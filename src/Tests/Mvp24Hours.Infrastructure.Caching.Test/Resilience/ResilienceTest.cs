@@ -113,4 +113,109 @@ public class ResilientCacheProviderTest
 
         act.Should().Throw<ArgumentNullException>();
     }
+
+    [Fact]
+    public async Task GetAsync_EmptyKey_ShouldThrow()
+    {
+        var inner = new Mock<ICacheProvider>();
+        var provider = new ResilientCacheProvider(inner.Object, new CacheResilienceOptions
+        {
+            EnableCircuitBreaker = false,
+            EnableRetry = false
+        });
+
+        Func<Task> act = () => provider.GetAsync<TestEntity>(" ");
+
+        await act.Should().ThrowAsync<ArgumentException>();
+    }
+
+    [Fact]
+    public async Task GetManyAsync_ShouldAggregateResults()
+    {
+        MemoryCacheProvider inner = CacheTestHelpers.CreateMemoryProvider();
+        await inner.SetAsync("a", new TestEntity { Id = 1, Name = "A" });
+        await inner.SetAsync("b", new TestEntity { Id = 2, Name = "B" });
+        var provider = new ResilientCacheProvider(inner, new CacheResilienceOptions
+        {
+            EnableCircuitBreaker = false,
+            EnableRetry = false
+        });
+
+        Dictionary<string, TestEntity> result = await provider.GetManyAsync<TestEntity>(["a", "b", "missing"]);
+
+        result.Should().HaveCount(2);
+        result["a"].Name.Should().Be("A");
+    }
+
+    [Fact]
+    public async Task SetManyAsync_AndRemoveManyAsync_ShouldProcessAllKeys()
+    {
+        MemoryCacheProvider inner = CacheTestHelpers.CreateMemoryProvider();
+        var provider = new ResilientCacheProvider(inner, new CacheResilienceOptions
+        {
+            EnableCircuitBreaker = false,
+            EnableRetry = false
+        });
+        var values = new Dictionary<string, TestEntity>
+        {
+            ["k1"] = new TestEntity { Id = 1, Name = "One" },
+            ["k2"] = new TestEntity { Id = 2, Name = "Two" }
+        };
+
+        await provider.SetManyAsync(values);
+        (await provider.GetAsync<TestEntity>("k1"))!.Name.Should().Be("One");
+
+        await provider.RemoveManyAsync(["k1", "k2", ""]);
+        (await provider.ExistsAsync("k1")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetStringAsync_WithRetryEnabled_ShouldReturnValue()
+    {
+        MemoryCacheProvider inner = CacheTestHelpers.CreateMemoryProvider();
+        await inner.SetStringAsync("retry-key", "ok");
+        var provider = new ResilientCacheProvider(inner, new CacheResilienceOptions
+        {
+            EnableCircuitBreaker = true,
+            EnableRetry = true,
+            MaxRetries = 1
+        });
+
+        string? value = await provider.GetStringAsync("retry-key");
+
+        value.Should().Be("ok");
+    }
+
+    [Fact]
+    public async Task RefreshAsync_InnerThrowsWithGracefulDegradation_ShouldNotThrow()
+    {
+        var inner = new Mock<ICacheProvider>();
+        inner.Setup(x => x.RefreshAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("refresh failed"));
+        var provider = new ResilientCacheProvider(inner.Object, new CacheResilienceOptions
+        {
+            EnableCircuitBreaker = false,
+            EnableRetry = false,
+            EnableGracefulDegradation = true
+        });
+
+        Func<Task> act = () => provider.RefreshAsync("key");
+
+        await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task SetAsync_NullValue_ShouldThrow()
+    {
+        var inner = new Mock<ICacheProvider>();
+        var provider = new ResilientCacheProvider(inner.Object, new CacheResilienceOptions
+        {
+            EnableCircuitBreaker = false,
+            EnableRetry = false
+        });
+
+        Func<Task> act = () => provider.SetAsync<TestEntity>("key", null!);
+
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
 }

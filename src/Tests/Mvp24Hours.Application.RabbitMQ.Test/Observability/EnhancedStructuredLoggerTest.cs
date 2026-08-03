@@ -56,7 +56,7 @@ public class EnhancedStructuredLoggerTest
     [Fact]
     public void LogMessageEnvelopeDebug_ShouldSanitizeSensitiveHeaders()
     {
-        using var factory = LoggerFactory.Create(builder => builder.AddProvider(new ListLoggerProvider()));
+        using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddProvider(new ListLoggerProvider()));
         var logger = new EnhancedStructuredLogger(factory.CreateLogger<EnhancedStructuredLogger>(), sensitiveHeaders: ["Authorization"]);
         var envelope = new MessageEnvelope
         {
@@ -183,7 +183,10 @@ public class EnhancedStructuredLoggerTest
 
     private sealed class ListLoggerProvider : ILoggerProvider
     {
-        public ILogger CreateLogger(string categoryName) => new ListLogger();
+        public ILogger CreateLogger(string categoryName)
+        {
+            return new ListLogger();
+        }
 
         public void Dispose()
         {
@@ -192,9 +195,15 @@ public class EnhancedStructuredLoggerTest
 
     private sealed class ListLogger : ILogger
     {
-        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull
+        {
+            return null;
+        }
 
-        public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Debug;
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return logLevel >= LogLevel.Debug;
+        }
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {

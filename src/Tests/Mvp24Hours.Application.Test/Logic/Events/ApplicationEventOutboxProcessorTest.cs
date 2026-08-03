@@ -60,7 +60,7 @@ public class ApplicationEventOutboxProcessorTest
     [Fact]
     public async Task ExecuteAsync_WithUnknownEventType_ShouldMarkAsFailed()
     {
-        Guid entryId = Guid.NewGuid();
+        var entryId = Guid.NewGuid();
         var mockOutbox = new Mock<IApplicationEventOutbox>();
         mockOutbox.Setup(o => o.GetPendingAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([
@@ -91,7 +91,7 @@ public class ApplicationEventOutboxProcessorTest
     [Fact]
     public async Task ExecuteAsync_WithInvalidPayload_ShouldMarkAsFailed()
     {
-        Guid entryId = Guid.NewGuid();
+        var entryId = Guid.NewGuid();
         string eventType = typeof(TestApplicationEvent).AssemblyQualifiedName!;
         var mockOutbox = new Mock<IApplicationEventOutbox>();
         mockOutbox.Setup(o => o.GetPendingAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))

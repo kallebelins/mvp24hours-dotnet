@@ -32,7 +32,10 @@ public class BulkOperationsIntegrationTest(SqlServerContainerFixture fixture) : 
         return _fixture.ClearDatabaseAsync();
     }
 
-    public Task DisposeAsync() => Task.CompletedTask;
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
+    }
 
     [DockerFact]
     public async Task ExecuteUpdateAsync_ShouldUpdateMatchingProducts()

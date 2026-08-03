@@ -31,16 +31,14 @@ public class InterceptorEdgeCasesTest
             await deleteContext.SaveChangesAsync();
         }
 
-        using (GenericSoftDeleteTestDbContext verifyContext = CreateGenericSoftDeleteContext(databaseName, interceptor))
-        {
-            TestGenericSoftDeleteEntity deleted = verifyContext.GenericSoftDeleteEntities
-                .IgnoreQueryFilters()
-                .Single();
+        using GenericSoftDeleteTestDbContext verifyContext = CreateGenericSoftDeleteContext(databaseName, interceptor);
+        TestGenericSoftDeleteEntity deleted = verifyContext.GenericSoftDeleteEntities
+            .IgnoreQueryFilters()
+            .Single();
 
-            deleted.IsDeleted.Should().BeTrue();
-            deleted.DeletedBy.Should().Be("System");
-            deleted.DeletedAt.Should().NotBeNull();
-        }
+        deleted.IsDeleted.Should().BeTrue();
+        deleted.DeletedBy.Should().Be("System");
+        deleted.DeletedAt.Should().NotBeNull();
     }
 
     [Fact]

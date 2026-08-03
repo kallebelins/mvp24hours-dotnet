@@ -125,7 +125,7 @@ public class OpenApiTransformersTest
     [Fact]
     public async Task DeprecationTransformer_Should_HandleNullPaths()
     {
-        var document = new OpenApiDocument { Paths = null };
+        OpenApiDocument document = new() { Paths = null! };
         var sut = new DeprecationTransformer();
 
         Func<Task> act = () => sut.TransformAsync(document, null!, CancellationToken.None);

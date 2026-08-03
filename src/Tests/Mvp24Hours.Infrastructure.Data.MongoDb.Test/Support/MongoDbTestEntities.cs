@@ -209,6 +209,52 @@ public class OrderDocument : IEntityBase
     }
 }
 
+public class SensorReading
+{
+    public DateTime Timestamp { get; set; }
+
+    public string SensorId { get; set; } = string.Empty;
+
+    public double Temperature { get; set; }
+
+    public double Humidity { get; set; }
+}
+
+public class AuditableTenantProduct : IEntityBase, IAuditableEntity, ISoftDeletable, ITenantEntity
+{
+    public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
+
+    public string TenantId { get; set; } = string.Empty;
+
+    public string Name { get; set; } = string.Empty;
+
+    public DateTime CreatedAt { get; set; }
+
+    public string CreatedBy { get; set; } = string.Empty;
+
+    public DateTime? ModifiedAt { get; set; }
+
+    public string? ModifiedBy { get; set; }
+
+    public bool IsDeleted { get; set; }
+
+    public DateTime? DeletedAt { get; set; }
+
+    public string DeletedBy { get; set; } = string.Empty;
+
+    public object EntityKey => Id;
+
+    public IReadOnlyCollection<MessageResult> GetNotifications()
+    {
+        return [];
+    }
+
+    public bool HasNotifications()
+    {
+        return false;
+    }
+}
+
 public class FakeTenantProvider(string? tenantId) : ITenantProvider
 {
     public string TenantId { get; set; } = tenantId ?? string.Empty;

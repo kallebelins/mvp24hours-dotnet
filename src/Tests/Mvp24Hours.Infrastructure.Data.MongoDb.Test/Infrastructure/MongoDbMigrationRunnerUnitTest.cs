@@ -10,7 +10,7 @@ public class MongoDbMigrationRunnerUnitTest
     [Fact]
     public void Constructor_WithNullContext_ShouldThrow()
     {
-        var options = Options.Create(new MongoDbMigrationOptions());
+        IOptions<MongoDbMigrationOptions> options = Options.Create(new MongoDbMigrationOptions());
 
         Action act = () => new MongoDbMigrationRunner(null!, options);
 

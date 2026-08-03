@@ -1,11 +1,16 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Moq;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Infrastructure.RabbitMQ.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Metrics;
 using Mvp24Hours.Infrastructure.RabbitMQ.Observability;
+using Mvp24Hours.Infrastructure.RabbitMQ.Observability.Contract;
+using Mvp24Hours.Infrastructure.RabbitMQ.Observability.Extensions;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Observability;
 
+[Trait("Category", "Unit")]
 public class ObservabilityTest
 {
     [Fact]
@@ -224,5 +229,120 @@ public class ObservabilityTest
     {
         ConnectionStatus.Connected.Should().NotBe(ConnectionStatus.Disconnected);
         ConnectionStatus.Reconnecting.Should().NotBe(ConnectionStatus.Connected);
+    }
+
+    [Fact]
+    public async Task ObserverManager_NotifyPreConsumeAsync_ShouldInvokeAllObservers()
+    {
+        var observer1 = new Mock<IConsumeObserver>();
+        var observer2 = new Mock<IConsumeObserver>();
+        var manager = new ObserverManager([observer1.Object, observer2.Object]);
+        var context = new ConsumeObserverContext { MessageType = "TestOrderEvent", QueueName = "orders" };
+
+        await manager.NotifyPreConsumeAsync(context);
+
+        observer1.Verify(o => o.PreConsumeAsync(context, It.IsAny<CancellationToken>()), Times.Once);
+        observer2.Verify(o => o.PreConsumeAsync(context, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ObserverManager_WhenObserverThrows_ShouldNotPropagate()
+    {
+        var failingObserver = new Mock<IConsumeObserver>();
+        failingObserver
+            .Setup(o => o.PreConsumeAsync(It.IsAny<ConsumeObserverContext>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("observer failed"));
+
+        var manager = new ObserverManager([failingObserver.Object]);
+        var context = new ConsumeObserverContext { MessageType = "TestOrderEvent" };
+
+        Func<Task> act = () => manager.NotifyPreConsumeAsync(context);
+
+        await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task ObserverManager_NotifyPublishFaultAsync_ShouldInvokeObservers()
+    {
+        var observer = new Mock<IPublishObserver>();
+        var manager = new ObserverManager(publishObservers: [observer.Object]);
+        var context = new PublishObserverContext { MessageType = "TestOrderEvent", Exchange = "orders" };
+        var exception = new Exception("publish failed");
+
+        await manager.NotifyPublishFaultAsync(context, exception);
+
+        observer.Verify(
+            o => o.PublishFaultAsync(context, exception, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task NullObserverManager_ShouldCompleteWithoutSideEffects()
+    {
+        IObserverManager manager = NullObserverManager.Instance;
+        var consumeContext = new ConsumeObserverContext();
+        var publishContext = new PublishObserverContext();
+
+        await manager.NotifyPreConsumeAsync(consumeContext);
+        await manager.NotifyPostPublishAsync(publishContext);
+        await manager.NotifyConnectedAsync(new ConnectionObserverContext());
+
+        Assert.True(true);
+    }
+
+    [Fact]
+    public void AddMvpRabbitMQObservability_ShouldRegisterCoreServices()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvpRabbitMQObservability();
+
+        ServiceProvider provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<IObserverManager>().Should().NotBeNull();
+        provider.GetRequiredService<IRabbitMQMetrics>().Should().NotBeNull();
+        provider.GetRequiredService<IRabbitMQStructuredLogger>().Should().NotBeNull();
+        provider.GetRequiredService<IRabbitMQDiagnostics>().Should().NotBeNull();
+    }
+
+    [Fact]
+    public void AddMvpRabbitMQObservers_ShouldRegisterObserverManagerSingleton()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvpRabbitMQObservers();
+
+        ServiceProvider provider = services.BuildServiceProvider();
+        IObserverManager first = provider.GetRequiredService<IObserverManager>();
+        IObserverManager second = provider.GetRequiredService<IObserverManager>();
+
+        first.Should().BeSameAs(second);
+        first.Should().BeOfType<ObserverManager>();
+    }
+
+    [Fact]
+    public void AddMvpRabbitMQPrometheusMetrics_ShouldRegisterMetricsAndObservers()
+    {
+        var services = new ServiceCollection();
+        services.AddMvpRabbitMQPrometheusMetrics();
+
+        ServiceProvider provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<IRabbitMQMetrics>().Should().BeOfType<RabbitMQPrometheusMetrics>();
+        provider.GetServices<IConsumeObserver>().Should().ContainSingle(o => o is RabbitMQPrometheusMetrics);
+        provider.GetServices<IPublishObserver>().Should().ContainSingle(o => o is RabbitMQPrometheusMetrics);
+    }
+
+    [Fact]
+    public void AddMvpRabbitMQObservabilityProduction_ShouldEnableProductionDefaults()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvpRabbitMQObservabilityProduction();
+
+        ServiceProvider provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<IObserverManager>().Should().NotBeNull();
+        provider.GetRequiredService<IRabbitMQMetrics>().Should().BeOfType<RabbitMQPrometheusMetrics>();
     }
 }

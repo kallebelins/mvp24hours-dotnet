@@ -228,6 +228,70 @@ public class IEndpointRouteBuilderExtensionsTest
     }
 
     [Fact]
+    public async Task MapCommandWithResult_ShouldReturn200_WhenBusinessResultSucceeds()
+    {
+        (HttpClient client, IHost host) = await CreateHost(
+            endpoints => endpoints.MapCommandWithResult<CreateWidgetResultCommand, string>("/api/widgets/result"),
+            services =>
+            {
+                RegisterValidators(services);
+                services.AddSingleton<ISender>(new EndpointStubSender()
+                    .Returns<CreateWidgetResultCommand, IBusinessResult<string>>((_, _) =>
+                        Task.FromResult<IBusinessResult<string>>(new BusinessResult<string>("created", []))!));
+            });
+
+        using (host)
+        using (client)
+        {
+            HttpResponseMessage response = await client.PostAsync(
+                "/api/widgets/result",
+                JsonContent(new CreateWidgetResultCommand("widget")));
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            (await response.Content.ReadAsStringAsync()).Should().Contain("created");
+        }
+    }
+
+    [Fact]
+    public async Task MapCommand_ShouldReturn400_WhenValidationExceptionThrown()
+    {
+        (HttpClient client, IHost host) = await CreateHost(
+            endpoints => endpoints.MapCommand<CreateWidgetCommand, string>("/api/widgets"),
+            services =>
+            {
+                RegisterValidators(services);
+                services.AddSingleton<ISender>(new EndpointStubSender()
+                    .Throws(new Core.Exceptions.ValidationException("Validation failed", [new MessageResult("Name", "required", MessageType.Error)])));
+            });
+
+        using (host)
+        using (client)
+        {
+            HttpResponseMessage response = await client.PostAsync("/api/widgets", JsonContent(new CreateWidgetCommand("widget")));
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+    }
+
+    [Fact]
+    public async Task MapCommand_ShouldReturn400_WhenDomainExceptionThrown()
+    {
+        (HttpClient client, IHost host) = await CreateHost(
+            endpoints => endpoints.MapCommand<CreateWidgetCommand, string>("/api/widgets"),
+            services =>
+            {
+                RegisterValidators(services);
+                services.AddSingleton<ISender>(new EndpointStubSender()
+                    .Throws(new DomainException("Domain rule violated", "Widget")));
+            });
+
+        using (host)
+        using (client)
+        {
+            HttpResponseMessage response = await client.PostAsync("/api/widgets", JsonContent(new CreateWidgetCommand("widget")));
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+    }
+
+    [Fact]
     public void MapCommand_Should_InvokeConfigureCallback()
     {
         WebApplication app = WebApplication.CreateBuilder().Build();
@@ -305,12 +369,14 @@ internal sealed class EndpointTestAuthHandler(
     UrlEncoder encoder) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-        => Task.FromResult(AuthenticateResult.NoResult());
+    {
+        return Task.FromResult(AuthenticateResult.NoResult());
+    }
 }
 
 internal sealed class EndpointStubSender : ISender
 {
-    private readonly Dictionary<Type, Func<object, CancellationToken, Task<object?>>> _handlers = new();
+    private readonly Dictionary<Type, Func<object, CancellationToken, Task<object?>>> _handlers = [];
     private Exception? _exception;
 
     public EndpointStubSender Returns<TRequest, TResponse>(Func<TRequest, CancellationToken, Task<TResponse>> handler)

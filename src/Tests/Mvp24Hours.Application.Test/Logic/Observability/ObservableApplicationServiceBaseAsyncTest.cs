@@ -1,10 +1,10 @@
+using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Contract.Observability;
 using Mvp24Hours.Application.Logic.Observability;
 using Mvp24Hours.Application.Test.Support;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using System.Linq.Expressions;
 
 namespace Mvp24Hours.Application.Test.Logic.Observability;
 

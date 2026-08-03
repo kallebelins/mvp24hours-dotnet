@@ -573,10 +573,13 @@ public class BulkOperationsRepositoryAsync<T>(
                 }
                 else
                 {
-                    // Create Set update for constant value
+                    // Create Set update for constant value (Expression-based overload)
                     MethodInfo setMethod = typeof(UpdateDefinitionBuilder<T>)
                         .GetMethods()
-                        .First(m => m.Name == "Set" && m.GetParameters().Length == 2);
+                        .First(m => m.Name == "Set"
+                            && m.GetParameters().Length == 2
+                            && m.GetParameters()[0].ParameterType.IsGenericType
+                            && m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(Expression<>));
 
                     Type propertyType = GetPropertyTypeFromExpression(setter.Property);
                     MethodInfo genericSetMethod = setMethod.MakeGenericMethod(propertyType);

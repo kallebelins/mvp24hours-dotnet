@@ -18,8 +18,8 @@ public class OpenTelemetryExporterExtensionsTest
             options.Otlp.Endpoint = "http://localhost:4317";
         });
 
-        using var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<OpenTelemetryExporterOptions>();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        OpenTelemetryExporterOptions options = provider.GetRequiredService<OpenTelemetryExporterOptions>();
         options.ServiceName.Should().Be("TestService");
         options.Otlp.Enabled.Should().BeTrue();
         Mvp24HoursMeters.AllMeterNames.Should().HaveCount(9);

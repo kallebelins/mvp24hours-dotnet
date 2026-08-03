@@ -224,4 +224,81 @@ public class ObservableCacheProviderTest
         await Assert.ThrowsAsync<InvalidOperationException>(() => provider.GetAsync<TestEntity>("err"));
         metrics.Verify(x => x.RecordError("get", It.IsAny<Exception>(), It.IsAny<string>()), Times.Once);
     }
+
+    [Fact]
+    public async Task GetStringAsync_HitAndMiss_ShouldRecordMetrics()
+    {
+        MemoryCacheProvider inner = CacheTestHelpers.CreateMemoryProvider();
+        await inner.SetStringAsync("str-key", "value");
+        var metrics = new Mock<ICacheMetrics>();
+        var provider = new ObservableCacheProvider(inner, metrics.Object);
+
+        await provider.GetStringAsync("str-key");
+        await provider.GetStringAsync("missing-str");
+
+        metrics.Verify(x => x.RecordGet("str-key", It.IsAny<double>(), true, "MemoryCacheProvider"), Times.Once);
+        metrics.Verify(x => x.RecordGet("missing-str", It.IsAny<double>(), false, "MemoryCacheProvider"), Times.Once);
+    }
+
+    [Fact]
+    public async Task SetStringAsync_ShouldRecordSetMetricsWithSize()
+    {
+        MemoryCacheProvider inner = CacheTestHelpers.CreateMemoryProvider();
+        var metrics = new Mock<ICacheMetrics>();
+        var provider = new ObservableCacheProvider(inner, metrics.Object);
+
+        await provider.SetStringAsync("set-str", "payload");
+
+        metrics.Verify(x => x.RecordSet("set-str", It.IsAny<double>(), It.IsAny<long>(), "MemoryCacheProvider"), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExistsAsync_AndRefreshAsync_ShouldComplete()
+    {
+        MemoryCacheProvider inner = CacheTestHelpers.CreateMemoryProvider();
+        await inner.SetStringAsync("exists-key", "value");
+        var provider = new ObservableCacheProvider(inner);
+
+        (await provider.ExistsAsync("exists-key")).Should().BeTrue();
+        await provider.RefreshAsync("exists-key");
+    }
+
+    [Fact]
+    public async Task ExistsAsync_InnerThrows_ShouldRecordErrorAndRethrow()
+    {
+        var inner = new Mock<ICacheProvider>();
+        inner.Setup(x => x.ExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("exists failed"));
+        var metrics = new Mock<ICacheMetrics>();
+        var provider = new ObservableCacheProvider(inner.Object, metrics.Object);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => provider.ExistsAsync("err"));
+        metrics.Verify(x => x.RecordError("exists", It.IsAny<Exception>(), It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SetAsync_WithStringValue_ShouldTrackValueSize()
+    {
+        MemoryCacheProvider inner = CacheTestHelpers.CreateMemoryProvider();
+        var metrics = new Mock<ICacheMetrics>();
+        var provider = new ObservableCacheProvider(inner, metrics.Object);
+
+        await provider.SetAsync("string-set", "hello");
+
+        metrics.Verify(x => x.RecordSet("string-set", It.IsAny<double>(), It.IsAny<long>(), "MemoryCacheProvider"), Times.Once);
+    }
+
+    [Fact]
+    public async Task RemoveManyAsync_ShouldDelegateToInner()
+    {
+        MemoryCacheProvider inner = CacheTestHelpers.CreateMemoryProvider();
+        await inner.SetStringAsync("k1", "v1");
+        await inner.SetStringAsync("k2", "v2");
+        var provider = new ObservableCacheProvider(inner);
+
+        await provider.RemoveManyAsync(["k1", "k2"]);
+
+        (await inner.ExistsAsync("k1")).Should().BeFalse();
+        (await inner.ExistsAsync("k2")).Should().BeFalse();
+    }
 }

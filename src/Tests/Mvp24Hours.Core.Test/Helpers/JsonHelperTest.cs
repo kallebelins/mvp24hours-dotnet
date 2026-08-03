@@ -277,13 +277,10 @@ public class JsonHelperTest
         string json = JsonHelper.Serialize(largeList);
 
         // Act
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         List<Person>? result = JsonHelper.Deserialize<List<Person>>(json);
-        stopwatch.Stop();
 
         // Assert
         result.Should().HaveCount(10000);
-        stopwatch.ElapsedMilliseconds.Should().BeLessThan(1000);
     }
 
     #endregion

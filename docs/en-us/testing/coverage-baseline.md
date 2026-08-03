@@ -4,13 +4,13 @@ Consolidated line coverage for the main solution (`src/Mvp24Hours.slnx`), measur
 
 Regenerate: `./scripts/run-ci-local.ps1 -SkipSamples`
 
-## Current snapshot — roadmap implementation (2026-08-03)
+## Current snapshot — Phase 2 complete (2026-08-03)
 
 | Metric | Value |
 |--------|-------|
-| Line coverage | **59.4%** (44,321 / 74,605 coverable lines) |
-| Branch coverage | **40.9%** |
-| CI regression floor | **55%** |
+| Line coverage | **65.9%** (49,170 / 74,608 coverable lines) |
+| Branch coverage | **49.2%** |
+| CI regression floor | **65%** |
 | Product target | **95%** |
 | Test projects | **19** in `src/Mvp24Hours.slnx` |
 
@@ -18,17 +18,17 @@ Regenerate: `./scripts/run-ci-local.ps1 -SkipSamples`
 
 | Assembly | Line % | Covered / coverable |
 |----------|--------|---------------------|
-| Infrastructure.RabbitMQ | 38.7 | 3,288 / 8,478 |
-| Infrastructure.Data.MongoDb | 41.0 | 3,663 / 8,919 |
-| Infrastructure.Pipe | 55.8 | 3,614 / 6,472 |
-| Infrastructure.Data.EFCore | 56.9 | 3,710 / 6,517 |
-| Core | 60.9 | 4,529 / 7,430 |
-| Infrastructure.Caching | 62.8 | 2,060 / 3,280 |
-| WebAPI | 64.2 | 5,146 / 8,004 |
+| Infrastructure.RabbitMQ | 49.4 | 4,190 / 8,478 |
+| Infrastructure.Data.MongoDb | 53.3 | 4,763 / 8,922 |
+| Infrastructure.Pipe | 59.8 | 3,872 / 6,472 |
+| Core | 66.1 | 4,914 / 7,430 |
+| Infrastructure.Data.EFCore | 66.3 | 4,326 / 6,517 |
 | Infrastructure.Identity.Keycloak | 66.3 | 948 / 1,428 |
-| Application | 66.5 | 4,330 / 6,509 |
-| Infrastructure.Cqrs | 67.5 | 3,040 / 4,500 |
-| Infrastructure | 75.5 | 8,270 / 10,952 |
+| Application | 69.8 | 4,545 / 6,509 |
+| Infrastructure.Caching | 70.5 | 2,314 / 3,280 |
+| WebAPI | 72.0 | 5,763 / 8,004 |
+| Infrastructure.Cqrs | 72.2 | 3,251 / 4,500 |
+| Infrastructure | 78.1 | 8,561 / 10,952 |
 | Infrastructure.CronJob | 81.2 | 1,707 / 2,100 |
 | Infrastructure.Caching.Redis | 100.0 | 16 / 16 |
 
@@ -38,10 +38,10 @@ Regenerate: `./scripts/run-ci-local.ps1 -SkipSamples`
 |-------|------|--------|
 | 0 — CI split, filter fix | 45% | Done (44.5% → split unit/integration) |
 | 1 — Unit quick wins | 55% | Done |
-| 2 — Docker integration | 65% | In progress (59.4%) |
+| 2 — Docker integration | 65% | **Done** (59.4% → 65.9%) |
 | 3 — WebAPI + Pipe | 75% | Tests added; gate pending |
 | 4 — EFCore + App + Infra | 85% | Tests added; gate pending |
-| 5 — Final sweep | 95% | Product target; ~35.6 pp remaining |
+| 5 — Final sweep | 95% | Product target; ~29.1 pp remaining |
 
 ### CI architecture
 

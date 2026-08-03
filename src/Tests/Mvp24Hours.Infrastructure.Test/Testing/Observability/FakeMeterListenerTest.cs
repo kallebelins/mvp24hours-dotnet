@@ -53,13 +53,16 @@ public class FakeMeterListenerTest
     }
 
     [Fact]
-    public void Clear_ShouldRemoveRecordedMeasurements()
+    public async Task Clear_ShouldRemoveRecordedMeasurements()
     {
         using FakeMeterListener listener = new();
         using Meter meter = new("ClearTest");
         Counter<int> counter = meter.CreateCounter<int>("events");
+        var recorded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        listener.MeasurementRecorded += (_, _) => recorded.TrySetResult();
 
         counter.Add(1);
+        await recorded.Task.WaitAsync(TimeSpan.FromSeconds(2));
         listener.Clear();
 
         listener.MeasurementCount.Should().Be(0);

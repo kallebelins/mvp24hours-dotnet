@@ -46,7 +46,7 @@ public class BatchConsumerProcessorTest
     [Fact]
     public void Constructor_WithNullOptions_ShouldThrow()
     {
-        var services = new ServiceCollection().BuildServiceProvider();
+        ServiceProvider services = new ServiceCollection().BuildServiceProvider();
         var serializer = new JsonMessageSerializer();
 
         Action act = () => new BatchConsumerProcessor<TestOrderEvent>(
@@ -61,7 +61,7 @@ public class BatchConsumerProcessorTest
     [Fact]
     public async Task AddMessageAsync_AfterDispose_ShouldThrowObjectDisposedException()
     {
-        var services = new ServiceCollection().BuildServiceProvider();
+        ServiceProvider services = new ServiceCollection().BuildServiceProvider();
         var serializer = new JsonMessageSerializer();
         var processor = new BatchConsumerProcessor<TestOrderEvent>(
             CreateOptions(),
@@ -80,7 +80,7 @@ public class BatchConsumerProcessorTest
     public async Task AddMessageAsync_WithInvalidPayload_ShouldNackWithoutRequeue()
     {
         var channelMock = new Mock<IModel>();
-        var services = new ServiceCollection().BuildServiceProvider();
+        ServiceProvider services = new ServiceCollection().BuildServiceProvider();
         var serializer = new JsonMessageSerializer();
         using var processor = new BatchConsumerProcessor<TestOrderEvent>(
             CreateOptions(),
@@ -97,7 +97,7 @@ public class BatchConsumerProcessorTest
     [Fact]
     public async Task FlushAsync_WithEmptyQueue_ShouldNotThrow()
     {
-        var services = new ServiceCollection().BuildServiceProvider();
+        ServiceProvider services = new ServiceCollection().BuildServiceProvider();
         var serializer = new JsonMessageSerializer();
         using var processor = new BatchConsumerProcessor<TestOrderEvent>(
             CreateOptions(),
@@ -114,7 +114,7 @@ public class BatchConsumerProcessorTest
     public async Task ProcessBatch_WithoutRegisteredConsumer_ShouldBatchAckWhenEnabled()
     {
         var channelMock = new Mock<IModel>();
-        var services = new ServiceCollection().BuildServiceProvider();
+        ServiceProvider services = new ServiceCollection().BuildServiceProvider();
         var serializer = new JsonMessageSerializer();
         using var processor = new BatchConsumerProcessor<TestOrderEvent>(
             CreateOptions(o => o.UseBatchAcknowledgment = true),
@@ -234,7 +234,7 @@ public class BatchConsumerProcessorTest
     public async Task Dispose_WithPendingMessages_ShouldNackRemaining()
     {
         var channelMock = new Mock<IModel>();
-        var services = new ServiceCollection().BuildServiceProvider();
+        ServiceProvider services = new ServiceCollection().BuildServiceProvider();
         var serializer = new JsonMessageSerializer();
         var processor = new BatchConsumerProcessor<TestOrderEvent>(
             CreateOptions(),

@@ -23,10 +23,7 @@ public class WebApiPipelineIntegrationTest
                 options.Return406WhenNoMatch = true;
             }))
             .ConfigurePipeline(app => app.UseMvp24HoursContentNegotiation())
-            .ConfigureEndpoints(endpoints => endpoints.MapGet("/api/data", async context =>
-            {
-                await context.Response.WriteAsync("{\"name\":\"test\"}");
-            }));
+            .ConfigureEndpoints(endpoints => endpoints.MapGet("/api/data", async context => await context.Response.WriteAsync("{\"name\":\"test\"}")));
 
         using HttpClient client = factory.CreateClient();
 
@@ -53,8 +50,8 @@ public class WebApiPipelineIntegrationTest
             }));
 
         using HttpClient client = factory.CreateClient();
-        using var request1 = CreatePost("/api/orders", "Idempotency-Key", "order-key-1");
-        using var request2 = CreatePost("/api/orders", "Idempotency-Key", "order-key-1");
+        using HttpRequestMessage request1 = CreatePost("/api/orders", "Idempotency-Key", "order-key-1");
+        using HttpRequestMessage request2 = CreatePost("/api/orders", "Idempotency-Key", "order-key-1");
 
         using HttpResponseMessage first = await client.SendAsync(request1);
         using HttpResponseMessage second = await client.SendAsync(request2);

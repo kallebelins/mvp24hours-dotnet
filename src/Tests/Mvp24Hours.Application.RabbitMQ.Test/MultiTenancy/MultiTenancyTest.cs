@@ -1,14 +1,19 @@
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Moq;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
+using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters;
+using RabbitMQ.Client;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.MultiTenancy;
 
+[Trait("Category", "Unit")]
 public class MultiTenancyTest
 {
     [Fact]
@@ -187,5 +192,125 @@ public class MultiTenancyTest
         });
 
         nextCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TenantConnectionFactory_HasConnection_WhenPoolEmpty_ShouldReturnFalse()
+    {
+        using TenantConnectionFactory factory = CreateTenantConnectionFactory();
+
+        factory.HasConnection("tenant-a").Should().BeFalse();
+    }
+
+    [Fact]
+    public void TenantConnectionFactory_GetOrCreateConnection_PoolHit_ShouldReturnSameInstance()
+    {
+        using TenantConnectionFactory factory = CreateTenantConnectionFactory();
+        Mock<IConnection> connectionMock = CreateOpenConnectionMock();
+        InjectPooledConnection(factory, "tenant-a", connectionMock.Object);
+
+        IConnection first = factory.GetOrCreateConnection("tenant-a");
+        IConnection second = factory.GetOrCreateConnection("tenant-a");
+
+        first.Should().BeSameAs(second);
+        first.Should().BeSameAs(connectionMock.Object);
+    }
+
+    [Fact]
+    public void TenantConnectionFactory_GetOrCreateConnection_PoolMissWithClosedConnection_ShouldRemoveStaleEntry()
+    {
+        using TenantConnectionFactory factory = CreateTenantConnectionFactory();
+        Mock<IConnection> closedConnection = CreateOpenConnectionMock(isOpen: false);
+        InjectPooledConnection(factory, "tenant-a", closedConnection.Object);
+
+        factory.HasConnection("tenant-a").Should().BeFalse();
+
+        Action act = () => factory.GetOrCreateConnection("tenant-a");
+
+        act.Should().Throw<Exception>();
+    }
+
+    [Fact]
+    public void TenantConnectionFactory_CloseConnection_ShouldRemoveFromPool()
+    {
+        using TenantConnectionFactory factory = CreateTenantConnectionFactory();
+        Mock<IConnection> connectionMock = CreateOpenConnectionMock();
+        InjectPooledConnection(factory, "tenant-b", connectionMock.Object);
+
+        factory.CloseConnection("tenant-b");
+
+        factory.HasConnection("tenant-b").Should().BeFalse();
+        connectionMock.Verify(c => c.Close(), Times.Once);
+        connectionMock.Verify(c => c.Dispose(), Times.Once);
+    }
+
+    [Fact]
+    public void TenantConnectionFactory_Dispose_ShouldCloseAllPooledConnections()
+    {
+        TenantConnectionFactory factory = CreateTenantConnectionFactory();
+        Mock<IConnection> connectionMock = CreateOpenConnectionMock();
+        InjectPooledConnection(factory, "tenant-c", connectionMock.Object);
+
+        factory.Dispose();
+
+        connectionMock.Verify(c => c.Close(), Times.Once);
+        connectionMock.Verify(c => c.Dispose(), Times.Once);
+    }
+
+    [Fact]
+    public void TenantConnectionFactory_GetVirtualHost_ShouldApplyTemplate()
+    {
+        using TenantConnectionFactory factory = CreateTenantConnectionFactory(new TenantRabbitMQOptions
+        {
+            VirtualHostTemplate = "/tenants/{tenantId}"
+        });
+
+        factory.GetVirtualHost("acme").Should().Be("/tenants/acme");
+    }
+
+    private static TenantConnectionFactory CreateTenantConnectionFactory(TenantRabbitMQOptions? tenantOptions = null)
+    {
+        tenantOptions ??= new TenantRabbitMQOptions();
+        IOptions<TenantRabbitMQOptions> tenantOptionsWrapper = Options.Create(tenantOptions);
+        IOptions<RabbitMQConnectionOptions> connectionOptions = Options.Create(new RabbitMQConnectionOptions
+        {
+            Configuration = new RabbitMQConnection
+            {
+                HostName = "localhost",
+                Port = 5672,
+                UserName = "guest",
+                Password = "guest"
+            },
+            RetryCount = 0
+        });
+
+        return new TenantConnectionFactory(tenantOptionsWrapper, connectionOptions);
+    }
+
+    private static Mock<IConnection> CreateOpenConnectionMock(bool isOpen = true)
+    {
+        var connectionMock = new Mock<IConnection>();
+        connectionMock.Setup(c => c.IsOpen).Returns(isOpen);
+        return connectionMock;
+    }
+
+    private static void InjectPooledConnection(TenantConnectionFactory factory, string tenantId, IConnection connection)
+    {
+        FieldInfo? connectionsField = typeof(TenantConnectionFactory).GetField(
+            "_connections",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        connectionsField.Should().NotBeNull();
+
+        object connections = connectionsField!.GetValue(factory)!;
+        Type entryType = typeof(TenantConnectionFactory).GetNestedType("TenantConnectionEntry", BindingFlags.NonPublic)!;
+        object entry = Activator.CreateInstance(entryType)!;
+        entryType.GetProperty("TenantId")!.SetValue(entry, tenantId);
+        entryType.GetProperty("Connection")!.SetValue(entry, connection);
+        entryType.GetProperty("CreatedAt")!.SetValue(entry, DateTimeOffset.UtcNow);
+        entryType.GetProperty("LastAccessed")!.SetValue(entry, DateTimeOffset.UtcNow);
+
+        MethodInfo tryAdd = connections.GetType().GetMethod("TryAdd")!;
+        bool added = (bool)tryAdd.Invoke(connections, [tenantId, entry])!;
+        added.Should().BeTrue();
     }
 }

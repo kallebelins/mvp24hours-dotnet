@@ -9,11 +9,11 @@ public class ActivityExtensionsExtendedTest
     [Fact]
     public void SetSuccess_WithTags_Should_SetStatusAndTags()
     {
-        using var listener = CreateListener();
+        using ActivityListener listener = CreateListener();
         using var source = new ActivitySource("ActivityExtensionsExtendedTest");
-        using Activity? activity = source.StartActivity("success-tags");
+        using Activity activity = source.StartActivity("success-tags")!;
 
-        activity!.SetSuccess(("count", 3), ("name", "test"));
+        activity.SetSuccess(("count", 3), ("name", "test"));
 
         activity.Status.Should().Be(ActivityStatusCode.Ok);
         activity.GetTagItem(SemanticTags.OperationSuccess).Should().Be(true);
@@ -23,11 +23,11 @@ public class ActivityExtensionsExtendedTest
     [Fact]
     public void SetError_WithMessage_Should_SetErrorCode()
     {
-        using var listener = CreateListener();
+        using ActivityListener listener = CreateListener();
         using var source = new ActivitySource("ActivityExtensionsExtendedTest");
-        using Activity? activity = source.StartActivity("error-message");
+        using Activity activity = source.StartActivity("error-message")!;
 
-        activity!.SetError("failed", "ERR_1");
+        activity.SetError("failed", "ERR_1");
 
         activity.Status.Should().Be(ActivityStatusCode.Error);
         activity.GetTagItem(SemanticTags.ErrorCode).Should().Be("ERR_1");
@@ -36,11 +36,11 @@ public class ActivityExtensionsExtendedTest
     [Fact]
     public void RecordEvent_And_RecordCacheMiss_Should_AddEvents()
     {
-        using var listener = CreateListener();
+        using ActivityListener listener = CreateListener();
         using var source = new ActivitySource("ActivityExtensionsExtendedTest");
-        using Activity? activity = source.StartActivity("events");
+        using Activity activity = source.StartActivity("events")!;
 
-        activity!.RecordEvent("custom.event", ("key", "value"));
+        activity.RecordEvent("custom.event", ("key", "value"));
         activity.RecordCacheMiss("cache-key");
 
         activity.Events.Should().HaveCount(2);
@@ -50,11 +50,11 @@ public class ActivityExtensionsExtendedTest
     [Fact]
     public void RecordSlowQuery_And_ValidationFailure_Should_AddEvents()
     {
-        using var listener = CreateListener();
+        using ActivityListener listener = CreateListener();
         using var source = new ActivitySource("ActivityExtensionsExtendedTest");
-        using Activity? activity = source.StartActivity("slow-validation");
+        using Activity activity = source.StartActivity("slow-validation")!;
 
-        activity!.RecordSlowQuery(1200, 500, "SELECT 1");
+        activity.RecordSlowQuery(1200, 500, "SELECT 1");
         activity.RecordValidationFailure(["Email invalid", "Name required"]);
 
         activity.Events.Should().HaveCount(2);
@@ -63,11 +63,11 @@ public class ActivityExtensionsExtendedTest
     [Fact]
     public void WithCausationId_And_WithDuration_Should_SetTags()
     {
-        using var listener = CreateListener();
+        using ActivityListener listener = CreateListener();
         using var source = new ActivitySource("ActivityExtensionsExtendedTest");
-        using Activity? activity = source.StartActivity("context");
+        using Activity activity = source.StartActivity("context")!;
 
-        activity!
+        activity
             .WithCausationId("cause-1")
             .WithDuration(42.5)
             .WithDatabase("postgresql", "orders", "SELECT")
@@ -82,7 +82,7 @@ public class ActivityExtensionsExtendedTest
     [Fact]
     public void StartScopedActivity_Should_SetSuccessOnDispose()
     {
-        using var listener = CreateListener();
+        using ActivityListener listener = CreateListener();
         using var source = new ActivitySource("ActivityExtensionsExtendedTest");
 
         using (ScopedActivity scope = source.StartScopedActivity("scoped-success"))
@@ -96,7 +96,7 @@ public class ActivityExtensionsExtendedTest
     [Fact]
     public void StartScopedActivity_Should_SetErrorWhenExceptionRecorded()
     {
-        using var listener = CreateListener();
+        using ActivityListener listener = CreateListener();
         using var source = new ActivitySource("ActivityExtensionsExtendedTest");
 
         using (ScopedActivity scope = source.StartScopedActivity("scoped-error"))

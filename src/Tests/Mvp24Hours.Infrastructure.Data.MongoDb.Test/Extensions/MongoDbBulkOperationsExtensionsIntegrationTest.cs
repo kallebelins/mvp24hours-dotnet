@@ -14,7 +14,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Extensions;
 public class MongoDbBulkOperationsExtensionsIntegrationTest(MongoDbIntegrationFixture fixture)
 {
     private Mvp24HoursContext CreateContext(string? databaseName = null)
-        => MongoDbIntegrationTestHelper.CreateContext(fixture, databaseName);
+    {
+        return MongoDbIntegrationTestHelper.CreateContext(fixture, databaseName);
+    }
 
     private async Task CleanupAsync(string? databaseName = null)
     {
@@ -26,7 +28,9 @@ public class MongoDbBulkOperationsExtensionsIntegrationTest(MongoDbIntegrationFi
     }
 
     private static List<TestEntity> CreateEntities(int count, string prefix)
-        => [.. Enumerable.Range(1, count).Select(i => new TestEntity { Name = $"{prefix}-{i}" })];
+    {
+        return [.. Enumerable.Range(1, count).Select(i => new TestEntity { Name = $"{prefix}-{i}" })];
+    }
 
     [Fact]
     [Trait("Category", "Unit")]

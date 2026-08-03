@@ -186,10 +186,7 @@ public class ServiceCollectionExtensionsTest
     {
         var services = new ServiceCollection();
 
-        services.AddMvp24HoursApiVersioning(options =>
-        {
-            options.Strategy = ApiVersioningStrategy.Header | ApiVersioningStrategy.QueryString;
-        });
+        services.AddMvp24HoursApiVersioning(options => options.Strategy = ApiVersioningStrategy.Header | ApiVersioningStrategy.QueryString);
 
         services.Should().Contain(x => x.ServiceType.Name.Contains("IApiVersionDescriptionProvider"));
     }
@@ -288,31 +285,341 @@ public class ServiceCollectionExtensionsTest
         options.Return406WhenNoMatch.Should().BeTrue();
         options.UseRfc7807ContentTypeForProblemDetails.Should().BeTrue();
     }
+
+    [Fact]
+    public void AddMvp24HoursWebJson_Should_RegisterControllersWithNewtonsoft()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursWebJson();
+
+        services.Should().Contain(x => x.ServiceType.Name.Contains("IConfigureOptions"));
+    }
+
+    [Fact]
+    public void AddMvp24HoursWebCors_Should_RegisterCorsOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursWebCors(options => options.Origin = "https://app.test");
+
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<CorsOptions>>().Value.Origin
+            .Should().Be("https://app.test");
+    }
+
+    [Fact]
+    public void AddMvp24HoursWebExceptions_Should_RegisterExceptionOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursWebExceptions(options => options.TraceMiddleware = true);
+
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<ExceptionOptions>>().Value.TraceMiddleware
+            .Should().BeTrue();
+    }
+
+    [Fact]
+    public void AddMvp24HoursCompression_Should_RegisterCompressionProviders()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursCompression(options =>
+        {
+            options.UseBrotli = true;
+            options.UseGzip = true;
+            options.EnableForHttps = true;
+        });
+
+        services.Should().Contain(x => x.ServiceType.Name.Contains("IConfigureOptions"));
+    }
+
+    [Fact]
+    public void AddMvp24HoursRequestDecompression_Should_RegisterOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursRequestDecompression(options => options.Enabled = true);
+
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<RequestDecompressionOptions>>().Value.Enabled
+            .Should().BeTrue();
+    }
+
+    [Fact]
+    public void AddMvp24HoursResponseCaching_Should_RegisterCachingServices()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursResponseCaching(options => options.MaximumBodySize = 2048);
+
+        services.Should().Contain(x => x.ServiceType.Name.Contains("IConfigureOptions"));
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<ResponseCachingOptions>>().Value.MaximumBodySize
+            .Should().Be(2048);
+    }
+
+    [Fact]
+    [Obsolete]
+    public void AddMvp24HoursOutputCaching_Should_RegisterOutputCache()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursOutputCaching(options => options.DefaultExpirationTimeSpan = TimeSpan.FromSeconds(30));
+
+        services.Should().Contain(x => x.ServiceType.Name.Contains("IConfigureOptions"));
+    }
+
+    [Fact]
+    public void AddMvp24HoursETag_Should_RegisterETagOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursETag(options => options.Enabled = true);
+
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<ETagOptions>>().Value.Enabled
+            .Should().BeTrue();
+    }
+
+    [Fact]
+    public void AddMvp24HoursRequestTimeout_Should_RegisterTimeoutOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursRequestTimeout(options => options.DefaultTimeout = TimeSpan.FromSeconds(15));
+
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<RequestTimeoutOptions>>().Value.DefaultTimeout
+            .Should().Be(TimeSpan.FromSeconds(15));
+    }
+
+    [Fact]
+    public void AddMvp24HoursCacheControl_Should_RegisterCacheControlOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursCacheControl(options => options.Enabled = false);
+
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<CacheControlOptions>>().Value.Enabled
+            .Should().BeFalse();
+    }
+
+    [Fact]
+    public void AddMvp24HoursIdempotency_Should_RegisterDefaultStoreAndGenerator()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursIdempotency(options =>
+        {
+            options.IntegrateWithCqrs = true;
+            options.RequireIdempotencyKey = true;
+        });
+
+        services.Should().Contain(x => x.ServiceType == typeof(IIdempotencyStore));
+        services.Should().Contain(x => x.ServiceType == typeof(IIdempotencyKeyGenerator));
+    }
+
+    [Fact]
+    public void AddMvp24HoursExceptionMapper_Should_RegisterCustomMapper()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursExceptionMapper<FakeExceptionMapper>();
+
+        services.Should().Contain(x =>
+            x.ServiceType == typeof(IExceptionToProblemDetailsMapper) &&
+            x.ImplementationType == typeof(FakeExceptionMapper));
+    }
+
+    [Fact]
+    public void AddMvp24HoursModelStateValidation_Should_RegisterFilter()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursModelStateValidation();
+
+        ServiceProvider provider = services.BuildServiceProvider();
+        provider.GetRequiredService<IOptions<ApiBehaviorOptions>>().Value.SuppressModelStateInvalidFilter
+            .Should().BeTrue();
+        provider.GetRequiredService<IOptions<MvcOptions>>().Value.Filters.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void AddMvp24HoursDistributedRateLimiting_Should_RegisterDistributedLimiter()
+    {
+        var services = new ServiceCollection();
+        services.AddDistributedMemoryCache();
+
+        services.AddMvp24HoursDistributedRateLimiting(options => options.InstanceName = "test:ratelimit:");
+
+        services.Should().Contain(x => x.ServiceType == typeof(Mvp24Hours.WebAPI.RateLimiting.IDistributedRateLimiter));
+    }
+
+    [Fact]
+    public void AddMvp24HoursSecurityHeaders_Should_RegisterSecurityHeadersOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursSecurityHeaders(options => options.EnableXContentTypeOptions = true);
+
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<SecurityHeadersOptions>>().Value.EnableXContentTypeOptions
+            .Should().BeTrue();
+    }
+
+    [Fact]
+    public void AddMvp24HoursApiKeyAuthentication_Should_RegisterOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursApiKeyAuthentication(options => options.HeaderName = "X-Test-Key");
+
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<ApiKeyAuthenticationOptions>>().Value.HeaderName
+            .Should().Be("X-Test-Key");
+    }
+
+    [Fact]
+    public void AddMvp24HoursIpFiltering_Should_RegisterIpFilteringOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursIpFiltering(options => options.WhitelistedIps.Add("127.0.0.1"));
+
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<IpFilteringOptions>>().Value.WhitelistedIps
+            .Should().Contain("127.0.0.1");
+    }
+
+    [Fact]
+    public void AddMvp24HoursAntiForgery_Should_RegisterAntiForgeryOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursAntiForgery(options => options.CookieName = "mvp-csrf");
+
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<AntiForgeryOptions>>().Value.CookieName
+            .Should().Be("mvp-csrf");
+    }
+
+    [Fact]
+    public void AddMvp24HoursInputSanitization_Should_RegisterSanitizationOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursInputSanitization(options => options.EnableSqlInjectionDetection = true);
+
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<InputSanitizationOptions>>().Value.EnableSqlInjectionDetection
+            .Should().BeTrue();
+    }
+
+    [Fact]
+    public void AddMvp24HoursRequestSizeLimit_Should_RegisterSizeLimitOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursRequestSizeLimit(options => options.DefaultMaxBodySize = 4096);
+
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<RequestSizeLimitOptions>>().Value.DefaultMaxBodySize
+            .Should().Be(4096);
+    }
+
+    [Fact]
+    public void AddMvp24HoursRequestTelemetry_Should_RegisterTelemetryOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursRequestTelemetry(options => options.EnableTracing = true);
+
+        services.BuildServiceProvider()
+            .GetRequiredService<IOptions<RequestTelemetryOptions>>().Value.EnableTracing
+            .Should().BeTrue();
+    }
+
+    [Fact]
+    public void AddContentFormatter_Should_RegisterCustomFormatter()
+    {
+        var services = new ServiceCollection();
+
+        services.AddContentFormatter<ProblemDetailsJsonFormatter>();
+
+        services.Should().Contain(x =>
+            x.ServiceType == typeof(IContentFormatter) &&
+            x.ImplementationType == typeof(ProblemDetailsJsonFormatter));
+    }
+
+    [Fact]
+    public void AddMvp24HoursContentNegotiationMvc_Should_RegisterMvcIntegration()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursContentNegotiationMvc();
+
+        services.Should().Contain(x => x.ServiceType.Name.Contains("IConfigureOptions"));
+    }
 }
 
 internal sealed class FakeIdempotencyStore : IIdempotencyStore
 {
     public Task CompleteAsync(string key, int statusCode, byte[] responseBody, string contentType, string? responseHeadersJson = null, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 
     public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
-        => Task.FromResult(false);
+    {
+        return Task.FromResult(false);
+    }
 
     public Task FailAsync(string key, bool removeRecord = true, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 
     public Task<IdempotencyRecord?> GetAsync(string key, CancellationToken cancellationToken = default)
-        => Task.FromResult<IdempotencyRecord?>(null);
+    {
+        return Task.FromResult<IdempotencyRecord?>(null);
+    }
 
     public Task RemoveAsync(string key, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 
     public Task<IdempotencyLockResult> TryAcquireLockAsync(string key, string requestPath, string requestMethod, string? requestBodyHash, TimeSpan duration, string? correlationId = null, CancellationToken cancellationToken = default)
-        => Task.FromResult(IdempotencyLockResult.Success());
+    {
+        return Task.FromResult(IdempotencyLockResult.Success());
+    }
 }
 
 internal sealed class FakeIdempotencyKeyGenerator : IIdempotencyKeyGenerator
 {
     public Task<IdempotencyKeyResult> GenerateKeyAsync(HttpContext context)
-        => Task.FromResult(IdempotencyKeyResult.FromHeader("fake-key"));
+    {
+        return Task.FromResult(IdempotencyKeyResult.FromHeader("fake-key"));
+    }
+}
+
+internal sealed class FakeExceptionMapper : IExceptionToProblemDetailsMapper
+{
+    public bool CanHandle(Exception exception)
+    {
+        return true;
+    }
+
+    public int GetStatusCode(Exception exception)
+    {
+        return StatusCodes.Status400BadRequest;
+    }
+
+    public Microsoft.AspNetCore.Mvc.ProblemDetails Map(Exception exception, HttpContext context)
+    {
+        return new() { Title = exception.Message };
+    }
 }

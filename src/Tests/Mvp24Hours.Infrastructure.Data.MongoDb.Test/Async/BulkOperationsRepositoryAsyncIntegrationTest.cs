@@ -282,4 +282,68 @@ public class BulkOperationsRepositoryAsyncIntegrationTest(MongoDbIntegrationFixt
         deleted.Should().Be(1);
         (await repository.ListCountAsync()).Should().Be(1);
     }
+
+    [DockerFact]
+    public async Task ExecuteUpdateAsync_WithPropertyExpression_ShouldUpdateMatchingEntities()
+    {
+        await CleanupAsync();
+        BulkOperationsRepositoryAsync<TestEntity> repository = CreateRepository();
+        await repository.BulkInsertAsync(
+        [
+            new TestEntity { Name = "Prop-Keep" },
+            new TestEntity { Name = "Prop-Update" }
+        ]);
+
+        int rowsAffected = await repository.ExecuteUpdateAsync(
+            e => e.Name == "Prop-Update",
+            e => e.Name,
+            "Prop-Updated");
+
+        rowsAffected.Should().Be(1);
+        (await repository.GetByCountAsync(e => e.Name == "Prop-Updated")).Should().Be(1);
+    }
+
+    [DockerFact]
+    public async Task ExecuteUpdateAsync_WithMultiPropertyExpression_ShouldUpdateFields()
+    {
+        await CleanupAsync();
+        BulkOperationsRepositoryAsync<TestEntity> repository = CreateRepository();
+        await repository.BulkInsertAsync([new TestEntity { Name = "Multi-Update" }]);
+
+        int rowsAffected = await repository.ExecuteUpdateAsync(
+            e => e.Name == "Multi-Update",
+            s => s.SetProperty(e => e.Name, "Multi-Updated"));
+
+        rowsAffected.Should().Be(1);
+        (await repository.GetByCountAsync(e => e.Name == "Multi-Updated")).Should().Be(1);
+    }
+
+    [DockerFact]
+    public async Task BulkInsertAsync_WithNullMongoOptions_ShouldThrow()
+    {
+        BulkOperationsRepositoryAsync<TestEntity> repository = CreateRepository();
+        List<TestEntity> entities = CreateEntities(2, "NullOptions");
+
+        Func<Task> act = () => repository.BulkInsertAsync(entities, (MongoDbBulkOperationOptions)null!);
+
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+    [DockerFact]
+    public async Task UpdateManyAsync_WithUpdateDefinition_ShouldModifyDocuments()
+    {
+        await CleanupAsync();
+        BulkOperationsRepositoryAsync<TestEntity> repository = CreateRepository();
+        await repository.BulkInsertAsync(
+        [
+            new TestEntity { Name = "Def-Open" },
+            new TestEntity { Name = "Def-Closed" }
+        ]);
+
+        long modified = await repository.UpdateManyAsync(
+            Builders<TestEntity>.Filter.Eq(e => e.Name, "Def-Closed"),
+            Builders<TestEntity>.Update.Set(e => e.Name, "Def-Archived"));
+
+        modified.Should().Be(1);
+    }
 }

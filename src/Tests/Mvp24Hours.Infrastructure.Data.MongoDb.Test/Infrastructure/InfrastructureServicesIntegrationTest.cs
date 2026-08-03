@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using MongoDB.Bson;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
@@ -31,7 +31,7 @@ public class InfrastructureServicesIntegrationTest(MongoDbIntegrationFixture fix
     public async Task MongoDbHealthCheck_WithVerifyDatabaseAccess_ShouldListCollections()
     {
         IOptions<MongoDbOptions> options = MongoDbIntegrationTestHelper.CreateMongoDbOptions(fixture);
-        var healthCheckOptions = Options.Create(new MongoDbHealthCheckOptions
+        IOptions<MongoDbHealthCheckOptions> healthCheckOptions = Options.Create(new MongoDbHealthCheckOptions
         {
             VerifyDatabaseAccess = true
         });
@@ -48,7 +48,7 @@ public class InfrastructureServicesIntegrationTest(MongoDbIntegrationFixture fix
     public async Task MongoDbHealthCheck_WithIncludeServerStatus_ShouldCompleteWithoutThrowing()
     {
         IOptions<MongoDbOptions> options = MongoDbIntegrationTestHelper.CreateMongoDbOptions(fixture);
-        var healthCheckOptions = Options.Create(new MongoDbHealthCheckOptions
+        IOptions<MongoDbHealthCheckOptions> healthCheckOptions = Options.Create(new MongoDbHealthCheckOptions
         {
             IncludeServerStatus = true
         });
@@ -65,7 +65,7 @@ public class InfrastructureServicesIntegrationTest(MongoDbIntegrationFixture fix
     {
         string databaseName = $"migrations_{Guid.NewGuid():N}";
         Mvp24HoursContext context = MongoDbIntegrationTestHelper.CreateContext(fixture, databaseName);
-        var migrationOptions = Options.Create(new MongoDbMigrationOptions
+        IOptions<MongoDbMigrationOptions> migrationOptions = Options.Create(new MongoDbMigrationOptions
         {
             MigrationAssemblies = [typeof(CreateProductsCollectionMigration).Assembly],
             AppliedBy = "integration-test"
@@ -101,7 +101,7 @@ public class InfrastructureServicesIntegrationTest(MongoDbIntegrationFixture fix
     {
         string databaseName = $"migrations_partial_{Guid.NewGuid():N}";
         Mvp24HoursContext context = MongoDbIntegrationTestHelper.CreateContext(fixture, databaseName);
-        var migrationOptions = Options.Create(new MongoDbMigrationOptions
+        IOptions<MongoDbMigrationOptions> migrationOptions = Options.Create(new MongoDbMigrationOptions
         {
             MigrationAssemblies = [typeof(CreateProductsCollectionMigration).Assembly],
             AppliedBy = "integration-test"
@@ -123,7 +123,7 @@ public class InfrastructureServicesIntegrationTest(MongoDbIntegrationFixture fix
     {
         string databaseName = $"migrations_uptodate_{Guid.NewGuid():N}";
         Mvp24HoursContext context = MongoDbIntegrationTestHelper.CreateContext(fixture, databaseName);
-        var migrationOptions = Options.Create(new MongoDbMigrationOptions
+        IOptions<MongoDbMigrationOptions> migrationOptions = Options.Create(new MongoDbMigrationOptions
         {
             MigrationAssemblies = [typeof(CreateProductsCollectionMigration).Assembly],
             AppliedBy = "integration-test"
@@ -145,7 +145,7 @@ public class InfrastructureServicesIntegrationTest(MongoDbIntegrationFixture fix
     {
         string databaseName = $"migrations_rollback_{Guid.NewGuid():N}";
         Mvp24HoursContext context = MongoDbIntegrationTestHelper.CreateContext(fixture, databaseName);
-        var migrationOptions = Options.Create(new MongoDbMigrationOptions
+        IOptions<MongoDbMigrationOptions> migrationOptions = Options.Create(new MongoDbMigrationOptions
         {
             MigrationAssemblies = [typeof(CreateProductsCollectionMigration).Assembly],
             AppliedBy = "integration-test"
@@ -168,7 +168,7 @@ public class InfrastructureServicesIntegrationTest(MongoDbIntegrationFixture fix
     {
         string databaseName = $"migrations_empty_{Guid.NewGuid():N}";
         Mvp24HoursContext context = MongoDbIntegrationTestHelper.CreateContext(fixture, databaseName);
-        var migrationOptions = Options.Create(new MongoDbMigrationOptions
+        IOptions<MongoDbMigrationOptions> migrationOptions = Options.Create(new MongoDbMigrationOptions
         {
             MigrationAssemblies = [typeof(CreateProductsCollectionMigration).Assembly],
             AppliedBy = "integration-test"
@@ -187,7 +187,7 @@ public class InfrastructureServicesIntegrationTest(MongoDbIntegrationFixture fix
     {
         string databaseName = $"migrations_noop_{Guid.NewGuid():N}";
         Mvp24HoursContext context = MongoDbIntegrationTestHelper.CreateContext(fixture, databaseName);
-        var migrationOptions = Options.Create(new MongoDbMigrationOptions
+        IOptions<MongoDbMigrationOptions> migrationOptions = Options.Create(new MongoDbMigrationOptions
         {
             MigrationAssemblies = [typeof(CreateProductsCollectionMigration).Assembly],
             AppliedBy = "integration-test"

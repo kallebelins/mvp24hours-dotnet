@@ -132,10 +132,7 @@ public class DatabaseExtensionsMigrationTest
             KeepAlive.Open();
 
             Host = new HostBuilder()
-                .ConfigureServices(services =>
-                {
-                    services.AddDbContext<TestDbContext>(options => options.UseSqlite(connectionString));
-                })
+                .ConfigureServices(services => services.AddDbContext<TestDbContext>(options => options.UseSqlite(connectionString)))
                 .Build();
         }
 

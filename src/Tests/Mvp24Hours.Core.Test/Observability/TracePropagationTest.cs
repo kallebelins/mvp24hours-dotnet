@@ -65,7 +65,7 @@ public class TracePropagationTest
             TraceState = "vendor=value"
         };
 
-        ActivityContext activityContext = context.ToActivityContext();
+        var activityContext = context.ToActivityContext();
 
         activityContext.TraceId.ToString().Should().Be("0af7651916cd43dd8448eb211c80319c");
         activityContext.SpanId.ToString().Should().Be("b7ad6b7169203331");

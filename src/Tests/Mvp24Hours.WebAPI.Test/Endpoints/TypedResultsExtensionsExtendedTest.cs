@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Moq;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Exceptions;
@@ -132,15 +133,142 @@ public class TypedResultsExtensionsExtendedTest
     }
 
     [Fact]
-    public void ValidationProblem_Should_Create400ValidationProblem()
+    public void ToTypedResult_Should_ReturnOk_WhenSuccessfulWithData()
     {
-        var errors = new Dictionary<string, string[]>
+        IBusinessResult<string> result = new BusinessResult<string>("value");
+
+        IResult httpResult = result.ToTypedResult();
+
+        httpResult.Should().BeOfType<Ok<string>>();
+    }
+
+    [Fact]
+    public void ToTypedResult_Should_ReturnBadRequest_WhenHasErrorsButNoMessages()
+    {
+        var mock = new Mock<IBusinessResult<object>>();
+        mock.Setup(r => r.HasErrors).Returns(true);
+        mock.Setup(r => r.Messages).Returns([]);
+
+        IResult httpResult = mock.Object.ToTypedResult();
+
+        httpResult.Should().BeOfType<BadRequest<ProblemDetails>>();
+    }
+
+    [Fact]
+    public void ToTypedResult_Should_MapNotFoundByKey()
+    {
+        var messages = new List<IMessageResult>
         {
-            ["Email"] = ["Required"]
+            new MessageResult("NOT_FOUND", "missing", MessageType.Error)
+        };
+        IBusinessResult<object> result = new BusinessResult<object>(null, messages);
+
+        IResult httpResult = result.ToTypedResult();
+
+        httpResult.Should().BeOfType<NotFound<ProblemDetails>>();
+    }
+
+    [Fact]
+    public void ToProblem_Should_MapDomainAndBusinessExceptions()
+    {
+        ProblemHttpResult domain = new DomainException("rule", "Order", "MustBeActive").ToProblem(includeDetails: true);
+        ProblemHttpResult business = new BusinessException("biz", "B001").ToProblem(includeDetails: true);
+        ProblemHttpResult timeout = new TimeoutException("slow").ToProblem(includeDetails: true);
+
+        domain.StatusCode.Should().Be(StatusCodes.Status422UnprocessableEntity);
+        business.StatusCode.Should().Be(StatusCodes.Status422UnprocessableEntity);
+        timeout.StatusCode.Should().Be(StatusCodes.Status408RequestTimeout);
+    }
+
+    [Fact]
+    public void NotFoundProblem_WithoutEntityId_ShouldOmitEntityIdExtension()
+    {
+        ProblemHttpResult result = TypedResultsExtensions.NotFoundProblem("Product");
+
+        result.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+        result.ProblemDetails.Extensions.Should().NotContainKey("entityId");
+    }
+
+    [Fact]
+    public void ConflictProblem_Should_Create409Problem()
+    {
+        ProblemHttpResult result = TypedResultsExtensions.ConflictProblem("duplicate", "Order", "/orders/1");
+
+        result.StatusCode.Should().Be(StatusCodes.Status409Conflict);
+        result.ProblemDetails.Extensions["entityName"].Should().Be("Order");
+    }
+
+    [Fact]
+    public void ForbiddenProblem_Should_Create403Problem()
+    {
+        ProblemHttpResult result = TypedResultsExtensions.ForbiddenProblem("denied", "Order", "orders:delete");
+
+        result.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        result.ProblemDetails.Extensions["requiredPermission"].Should().Be("orders:delete");
+    }
+
+    [Fact]
+    public void UnauthorizedProblem_Should_Create401Problem()
+    {
+        ProblemHttpResult result = TypedResultsExtensions.UnauthorizedProblem("auth required", "Bearer");
+
+        result.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
+        result.ProblemDetails.Extensions["authenticationScheme"].Should().Be("Bearer");
+    }
+
+    [Fact]
+    public void DomainProblem_Should_Create422Problem()
+    {
+        ProblemHttpResult result = TypedResultsExtensions.DomainProblem("invalid state", "Order", "MustNotShip");
+
+        result.StatusCode.Should().Be(StatusCodes.Status422UnprocessableEntity);
+        result.ProblemDetails.Extensions["ruleName"].Should().Be("MustNotShip");
+    }
+
+    [Fact]
+    public void InternalServerErrorProblem_Should_Create500Problem()
+    {
+        ProblemHttpResult result = TypedResultsExtensions.InternalServerErrorProblem("unexpected");
+
+        result.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+        result.ProblemDetails.Detail.Should().Be("unexpected");
+    }
+
+    [Fact]
+    public void CustomProblem_Should_AddExtensions()
+    {
+        ProblemHttpResult result = TypedResultsExtensions.CustomProblem(
+            StatusCodes.Status413PayloadTooLarge,
+            "Payload Too Large",
+            "File too big",
+            extensions: new Dictionary<string, object?> { ["maxSize"] = "10MB" });
+
+        result.StatusCode.Should().Be(StatusCodes.Status413PayloadTooLarge);
+        result.ProblemDetails.Extensions["maxSize"].Should().Be("10MB");
+    }
+
+    [Fact]
+    public void ValidationProblem_WithTuples_Should_CreateValidationProblem()
+    {
+        var errors = new List<(string Property, string Message)>
+        {
+            ("Email", "Required"),
+            ("Email", "Invalid")
         };
 
-        IResult result = TypedResultsExtensions.ValidationProblem(errors);
+        IResult result = TypedResultsExtensions.ValidationProblem(errors, "/users");
 
         result.Should().BeOfType<ValidationProblem>();
+    }
+
+    [Fact]
+    public void ToProblemWithStackTrace_Should_IncludeExceptionDetails()
+    {
+        var exception = new NotFoundException("missing", "Order", 1);
+
+        ProblemHttpResult result = exception.ToProblemWithStackTrace("/orders/1");
+
+        result.ProblemDetails.Extensions.Should().ContainKey("entityId");
+        result.ProblemDetails.Extensions.Should().ContainKey("stackTrace");
     }
 }

@@ -9,6 +9,7 @@ using RabbitMQ.Client;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Topology;
 
+[Trait("Category", "Unit")]
 public class TopologyBuilderTest
 {
     private static Mock<IModel> CreateChannelMock()
@@ -202,6 +203,86 @@ public class TopologyBuilderTest
         act.Should().Throw<ArgumentNullException>();
     }
 
+    [Fact]
+    public void AutoBindingHelper_AutoBindConsumer_ShouldDeclareExchangeQueueAndBind()
+    {
+        Mock<IModel> channelMock = CreateChannelMock();
+        var helper = new AutoBindingHelper();
+
+        ConsumerBindingInfo binding = helper.AutoBindConsumer<TopologyTestOrderConsumer>(channelMock.Object);
+
+        binding.MessageType.Should().Be(typeof(TestOrderEvent));
+        binding.QueueName.Should().NotBeNullOrWhiteSpace();
+        binding.ExchangeName.Should().NotBeNullOrWhiteSpace();
+        channelMock.Verify(
+            c => c.ExchangeDeclare(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<IDictionary<string, object>>()),
+            Times.Once);
+        channelMock.Verify(
+            c => c.QueueDeclare(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<IDictionary<string, object>>()),
+            Times.Once);
+        channelMock.Verify(
+            c => c.QueueBind(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IDictionary<string, object>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public void AutoBindingHelper_AutoBindMessage_ShouldDeclareExchangeAndDefaultQueue()
+    {
+        Mock<IModel> channelMock = CreateChannelMock();
+        var options = new AutoBindingOptions { CreateDefaultQueue = true, ConfigureDeadLetter = false };
+        var helper = new AutoBindingHelper(
+            EndpointNameFormatter.Instance,
+            RoutingKeyConvention.Instance,
+            new TopologyBuilder(),
+            options);
+
+        MessageBindingInfo binding = helper.AutoBindMessage<TopologyBuilderTestEvent>(channelMock.Object);
+
+        binding.MessageType.Should().Be(typeof(TopologyBuilderTestEvent));
+        binding.QueueName.Should().NotBeNullOrWhiteSpace();
+        channelMock.Verify(c => c.ExchangeDeclare(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<IDictionary<string, object>>()), Times.Once);
+        channelMock.Verify(c => c.QueueDeclare(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<IDictionary<string, object>>()), Times.Once);
+        channelMock.Verify(c => c.QueueBind(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IDictionary<string, object>>()), Times.Once);
+    }
+
+    [Fact]
+    public void AutoBindingHelper_AutoBindConsumer_WithNullChannel_ShouldThrow()
+    {
+        var helper = new AutoBindingHelper();
+
+        Action act = () => helper.AutoBindConsumer<TopologyTestOrderConsumer>(null!);
+
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void AutoBindingHelper_AutoBindConsumer_WithoutMessageConsumer_ShouldThrow()
+    {
+        Mock<IModel> channelMock = CreateChannelMock();
+        var helper = new AutoBindingHelper();
+
+        Action act = () => helper.AutoBindConsumer(channelMock.Object, typeof(string));
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Could not determine message type*");
+    }
+
+    [Fact]
+    public void AutoBindingHelper_AutoBindConsumersFromAssembly_ShouldBindDiscoveredConsumers()
+    {
+        Mock<IModel> channelMock = CreateChannelMock();
+        var helper = new AutoBindingHelper();
+
+        IEnumerable<ConsumerBindingInfo> bindings = helper.AutoBindConsumersFromAssembly(
+            channelMock.Object,
+            typeof(AutoBindingTestOrderConsumer).Assembly);
+
+        bindings.Should().Contain(b => b.ConsumerType == typeof(AutoBindingTestOrderConsumer));
+        channelMock.Verify(
+            c => c.QueueBind(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IDictionary<string, object>>()),
+            Times.AtLeastOnce);
+    }
+
     private sealed class TopologyTestOrderConsumer : IMessageConsumer<TestOrderEvent>
     {
         public Task ConsumeAsync(IConsumeContext<TestOrderEvent> context, CancellationToken cancellationToken = default)
@@ -213,5 +294,13 @@ public class TopologyBuilderTest
     private sealed class TopologyBuilderTestEvent
     {
         public string Name { get; set; } = string.Empty;
+    }
+}
+
+public sealed class AutoBindingTestOrderConsumer : IMessageConsumer<TestOrderEvent>
+{
+    public Task ConsumeAsync(IConsumeContext<TestOrderEvent> context, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
     }
 }

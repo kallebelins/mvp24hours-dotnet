@@ -1,7 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Observability;
 using Mvp24Hours.Core.Observability.Metrics;
 using Mvp24Hours.Infrastructure.Testing.Observability;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Mvp24Hours.Core.Test.Observability;
 
@@ -28,12 +28,12 @@ public class CoreMetricsCoverageTest
         using var listener = new FakeMeterListener(Mvp24HoursMeters.Caching.Name);
         var metrics = new CacheMetrics();
 
-        using (var get = metrics.BeginGet("session"))
+        using (CacheMetrics.CacheOperationScope get = metrics.BeginGet("session"))
         {
             get.SetHit();
         }
 
-        using (var set = metrics.BeginSet("session"))
+        using (CacheMetrics.CacheOperationScope set = metrics.BeginSet("session"))
         {
             set.SetItemSize(128);
         }
@@ -56,22 +56,22 @@ public class CoreMetricsCoverageTest
         using var listener = new FakeMeterListener(Mvp24HoursMeters.Cqrs.Name);
         var metrics = new CqrsMetrics();
 
-        using (var cmd = metrics.BeginCommand("CreateOrder"))
+        using (CqrsMetrics.RequestScope cmd = metrics.BeginCommand("CreateOrder"))
         {
             cmd.Complete();
         }
 
-        using (var q = metrics.BeginQuery("GetOrder"))
+        using (CqrsMetrics.RequestScope q = metrics.BeginQuery("GetOrder"))
         {
             q.Fail();
         }
 
-        using (var n = metrics.BeginNotification("OrderCreated"))
+        using (CqrsMetrics.RequestScope n = metrics.BeginNotification("OrderCreated"))
         {
             n.Complete();
         }
 
-        using (var b = metrics.BeginBehavior("Validation"))
+        using (CqrsMetrics.BehaviorScope b = metrics.BeginBehavior("Validation"))
         {
             b.Complete();
         }
@@ -112,7 +112,7 @@ public class CoreMetricsCoverageTest
         var metrics = new HttpMetrics();
 
         metrics.IncrementActiveRequests();
-        using (var scope = metrics.BeginRequest("GET", "/api/orders"))
+        using (HttpMetrics.HttpRequestScope scope = metrics.BeginRequest("GET", "/api/orders"))
         {
             scope.SetStatusCode(200);
             scope.SetSizes(requestSize: 10, responseSize: 20);
@@ -133,12 +133,12 @@ public class CoreMetricsCoverageTest
         using var listener = new FakeMeterListener(Mvp24HoursMeters.Pipe.Name);
         var metrics = new PipelineMetrics();
 
-        using (var pipeline = metrics.BeginExecution("checkout"))
+        using (PipelineMetrics.PipelineExecutionScope pipeline = metrics.BeginExecution("checkout"))
         {
             pipeline.Complete();
         }
 
-        using (var op = metrics.BeginOperation("checkout", "validate"))
+        using (PipelineMetrics.OperationExecutionScope op = metrics.BeginOperation("checkout", "validate"))
         {
             op.Fail();
         }
@@ -157,17 +157,17 @@ public class CoreMetricsCoverageTest
         using var listener = new FakeMeterListener(Mvp24HoursMeters.Data.Name);
         var metrics = new RepositoryMetrics();
 
-        using (var query = metrics.BeginQuery("List", "Order", "efcore"))
+        using (RepositoryMetrics.QueryScope query = metrics.BeginQuery("List", "Order", "efcore"))
         {
             query.Complete();
         }
 
-        using (var command = metrics.BeginCommand("Insert", "Order", "efcore"))
+        using (RepositoryMetrics.CommandScope command = metrics.BeginCommand("Insert", "Order", "efcore"))
         {
             command.Complete(rowsAffected: 1);
         }
 
-        using (var save = metrics.BeginSaveChanges("efcore"))
+        using (RepositoryMetrics.SaveChangesScope save = metrics.BeginSaveChanges("efcore"))
         {
             save.Complete(rowsAffected: 3);
         }
@@ -194,12 +194,12 @@ public class CoreMetricsCoverageTest
         using var listener = new FakeMeterListener(Mvp24HoursMeters.RabbitMQ.Name);
         var metrics = new MessagingMetrics();
 
-        using (var publish = metrics.BeginPublish("OrderCreated", "orders"))
+        using (MessagingMetrics.PublishScope publish = metrics.BeginPublish("OrderCreated", "orders"))
         {
             publish.Complete(payloadSize: 64);
         }
 
-        using (var consume = metrics.BeginConsume("OrderCreated", "orders", consumerGroup: "workers"))
+        using (MessagingMetrics.ConsumeScope consume = metrics.BeginConsume("OrderCreated", "orders", consumerGroup: "workers"))
         {
             consume.Complete();
         }
@@ -230,7 +230,7 @@ public class CoreMetricsCoverageTest
         using var listener = new FakeMeterListener(Mvp24HoursMeters.Infrastructure.Name);
         var metrics = new InfrastructureMetrics();
 
-        using (var http = metrics.BeginHttpClientRequest("GET", "api.example.com"))
+        using (InfrastructureMetrics.HttpClientRequestScope http = metrics.BeginHttpClientRequest("GET", "api.example.com"))
         {
             http.SetStatusCode(200);
         }
@@ -239,14 +239,14 @@ public class CoreMetricsCoverageTest
         metrics.RecordSmsSend(success: false, provider: "twilio");
         metrics.RecordFileStorageOperation("upload", fileSizeBytes: 1024, provider: "s3");
 
-        using (var lockScope = metrics.BeginLock("resource-1"))
+        using (InfrastructureMetrics.LockScope lockScope = metrics.BeginLock("resource-1"))
         {
         }
 
         metrics.RecordLockAttempt("resource-1", acquired: true, waitDurationMs: 2);
         metrics.RecordLockRelease("resource-1", holdDurationMs: 10);
 
-        using (var job = metrics.BeginBackgroundJob("cleanup"))
+        using (InfrastructureMetrics.BackgroundJobScope job = metrics.BeginBackgroundJob("cleanup"))
         {
             job.Complete();
         }
@@ -268,7 +268,7 @@ public class CoreMetricsCoverageTest
         var metrics = new CronJobMetrics();
 
         metrics.IncrementActive("sync");
-        using (var job = metrics.BeginExecution("sync"))
+        using (CronJobMetrics.JobExecutionScope job = metrics.BeginExecution("sync"))
         {
             job.Complete();
         }
@@ -295,7 +295,7 @@ public class CoreMetricsCoverageTest
             options.EnableCronJobMetrics = true;
         });
 
-        using var provider = services.BuildServiceProvider();
+        using ServiceProvider provider = services.BuildServiceProvider();
         provider.GetRequiredService<PipelineMetrics>().Should().NotBeNull();
         provider.GetRequiredService<CqrsMetrics>().Should().NotBeNull();
         provider.GetRequiredService<RepositoryMetrics>().Should().NotBeNull();
@@ -320,7 +320,7 @@ public class CoreMetricsCoverageTest
         services.AddCronJobMetrics();
         services.AddInfrastructureMetrics();
 
-        using var provider = services.BuildServiceProvider();
+        using ServiceProvider provider = services.BuildServiceProvider();
         provider.GetRequiredService<PipelineMetrics>().Should().NotBeNull();
         provider.GetRequiredService<RepositoryMetrics>().Should().NotBeNull();
         provider.GetRequiredService<CqrsMetrics>().Should().NotBeNull();
@@ -347,7 +347,7 @@ public class CoreMetricsCoverageTest
             options.EnableCronJobMetrics = false;
         });
 
-        using var provider = services.BuildServiceProvider();
+        using ServiceProvider provider = services.BuildServiceProvider();
         provider.GetService<PipelineMetrics>().Should().BeNull();
         provider.GetService<CqrsMetrics>().Should().BeNull();
         provider.GetService<RepositoryMetrics>().Should().BeNull();
@@ -384,7 +384,7 @@ public class CoreMetricsCoverageTest
         using var listener = new FakeMeterListener(Mvp24HoursMeters.Cqrs.Name);
         var metrics = new CqrsMetrics();
 
-        using (var cmd = metrics.BeginCommand("DeleteOrder"))
+        using (CqrsMetrics.RequestScope cmd = metrics.BeginCommand("DeleteOrder"))
         {
             cmd.Fail();
         }
@@ -403,17 +403,17 @@ public class CoreMetricsCoverageTest
         using var listener = new FakeMeterListener(Mvp24HoursMeters.Data.Name);
         var metrics = new RepositoryMetrics();
 
-        using (var query = metrics.BeginQuery("Select", "Order", "efcore"))
+        using (RepositoryMetrics.QueryScope query = metrics.BeginQuery("Select", "Order", "efcore"))
         {
             query.Fail();
         }
 
-        using (var command = metrics.BeginCommand("Delete", "Order", "efcore"))
+        using (RepositoryMetrics.CommandScope command = metrics.BeginCommand("Delete", "Order", "efcore"))
         {
             command.Fail();
         }
 
-        using (var save = metrics.BeginSaveChanges("efcore"))
+        using (RepositoryMetrics.SaveChangesScope save = metrics.BeginSaveChanges("efcore"))
         {
             save.Fail();
         }
@@ -429,12 +429,12 @@ public class CoreMetricsCoverageTest
         using var listener = new FakeMeterListener(Mvp24HoursMeters.RabbitMQ.Name);
         var metrics = new MessagingMetrics();
 
-        using (var publish = metrics.BeginPublish("OrderCreated", "orders"))
+        using (MessagingMetrics.PublishScope publish = metrics.BeginPublish("OrderCreated", "orders"))
         {
             publish.Fail();
         }
 
-        using (var consume = metrics.BeginConsume("OrderCreated", "orders", consumerGroup: "workers"))
+        using (MessagingMetrics.ConsumeScope consume = metrics.BeginConsume("OrderCreated", "orders", consumerGroup: "workers"))
         {
             consume.Fail();
         }
@@ -452,7 +452,7 @@ public class CoreMetricsCoverageTest
         using var listener = new FakeMeterListener(Mvp24HoursMeters.Infrastructure.Name);
         var metrics = new InfrastructureMetrics();
 
-        using (var http = metrics.BeginHttpClientRequest("POST", "api.example.com"))
+        using (InfrastructureMetrics.HttpClientRequestScope http = metrics.BeginHttpClientRequest("POST", "api.example.com"))
         {
             http.SetStatusCode(500);
         }
@@ -460,7 +460,7 @@ public class CoreMetricsCoverageTest
         metrics.RecordEmailSend(success: false, provider: "smtp");
         metrics.RecordSmsSend(success: true, provider: "twilio");
 
-        using (var job = metrics.BeginBackgroundJob("cleanup"))
+        using (InfrastructureMetrics.BackgroundJobScope job = metrics.BeginBackgroundJob("cleanup"))
         {
             job.Fail();
         }
@@ -477,7 +477,7 @@ public class CoreMetricsCoverageTest
         using var listener = new FakeMeterListener(Mvp24HoursMeters.CronJob.Name);
         var metrics = new CronJobMetrics();
 
-        using (var job = metrics.BeginExecution("sync"))
+        using (CronJobMetrics.JobExecutionScope job = metrics.BeginExecution("sync"))
         {
             job.Fail();
         }

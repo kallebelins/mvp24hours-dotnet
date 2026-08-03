@@ -94,14 +94,14 @@ public class MongoDbConnectionPoolMetricsIntegrationTest(MongoDbIntegrationFixtu
     [DockerFact]
     public async Task ConfigureClusterBuilder_WithRealClient_ShouldCollectStatsAfterPing()
     {
-        var options = Options.Create(new MongoDbObservabilityOptions
+        IOptions<MongoDbObservabilityOptions> options = Options.Create(new MongoDbObservabilityOptions
         {
             EnableConnectionPoolMetrics = true,
             EnableConnectionPoolAlerts = true,
             ConnectionPoolAlertThreshold = 0.01
         });
         var metrics = new MongoDbConnectionPoolMetrics(options, NullLogger<MongoDbConnectionPoolMetrics>.Instance);
-        MongoClientSettings settings = MongoClientSettings.FromConnectionString(fixture.ConnectionString);
+        var settings = MongoClientSettings.FromConnectionString(fixture.ConnectionString);
         metrics.ConfigureClusterBuilder(settings);
         metrics.StartPeriodicCollection();
 

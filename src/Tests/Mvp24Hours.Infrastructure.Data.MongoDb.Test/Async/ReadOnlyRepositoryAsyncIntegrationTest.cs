@@ -128,6 +128,86 @@ public class ReadOnlyRepositoryAsyncIntegrationTest(MongoDbIntegrationFixture fi
     }
 
     [DockerFact]
+    public async Task ListAsync_WithPagingCriteria_ShouldReturnSubset()
+    {
+        await SeedAsync(
+            new TestEntity { Name = "Page-A" },
+            new TestEntity { Name = "Page-B" },
+            new TestEntity { Name = "Page-C" });
+        ReadOnlyRepositoryAsync<TestEntity> repository = CreateRepository();
+        var paging = new Mvp24Hours.Core.ValueObjects.Logic.PagingCriteria(limit: 2, offset: 0);
+
+        IList<TestEntity> page = await repository.ListAsync(paging);
+
+        page.Should().HaveCount(2);
+        (await repository.ListCountAsync()).Should().Be(3);
+    }
+
+    [DockerFact]
+    public async Task ListAsync_WithPagingCriteria_WhenEmpty_ShouldReturnEmptyList()
+    {
+        await SeedAsync();
+        ReadOnlyRepositoryAsync<TestEntity> repository = CreateRepository();
+        var paging = new Mvp24Hours.Core.ValueObjects.Logic.PagingCriteria(limit: 10, offset: 0);
+
+        IList<TestEntity> results = await repository.ListAsync(paging);
+
+        results.Should().BeEmpty();
+        (await repository.ListCountAsync()).Should().Be(0);
+    }
+
+    [DockerFact]
+    public async Task GetByKeysetPaginationAsync_Descending_ShouldReturnPagesInReverseOrder()
+    {
+        await SeedAsync(
+            new TestEntity { Name = "A" },
+            new TestEntity { Name = "B" },
+            new TestEntity { Name = "C" });
+        ReadOnlyRepositoryAsync<TestEntity> repository = CreateRepository();
+
+        IKeysetPageResultString<TestEntity> firstPage = await repository.GetByKeysetPaginationAsync(
+            clause: null,
+            keySelector: e => e.Name,
+            lastKey: null,
+            pageSize: 2,
+            ascending: false);
+
+        firstPage.Items.Should().HaveCount(2);
+        firstPage.Items[0].Name.Should().Be("C");
+        firstPage.Items[1].Name.Should().Be("B");
+        firstPage.HasMore.Should().BeTrue();
+
+        IKeysetPageResultString<TestEntity> secondPage = await repository.GetByKeysetPaginationAsync(
+            clause: null,
+            keySelector: e => e.Name,
+            lastKey: firstPage.LastKey,
+            pageSize: 2,
+            ascending: false);
+
+        secondPage.Items.Should().ContainSingle();
+        secondPage.Items[0].Name.Should().Be("A");
+        secondPage.HasMore.Should().BeFalse();
+    }
+
+    [DockerFact]
+    public async Task GetByKeysetPaginationAsync_WhenNoResults_ShouldReturnEmptyPage()
+    {
+        await SeedAsync(new TestEntity { Name = "Only" });
+        ReadOnlyRepositoryAsync<TestEntity> repository = CreateRepository();
+
+        IKeysetPageResultString<TestEntity> page = await repository.GetByKeysetPaginationAsync(
+            clause: e => e.Name == "Missing",
+            keySelector: e => e.Name,
+            lastKey: null,
+            pageSize: 10,
+            ascending: true);
+
+        page.Items.Should().BeEmpty();
+        page.HasMore.Should().BeFalse();
+        page.LastKey.Should().BeNull();
+    }
+
+    [DockerFact]
     public async Task LoadRelationAsync_ShouldThrowNotSupported()
     {
         await SeedAsync(new TestEntity { Name = "Rel" });

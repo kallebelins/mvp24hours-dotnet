@@ -2,15 +2,24 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Moq;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
+using Mvp24Hours.Infrastructure.RabbitMQ.Channels;
+using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
+using Mvp24Hours.Infrastructure.RabbitMQ.Consumers;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters;
+using Mvp24Hours.Infrastructure.RabbitMQ.Serialization;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Pipeline;
 
+[Trait("Category", "Unit")]
 public class PipelineFiltersTest
 {
     [Fact]
@@ -101,6 +110,182 @@ public class PipelineFiltersTest
             });
 
         executed.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task FilterPipelineExecutor_WithConsumeFilters_ShouldExecuteInOrder()
+    {
+        var sequence = new List<string>();
+        var services = new ServiceCollection();
+        services.AddSingleton<IConsumeFilter<TestOrderEvent>>(new SequenceConsumeFilter("typed", sequence));
+        services.AddSingleton<IConsumeFilter>(new SequenceGlobalConsumeFilter("global", sequence));
+        FilterPipelineOptions options = new FilterPipelineOptions()
+            .UseConsumeFilter<SequenceInlineConsumeFilter, TestOrderEvent>();
+        IServiceProvider provider = services.BuildServiceProvider();
+        SequenceInlineConsumeFilter.Sequence = sequence;
+        var executor = new FilterPipelineExecutor(provider, options);
+        ConsumeFilterContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateConsumeFilterContext(new TestOrderEvent());
+
+        await executor.ExecuteConsumeFiltersAsync(context, (_, _) =>
+        {
+            sequence.Add("final");
+            return Task.CompletedTask;
+        });
+
+        sequence.Should().Contain("global");
+        sequence.Should().Contain("typed");
+        sequence.Should().Contain("inline");
+        sequence.Should().Contain("final");
+        sequence[^1].Should().Be("final");
+    }
+
+    [Fact]
+    public async Task FilterPipelineExecutor_WhenSkipRemainingFilters_ShouldNotExecuteFinalAction()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IConsumeFilter<TestOrderEvent>, SkipConsumeFilter>();
+        IServiceProvider provider = services.BuildServiceProvider();
+        var executor = new FilterPipelineExecutor(provider, new FilterPipelineOptions());
+        ConsumeFilterContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateConsumeFilterContext(new TestOrderEvent());
+        bool executed = false;
+
+        await executor.ExecuteConsumeFiltersAsync(context, (_, _) =>
+        {
+            executed = true;
+            return Task.CompletedTask;
+        });
+
+        executed.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task FilterPipelineExecutor_PublishFilters_WhenCancelled_ShouldNotExecuteFinalAction()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IPublishFilter<TestOrderEvent>, CancelPublishFilter>();
+        IServiceProvider provider = services.BuildServiceProvider();
+        var executor = new FilterPipelineExecutor(provider, new FilterPipelineOptions());
+        PublishFilterContext<TestOrderEvent> context = RabbitMQTestHelpers.CreatePublishFilterContext(new TestOrderEvent());
+        bool executed = false;
+
+        await executor.ExecutePublishFiltersAsync(context, (_, _) =>
+        {
+            executed = true;
+            return Task.CompletedTask;
+        });
+
+        executed.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task FilterPipelineExecutor_SendFilters_ShouldExecuteFinalAction()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<ISendFilter<TestOrderEvent>, PassThroughSendFilter>();
+        IServiceProvider provider = services.BuildServiceProvider();
+        var executor = new FilterPipelineExecutor(provider, new FilterPipelineOptions());
+        var context = new SendFilterContext<TestOrderEvent>(new TestOrderEvent(), "queue", provider);
+        bool executed = false;
+
+        await executor.ExecuteSendFiltersAsync(context, (_, _) =>
+        {
+            executed = true;
+            return Task.CompletedTask;
+        });
+
+        executed.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task FilterPipelineExecutor_SendFilters_WhenCancelled_ShouldNotExecuteFinalAction()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<ISendFilter<TestOrderEvent>, CancelSendFilter>();
+        IServiceProvider provider = services.BuildServiceProvider();
+        var executor = new FilterPipelineExecutor(provider, new FilterPipelineOptions());
+        var context = new SendFilterContext<TestOrderEvent>(new TestOrderEvent(), "queue", provider);
+        bool executed = false;
+
+        await executor.ExecuteSendFiltersAsync(context, (_, _) =>
+        {
+            executed = true;
+            return Task.CompletedTask;
+        });
+
+        executed.Should().BeFalse();
+    }
+
+    [Fact]
+    public void FilterPipelineExecutor_WithNullServiceProvider_ShouldThrow()
+    {
+        Action act = () => new FilterPipelineExecutor(null!, new FilterPipelineOptions());
+
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    private sealed class SequenceConsumeFilter(string marker, List<string> sequence) : IConsumeFilter<TestOrderEvent>
+    {
+        public Task ConsumeAsync(IConsumeFilterContext<TestOrderEvent> context, ConsumeFilterDelegate<TestOrderEvent> next, CancellationToken cancellationToken = default)
+        {
+            sequence.Add(marker);
+            return next(context, cancellationToken);
+        }
+    }
+
+    private sealed class SequenceGlobalConsumeFilter(string marker, List<string> sequence) : IConsumeFilter
+    {
+        public Task ConsumeAsync<TMessage>(IConsumeFilterContext<TMessage> context, ConsumeFilterDelegate<TMessage> next, CancellationToken cancellationToken = default)
+            where TMessage : class
+        {
+            sequence.Add(marker);
+            return next(context, cancellationToken);
+        }
+    }
+
+    private sealed class SequenceInlineConsumeFilter : IConsumeFilter<TestOrderEvent>
+    {
+        internal static List<string>? Sequence;
+
+        public Task ConsumeAsync(IConsumeFilterContext<TestOrderEvent> context, ConsumeFilterDelegate<TestOrderEvent> next, CancellationToken cancellationToken = default)
+        {
+            Sequence?.Add("inline");
+            return next(context, cancellationToken);
+        }
+    }
+
+    private sealed class SkipConsumeFilter : IConsumeFilter<TestOrderEvent>
+    {
+        public Task ConsumeAsync(IConsumeFilterContext<TestOrderEvent> context, ConsumeFilterDelegate<TestOrderEvent> next, CancellationToken cancellationToken = default)
+        {
+            context.SkipRemainingFilters();
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class CancelPublishFilter : IPublishFilter<TestOrderEvent>
+    {
+        public Task PublishAsync(IPublishFilterContext<TestOrderEvent> context, PublishFilterDelegate<TestOrderEvent> next, CancellationToken cancellationToken = default)
+        {
+            context.CancelPublish("cancelled");
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class PassThroughSendFilter : ISendFilter<TestOrderEvent>
+    {
+        public Task SendAsync(ISendFilterContext<TestOrderEvent> context, SendFilterDelegate<TestOrderEvent> next, CancellationToken cancellationToken = default)
+        {
+            return next(context, cancellationToken);
+        }
+    }
+
+    private sealed class CancelSendFilter : ISendFilter<TestOrderEvent>
+    {
+        public Task SendAsync(ISendFilterContext<TestOrderEvent> context, SendFilterDelegate<TestOrderEvent> next, CancellationToken cancellationToken = default)
+        {
+            context.CancelSend("cancelled");
+            return Task.CompletedTask;
+        }
     }
 
     [Fact]

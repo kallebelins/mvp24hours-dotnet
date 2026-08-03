@@ -487,6 +487,41 @@ public class OptionsValidationTest
         Assert.Equal("Host=localhost", optionsSnapshot.Value.ConnectionString);
     }
 
+    [Fact]
+    public void AddOptionsValidatorsFromAssembly_RegistersDiscoveredValidators()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddOptions<TestOptions>();
+
+        // Act
+        services.AddOptionsValidatorsFromAssembly(typeof(OptionsValidationTest).Assembly);
+
+        ServiceProvider provider = services.BuildServiceProvider();
+        IEnumerable<IValidateOptions<TestOptions>> validators = provider.GetServices<IValidateOptions<TestOptions>>();
+
+        // Assert
+        validators.Should().NotBeEmpty();
+        validators.First().GetType().Name.Should().Contain("OptionsValidatorAdapter");
+    }
+
+    [Fact]
+    public void AddOptionsValidatorsFromAssemblyContaining_RegistersDiscoveredValidators()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddOptions<SimpleTestOptions>();
+
+        // Act
+        services.AddOptionsValidatorsFromAssemblyContaining<OptionsValidationTest>();
+
+        ServiceProvider provider = services.BuildServiceProvider();
+        IEnumerable<IValidateOptions<SimpleTestOptions>> validators = provider.GetServices<IValidateOptions<SimpleTestOptions>>();
+
+        // Assert
+        validators.Should().NotBeEmpty();
+    }
+
     #endregion
 }
 

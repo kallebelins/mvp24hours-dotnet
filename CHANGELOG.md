@@ -104,9 +104,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (+~2,198 tests vs baseline). Consolidated Coverlet coverage: **37.7%** line (**+9.4 pp** vs baseline 28.3%);
   **12/12** production assemblies instrumented (baseline: 3/12). **>95%** target documented as pending —
   evidence: `tasks/coverage-final-tests.json`, `tasks/coverage-delta-tests.md`, `tasks/coverage-final-report.html`.
-- Coverage anti-regression gate in CI (`scripts/check-coverage-gate.ps1`): **55%** line floor
-  (Phase 1 roadmap gate); product target remains **95%**. Current consolidated baseline:
-  **59.4%** — see `docs/en-us/testing/coverage-baseline.md`.
+- Coverage anti-regression gate in CI (`scripts/check-coverage-gate.ps1`): **65%** line floor
+  (Phase 2 roadmap gate); product target remains **95%**. Current consolidated baseline:
+  **65.9%** — see `docs/en-us/testing/coverage-baseline.md`.
 - **Coverage roadmap (Phases 0–5):** CI split into unit + integration jobs with merged
   Cobertura; `reportgenerator` excludes test assemblies (`+Mvp24Hours*;-Mvp24Hours*.Test*`);
   `scripts/merge-coverage-report.ps1` for local/CI merge. Hundreds of new tests across Core metrics,
@@ -134,7 +134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Formatting step: `dotnet format src/Mvp24Hours.sln --exclude-diagnostics IDE0130 IDE1006
   --verify-no-changes` (full scope, no `--severity error`).
 - Coverage gate: split `build-and-test` (unit) and `build-and-test-integration` (Docker) jobs;
-  merged gate via `merge-coverage-report.ps1` + `check-coverage-gate.ps1`. **55%** line floor;
+  merged gate via `merge-coverage-report.ps1` + `check-coverage-gate.ps1`. **65%** line floor;
   **95%** product target. Baseline documented in `docs/en-us/testing/coverage-baseline.md`.
 
 ---

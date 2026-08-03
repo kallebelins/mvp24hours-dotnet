@@ -1,15 +1,21 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Moq;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Application.RabbitMQ.Test.Support.Consumers;
 using Mvp24Hours.Application.RabbitMQ.Test.Support.Dto;
+using Mvp24Hours.Extensions;
+using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Testing;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test;
 
+[Trait("Category", "Unit")]
 public class MvpRabbitMQClientTest
 {
     [Fact]
@@ -207,7 +213,7 @@ public class MvpRabbitMQClientTest
         channelMock.Setup(c => c.ConfirmSelect());
         channelMock.Setup(c => c.WaitForConfirmsOrDie(It.IsAny<TimeSpan>()));
 
-        var connectionMock = RabbitMQTestHelpers.CreateMockConnection();
+        Mock<IMvpRabbitMQConnection> connectionMock = RabbitMQTestHelpers.CreateMockConnection();
         connectionMock.Setup(c => c.CreateModel()).Returns(channelMock.Object);
 
         IServiceProvider provider = RabbitMQTestHelpers.CreateClientServiceProvider(connection: connectionMock.Object);
@@ -235,7 +241,7 @@ public class MvpRabbitMQClientTest
         channelMock.Setup(c => c.ConfirmSelect());
         channelMock.Setup(c => c.WaitForConfirmsOrDie(It.IsAny<TimeSpan>()));
 
-        var connectionMock = RabbitMQTestHelpers.CreateMockConnection();
+        Mock<IMvpRabbitMQConnection> connectionMock = RabbitMQTestHelpers.CreateMockConnection();
         connectionMock.Setup(c => c.CreateModel()).Returns(channelMock.Object);
 
         IServiceProvider provider = RabbitMQTestHelpers.CreateClientServiceProvider(connection: connectionMock.Object);
@@ -247,5 +253,186 @@ public class MvpRabbitMQClientTest
         ]);
 
         ids.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void Publish_WhenDisconnected_ShouldTryConnectBeforePublishing()
+    {
+        Mock<IMvpRabbitMQConnection> connectionMock = RabbitMQTestHelpers.CreateMockConnection(isConnected: false);
+        bool connected = false;
+        connectionMock.Setup(c => c.IsConnected).Returns(() => connected);
+        connectionMock.Setup(c => c.TryConnect()).Callback(() => connected = true).Returns(true);
+
+        IServiceProvider provider = RabbitMQTestHelpers.CreateClientServiceProvider(connection: connectionMock.Object);
+        MvpRabbitMQClient client = provider.GetRequiredService<MvpRabbitMQClient>();
+
+        string messageId = client.Publish(new CustomerEvent { Id = 10, Name = "reconnect" }, routingKey: "customer-event");
+
+        messageId.Should().NotBeNullOrWhiteSpace();
+        connectionMock.Verify(c => c.TryConnect(), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public void PublishBatch_WhenDisconnected_ShouldTryConnectBeforePublishing()
+    {
+        Mock<IMvpRabbitMQConnection> connectionMock = RabbitMQTestHelpers.CreateMockConnection(isConnected: false);
+        bool connected = false;
+        connectionMock.Setup(c => c.IsConnected).Returns(() => connected);
+        connectionMock.Setup(c => c.TryConnect()).Callback(() => connected = true).Returns(true);
+
+        var batchMock = new Mock<IBasicPublishBatch>();
+        var channelMock = new Mock<IModel>();
+        var propertiesMock = new Mock<IBasicProperties>();
+        propertiesMock.SetupAllProperties();
+        channelMock.Setup(c => c.CreateBasicProperties()).Returns(propertiesMock.Object);
+        channelMock.Setup(c => c.IsOpen).Returns(true);
+        channelMock.Setup(c => c.CreateBasicPublishBatch()).Returns(batchMock.Object);
+        channelMock.Setup(c => c.ConfirmSelect());
+        channelMock.Setup(c => c.WaitForConfirmsOrDie(It.IsAny<TimeSpan>()));
+        connectionMock.Setup(c => c.CreateModel()).Returns(channelMock.Object);
+
+        IServiceProvider provider = RabbitMQTestHelpers.CreateClientServiceProvider(connection: connectionMock.Object);
+        MvpRabbitMQClient client = provider.GetRequiredService<MvpRabbitMQClient>();
+
+        IEnumerable<string> ids = client.PublishBatch([
+            (new CustomerEvent { Id = 11, Name = "batch-reconnect", Active = true }, "route-1")
+        ]);
+
+        ids.Should().HaveCount(1);
+        connectionMock.Verify(c => c.TryConnect(), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public void Consume_WithSyncRecoveryConsumer_ShouldSetupChannelAndConsumers()
+    {
+        var channelMock = new Mock<IModel>();
+        var propertiesMock = new Mock<IBasicProperties>();
+        propertiesMock.SetupAllProperties();
+        channelMock.Setup(c => c.CreateBasicProperties()).Returns(propertiesMock.Object);
+        channelMock.Setup(c => c.IsOpen).Returns(true);
+        channelMock.Setup(c => c.ChannelNumber).Returns(1);
+
+        Mock<IMvpRabbitMQConnection> connectionMock = RabbitMQTestHelpers.CreateMockConnection();
+        connectionMock.Setup(c => c.CreateModel()).Returns(channelMock.Object);
+        connectionMock.Setup(c => c.Options).Returns(new RabbitMQConnectionOptions
+        {
+            RetryCount = 0,
+            DispatchConsumersAsync = false
+        });
+
+        var services = new ServiceCollection();
+        services.AddSingleton(RabbitMQTestHelpers.CreateClientOptions());
+        services.AddSingleton(Options.Create(RabbitMQTestHelpers.CreateClientOptions()));
+        services.AddSingleton(connectionMock.Object);
+        services.AddSingleton<RecoverySyncConsumer>();
+        services.AddSingleton<MvpRabbitMQClient>();
+        IServiceProvider provider = services.BuildServiceProvider();
+        MvpRabbitMQClient client = provider.GetRequiredService<MvpRabbitMQClient>();
+        client.Register<RecoverySyncConsumer>();
+
+        Action act = () => client.Consume();
+
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public async Task HandleConsumeAsync_RecoveryConsumerFailure_ShouldInvokeRecoveryHooks()
+    {
+        var channelMock = new Mock<IModel>();
+        channelMock.Setup(c => c.BasicAck(It.IsAny<ulong>(), It.IsAny<bool>()));
+        channelMock.Setup(c => c.BasicNack(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<bool>()));
+        channelMock.Setup(c => c.BasicPublish(
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<bool>(),
+            It.IsAny<IBasicProperties>(),
+            It.IsAny<ReadOnlyMemory<byte>>()));
+
+        IServiceProvider provider = RabbitMQTestHelpers.CreateClientServiceProvider();
+        MvpRabbitMQClient client = provider.GetRequiredService<MvpRabbitMQClient>();
+        var consumer = new RecoveryAsyncConsumer();
+        BasicDeliverEventArgs args = CreateBusinessEventArgs(new CustomerEvent { Id = 99, Name = "recover" }, redeliveredCount: 5);
+
+        await InvokeHandleConsumeAsync(client, args, channelMock.Object, consumer);
+
+        consumer.FailureCalled.Should().BeTrue();
+        consumer.RejectedCalled.Should().BeTrue();
+    }
+
+    private static BasicDeliverEventArgs CreateBusinessEventArgs(CustomerEvent message, int redeliveredCount = 0)
+    {
+        string payload = message.ToBusinessEvent("recovery-token").ToSerialize(JsonHelper.JsonBusinessEventSettings());
+        var propertiesMock = new Mock<IBasicProperties>();
+        propertiesMock.SetupAllProperties();
+        propertiesMock.Object.Headers = new Dictionary<string, object>
+        {
+            ["x-redelivered-count"] = redeliveredCount
+        };
+        propertiesMock.Object.MessageId = "recovery-token";
+        propertiesMock.Object.CorrelationId = "recovery-token";
+
+        return new BasicDeliverEventArgs(
+            consumerTag: "tag",
+            deliveryTag: 1,
+            redelivered: false,
+            exchange: "test-exchange",
+            routingKey: "customer-event",
+            properties: propertiesMock.Object,
+            body: System.Text.Encoding.UTF8.GetBytes(payload));
+    }
+
+    private static async Task InvokeHandleConsumeAsync(
+        MvpRabbitMQClient client,
+        BasicDeliverEventArgs args,
+        IModel channel,
+        IMvpRabbitMQConsumerAsync consumer)
+    {
+        System.Reflection.MethodInfo? method = typeof(MvpRabbitMQClient).GetMethod(
+            "HandleConsumeAsync",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        method.Should().NotBeNull();
+        var task = (Task)method!.Invoke(client, [args, channel, consumer])!;
+        await task;
+    }
+}
+
+internal sealed class RecoverySyncConsumer : IMvpRabbitMQConsumerSync, IMvpRabbitMQConsumerRecoverySync
+{
+    public string RoutingKey => "recovery-sync";
+    public string QueueName => "recovery-sync-queue";
+
+    public void Received(object message, string token)
+    {
+        throw new InvalidOperationException("forced failure");
+    }
+
+    public void Failure(Exception ex, string token) { }
+
+    public void Rejected(object message, string token) { }
+}
+
+internal sealed class RecoveryAsyncConsumer : IMvpRabbitMQConsumerAsync, IMvpRabbitMQConsumerRecoveryAsync
+{
+    public bool FailureCalled { get; private set; }
+    public bool RejectedCalled { get; private set; }
+
+    public string RoutingKey => "recovery-async";
+    public string QueueName => "recovery-async-queue";
+
+    public Task ReceivedAsync(object message, string token)
+    {
+        throw new InvalidOperationException("forced async failure");
+    }
+
+    public Task FailureAsync(Exception ex, string token)
+    {
+        FailureCalled = true;
+        return Task.CompletedTask;
+    }
+
+    public Task RejectedAsync(object message, string token)
+    {
+        RejectedCalled = true;
+        return Task.CompletedTask;
     }
 }

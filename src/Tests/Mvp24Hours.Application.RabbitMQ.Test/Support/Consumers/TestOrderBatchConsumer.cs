@@ -7,7 +7,10 @@ public sealed class TestOrderBatchConsumer : IBatchConsumer<TestOrderEvent>
 {
     public static int ProcessedCount { get; private set; }
 
-    public static void Reset() => ProcessedCount = 0;
+    public static void Reset()
+    {
+        ProcessedCount = 0;
+    }
 
     public Task<IEnumerable<IBatchMessageResult>?> ConsumeAsync(
         IBatchConsumeContext<TestOrderEvent> context,

@@ -34,10 +34,7 @@ public class ContentNegotiationMiddlewareTest
         var negotiator = new AcceptHeaderNegotiator(options, registry);
         DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.Request.Headers.Accept = "application/json";
-        var sut = new ContentNegotiationMiddleware(async c =>
-        {
-            await c.Response.WriteAsync("{\"ok\":true}");
-        }, Options.Create(options), NullLogger<ContentNegotiationMiddleware>.Instance);
+        var sut = new ContentNegotiationMiddleware(async c => await c.Response.WriteAsync("{\"ok\":true}"), Options.Create(options), NullLogger<ContentNegotiationMiddleware>.Instance);
 
         await sut.InvokeAsync(context, negotiator);
 

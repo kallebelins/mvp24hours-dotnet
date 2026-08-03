@@ -117,4 +117,108 @@ public class RateLimitingTest
 
         count.Should().Be(0);
     }
+
+    [Fact]
+    public void DefaultRateLimitKeyGenerator_Should_UseApiKeyFromHeader()
+    {
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
+        context.Request.Headers["X-Api-Key"] = "secret-key";
+        var policy = new RateLimitPolicy { Name = "api", KeySource = RateLimitKeySource.ApiKey };
+        var options = new RateLimitingOptions { ApiKeyHeaderName = "X-Api-Key" };
+        var sut = new DefaultRateLimitKeyGenerator(Options.Create(options));
+
+        string key = sut.GenerateKey(context, policy);
+
+        key.Should().Contain("apikey:secret-key");
+    }
+
+    [Fact]
+    public void DefaultRateLimitKeyGenerator_Should_UseTenantIdFromHeader()
+    {
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
+        context.Request.Headers["X-Tenant-ID"] = "tenant-42";
+        var policy = new RateLimitPolicy { Name = "api", KeySource = RateLimitKeySource.TenantId };
+        var options = new RateLimitingOptions { TenantIdHeaderName = "X-Tenant-ID" };
+        var sut = new DefaultRateLimitKeyGenerator(Options.Create(options));
+
+        string key = sut.GenerateKey(context, policy);
+
+        key.Should().Contain("tenant:tenant-42");
+    }
+
+    [Fact]
+    public void DefaultRateLimitKeyGenerator_Should_UseCustomHeader()
+    {
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
+        context.Request.Headers["X-Partner-ID"] = "partner-7";
+        var policy = new RateLimitPolicy
+        {
+            Name = "api",
+            KeySource = RateLimitKeySource.CustomHeader,
+            CustomHeaderName = "X-Partner-ID"
+        };
+        var sut = new DefaultRateLimitKeyGenerator(Options.Create(new RateLimitingOptions()));
+
+        string key = sut.GenerateKey(context, policy);
+
+        key.Should().Contain("header:partner-7");
+    }
+
+    [Fact]
+    public void DefaultRateLimitKeyGenerator_Should_UseForwardedHeaderWhenEnabled()
+    {
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
+        context.Connection.RemoteIpAddress = IPAddress.Parse("127.0.0.1");
+        context.Request.Headers["X-Forwarded-For"] = "203.0.113.10, 10.0.0.1";
+        var options = new RateLimitingOptions { UseForwardedHeaders = true };
+        var policy = new RateLimitPolicy { Name = "api", KeySource = RateLimitKeySource.ClientIp };
+        var sut = new DefaultRateLimitKeyGenerator(Options.Create(options));
+
+        string key = sut.GenerateKey(context, policy);
+
+        key.Should().Contain("ip:203.0.113.10");
+    }
+
+    [Fact]
+    public void DefaultRateLimitKeyGenerator_Should_FallbackToIpWhenNoKeyPartsMatch()
+    {
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
+        context.Connection.RemoteIpAddress = IPAddress.Parse("198.51.100.20");
+        var policy = new RateLimitPolicy { Name = "api", KeySource = RateLimitKeySource.UserId };
+        var sut = new DefaultRateLimitKeyGenerator(Options.Create(new RateLimitingOptions()));
+
+        string key = sut.GenerateKey(context, policy);
+
+        key.Should().Be("api:ip:198.51.100.20");
+    }
+
+    [Fact]
+    public void RateLimitPartitionResolver_Should_BypassWhitelistedIp()
+    {
+        var options = new RateLimitingOptions();
+        options.WhitelistedIps.Add("203.0.113.50");
+        options.AddFixedWindowPolicy("default", 1, TimeSpan.FromMinutes(1));
+        var sut = new RateLimitPartitionResolver(Options.Create(options), new DefaultRateLimitKeyGenerator(Options.Create(options)));
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/orders");
+        context.Connection.RemoteIpAddress = IPAddress.Parse("203.0.113.50");
+
+        RateLimitPartition<string> partition = sut.GetPartition(context);
+
+        partition.PartitionKey.Should().Be("bypassed");
+    }
+
+    [Fact]
+    public void RateLimitPartitionResolver_Should_UseEndpointSpecificPolicy()
+    {
+        var options = new RateLimitingOptions();
+        options.AddFixedWindowPolicy("orders", 5, TimeSpan.FromMinutes(1));
+        options.EndpointPolicies["/api/orders/**"] = "orders";
+        var sut = new RateLimitPartitionResolver(Options.Create(options), new DefaultRateLimitKeyGenerator(Options.Create(options)));
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/orders/123");
+        context.Connection.RemoteIpAddress = IPAddress.Parse("10.0.0.5");
+
+        RateLimitPartition<string> partition = sut.GetPartition(context);
+
+        partition.PartitionKey.Should().StartWith("orders:");
+    }
 }

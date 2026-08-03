@@ -814,5 +814,173 @@ public class SagaTest
     }
 
     #endregion
+
+    #region Saga Orchestrator Extended Tests
+
+    [Fact, Priority(25)]
+    public async Task Orchestrator_ResumeAsync_ShouldContinueSuspendedSaga()
+    {
+        IServiceProvider provider = CreateServiceProvider();
+        using IServiceScope scope = provider.CreateScope();
+        ISagaOrchestrator orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
+        ISagaStateStore stateStore = provider.GetRequiredService<ISagaStateStore>();
+
+        var data = new OrderSagaData { ReservationId = Guid.NewGuid(), ExecutedSteps = ["ReserveStock"] };
+        var state = new SagaState<OrderSagaData>
+        {
+            SagaId = Guid.NewGuid(),
+            SagaType = typeof(TestOrderSaga).FullName!,
+            Status = SagaStatus.Suspended,
+            CurrentStepIndex = 1,
+            CurrentStepName = "ProcessPayment",
+            Data = data,
+            StartedAt = DateTime.UtcNow.AddMinutes(-5)
+        };
+        await stateStore.SaveAsync(state);
+
+        SagaResult<OrderSagaData> result = await orchestrator.ResumeAsync<TestOrderSaga, OrderSagaData>(state.SagaId);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data?.PaymentId);
+    }
+
+    [Fact, Priority(26)]
+    public async Task Orchestrator_ResumeAsync_WithMissingSaga_ShouldThrow()
+    {
+        IServiceProvider provider = CreateServiceProvider();
+        using IServiceScope scope = provider.CreateScope();
+        ISagaOrchestrator orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
+
+        await Assert.ThrowsAsync<SagaNotFoundException>(() =>
+            orchestrator.ResumeAsync<TestOrderSaga, OrderSagaData>(Guid.NewGuid()));
+    }
+
+    [Fact, Priority(27)]
+    public async Task Orchestrator_CompensateAsync_ShouldCompensateFailedSaga()
+    {
+        IServiceProvider provider = CreateServiceProvider();
+        using IServiceScope scope = provider.CreateScope();
+        ISagaOrchestrator orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
+        ISagaStateStore stateStore = provider.GetRequiredService<ISagaStateStore>();
+
+        SagaResult<OrderSagaData> failed = await orchestrator.ExecuteAsync<FailingSaga, OrderSagaData>(new OrderSagaData());
+        SagaState<OrderSagaData>? state = await stateStore.GetAsync<OrderSagaData>(failed.SagaId);
+        Assert.NotNull(state);
+        await stateStore.UpdateAsync(failed.SagaId, s => s.Status = SagaStatus.Failed);
+
+        SagaResult compensated = await orchestrator.CompensateAsync<FailingSaga, OrderSagaData>(failed.SagaId);
+
+        Assert.True(compensated.WasCompensated || compensated.Status == SagaStatus.PartiallyCompensated);
+    }
+
+    [Fact, Priority(28)]
+    public async Task Orchestrator_CancelAsync_ShouldMarkSagaCancelled()
+    {
+        IServiceProvider provider = CreateServiceProvider();
+        using IServiceScope scope = provider.CreateScope();
+        ISagaOrchestrator orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
+        ISagaStateStore stateStore = provider.GetRequiredService<ISagaStateStore>();
+
+        var runningState = new SagaState<OrderSagaData>
+        {
+            SagaId = Guid.NewGuid(),
+            SagaType = typeof(TestOrderSaga).FullName!,
+            Status = SagaStatus.Running,
+            Data = new OrderSagaData(),
+            StartedAt = DateTime.UtcNow
+        };
+        await stateStore.SaveAsync(runningState);
+
+        SagaResult result = await orchestrator.CancelAsync(runningState.SagaId);
+
+        Assert.Equal(SagaStatus.Cancelled, result.Status);
+        SagaState? updated = await stateStore.GetAsync(runningState.SagaId);
+        Assert.Equal(SagaStatus.Cancelled, updated!.Status);
+    }
+
+    [Fact, Priority(29)]
+    public async Task Orchestrator_ProcessRetryQueueAsync_ShouldMarkRetryAttempts()
+    {
+        var store = new InMemorySagaStateStore();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<ISagaStateStore>(store);
+        services.AddScoped<ISagaOrchestrator, SagaOrchestrator>();
+        IServiceProvider provider = services.BuildServiceProvider();
+
+        await store.SaveAsync(new SagaState
+        {
+            SagaId = Guid.NewGuid(),
+            Status = SagaStatus.Suspended,
+            SagaType = typeof(TestOrderSaga).FullName!,
+            DataJson = "{}",
+            NextRetryAt = DateTime.UtcNow.AddMinutes(-1),
+            RetryCount = 0,
+            MaxRetries = 3,
+            StartedAt = DateTime.UtcNow.AddHours(-1)
+        });
+
+        ISagaOrchestrator orchestrator = provider.GetRequiredService<ISagaOrchestrator>();
+        int processed = await orchestrator.ProcessRetryQueueAsync();
+
+        Assert.Equal(1, processed);
+    }
+
+    [Fact, Priority(30)]
+    public async Task Orchestrator_ProcessTimeoutsAsync_ShouldMarkTimedOutSagas()
+    {
+        var store = new InMemorySagaStateStore();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<ISagaStateStore>(store);
+        services.AddScoped<ISagaOrchestrator, SagaOrchestrator>();
+        IServiceProvider provider = services.BuildServiceProvider();
+
+        var sagaId = Guid.NewGuid();
+        await store.SaveAsync(new SagaState
+        {
+            SagaId = sagaId,
+            Status = SagaStatus.Running,
+            SagaType = typeof(TestOrderSaga).FullName!,
+            DataJson = "{}",
+            TimeoutSeconds = 30,
+            StartedAt = DateTime.UtcNow.AddHours(-2)
+        });
+
+        ISagaOrchestrator orchestrator = provider.GetRequiredService<ISagaOrchestrator>();
+        int processed = await orchestrator.ProcessTimeoutsAsync();
+
+        Assert.Equal(1, processed);
+        SagaState? updated = await store.GetAsync(sagaId);
+        Assert.Equal(SagaStatus.TimedOut, updated!.Status);
+    }
+
+    [Fact, Priority(31)]
+    public async Task Orchestrator_CleanupAsync_ShouldRemoveOldStates()
+    {
+        var store = new InMemorySagaStateStore();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<ISagaStateStore>(store);
+        services.AddScoped<ISagaOrchestrator, SagaOrchestrator>();
+        IServiceProvider provider = services.BuildServiceProvider();
+
+        await store.SaveAsync(new SagaState
+        {
+            SagaId = Guid.NewGuid(),
+            Status = SagaStatus.Completed,
+            SagaType = typeof(TestOrderSaga).FullName!,
+            DataJson = "{}",
+            StartedAt = DateTime.UtcNow.AddDays(-10),
+            CompletedAt = DateTime.UtcNow.AddDays(-9)
+        });
+
+        ISagaOrchestrator orchestrator = provider.GetRequiredService<ISagaOrchestrator>();
+        int cleaned = await orchestrator.CleanupAsync(DateTime.UtcNow.AddDays(-5));
+
+        Assert.Equal(1, cleaned);
+    }
+
+    #endregion
 }
 

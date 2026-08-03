@@ -6,6 +6,7 @@
 using Mvp24Hours.Application.Integration.Test.Entities;
 using Mvp24Hours.Application.Integration.Test.Fixtures;
 using Mvp24Hours.Application.Integration.Test.Services;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 
 namespace Mvp24Hours.Application.Integration.Test;
 
@@ -28,7 +29,10 @@ public class PostgreSqlRepositoryIntegrationTest(PostgreSqlContainerFixture fixt
         return _fixture.ClearDatabaseAsync();
     }
 
-    public Task DisposeAsync() => Task.CompletedTask;
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
+    }
 
     [DockerFact]
     public async Task AddAsync_Category_ShouldPersistInPostgreSql()
@@ -43,7 +47,7 @@ public class PostgreSqlRepositoryIntegrationTest(PostgreSqlContainerFixture fixt
             IsActive = true
         };
 
-        var result = await categoryService.AddAsync(category);
+        IBusinessResult<int> result = await categoryService.AddAsync(category);
 
         result.HasErrors.Should().BeFalse();
         category.Id.Should().BeGreaterThan(0);

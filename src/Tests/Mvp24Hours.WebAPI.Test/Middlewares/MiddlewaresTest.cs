@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
+using Mvp24Hours.Core.Enums;
+using Mvp24Hours.Core.Exceptions;
+using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.Exceptions;
 using Mvp24Hours.WebAPI.Middlewares;
@@ -260,5 +263,35 @@ public class MiddlewaresTest
         await sut.InvokeAsync(context);
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+    }
+
+    [Fact]
+    public async Task ExceptionMiddleware_Should_Return400_WhenValidationExceptionThrown()
+    {
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
+        IOptions<ExceptionOptions> options = Options.Create(new ExceptionOptions());
+        var sut = new ExceptionMiddleware(
+            _ => throw new ValidationException("Validation failed", [new MessageResult("Name", "required", MessageType.Error)]),
+            options,
+            NullLogger<ExceptionMiddleware>.Instance);
+
+        await sut.InvokeAsync(context);
+
+        context.Response.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+    }
+
+    [Fact]
+    public async Task ExceptionMiddleware_Should_Return422_WhenDomainExceptionThrown()
+    {
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
+        IOptions<ExceptionOptions> options = Options.Create(new ExceptionOptions());
+        var sut = new ExceptionMiddleware(
+            _ => throw new DomainException("Domain rule violated"),
+            options,
+            NullLogger<ExceptionMiddleware>.Instance);
+
+        await sut.InvokeAsync(context);
+
+        context.Response.StatusCode.Should().Be(StatusCodes.Status422UnprocessableEntity);
     }
 }

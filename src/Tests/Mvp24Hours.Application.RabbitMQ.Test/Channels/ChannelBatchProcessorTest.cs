@@ -1,13 +1,20 @@
+using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Infrastructure.RabbitMQ.Channels;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
+using Mvp24Hours.Infrastructure.RabbitMQ.Consumers;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Serialization;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Channels;
 
+[Trait("Category", "Unit")]
 public class ChannelBatchProcessorTest
 {
     [Fact]
@@ -177,5 +184,163 @@ public class ChannelBatchProcessorTest
         };
 
         await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task AddMessageAsync_WithValidPayload_ShouldEnqueueMessage()
+    {
+        var options = new BatchConsumerOptions { MaxBatchSize = 2, MinBatchSize = 1, BatchTimeout = TimeSpan.FromMilliseconds(200) };
+        var services = new ServiceCollection();
+        services.AddSingleton<IBatchConsumer<TestOrderEvent>, TestBatchConsumer>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        var serializer = new JsonMessageSerializer();
+        ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
+        var channelMock = new Mock<IModel>();
+
+        await using var processor = new ChannelBatchProcessor<TestOrderEvent>(
+            options,
+            provider,
+            serializer,
+            logger,
+            channel: channelMock.Object);
+
+        processor.Start();
+        processor.SetQueueMetadata("orders", "exchange", "tag-1");
+
+        BasicDeliverEventArgs eventArgs = CreateEventArgs(new TestOrderEvent { Name = "Order-1" }, deliveryTag: 1);
+        await processor.AddMessageAsync(eventArgs);
+
+        await Task.Delay(300);
+        channelMock.Verify(c => c.BasicAck(1, false), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddMessageAsync_WithInvalidPayload_ShouldNackWithoutRequeue()
+    {
+        var options = new BatchConsumerOptions { MaxBatchSize = 1, MinBatchSize = 1, BatchTimeout = TimeSpan.FromMilliseconds(100), RequeueOnFailure = false };
+        var services = new ServiceCollection();
+        ServiceProvider provider = services.BuildServiceProvider();
+        var serializer = new Mock<IMessageSerializer>();
+        serializer.Setup(s => s.Deserialize<TestOrderEvent>(It.IsAny<byte[]>())).Returns((TestOrderEvent?)null);
+        ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
+        var channelMock = new Mock<IModel>();
+
+        await using var processor = new ChannelBatchProcessor<TestOrderEvent>(
+            options,
+            provider,
+            serializer.Object,
+            logger,
+            channel: channelMock.Object);
+
+        processor.Start();
+        await processor.AddMessageAsync(CreateEventArgs(new TestOrderEvent(), deliveryTag: 9));
+
+        await Task.Delay(150);
+        channelMock.Verify(c => c.BasicNack(9, false, false), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddMessageAsync_WhenDeserializationThrows_ShouldNackWithoutRequeue()
+    {
+        var options = new BatchConsumerOptions { MaxBatchSize = 1, MinBatchSize = 1, BatchTimeout = TimeSpan.FromMilliseconds(100) };
+        var services = new ServiceCollection();
+        ServiceProvider provider = services.BuildServiceProvider();
+        var serializer = new Mock<IMessageSerializer>();
+        serializer.Setup(s => s.Deserialize<TestOrderEvent>(It.IsAny<byte[]>())).Throws(new InvalidOperationException("bad json"));
+        ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
+        var channelMock = new Mock<IModel>();
+
+        await using var processor = new ChannelBatchProcessor<TestOrderEvent>(
+            options,
+            provider,
+            serializer.Object,
+            logger,
+            channel: channelMock.Object);
+
+        processor.Start();
+        await processor.AddMessageAsync(CreateEventArgs(new TestOrderEvent(), deliveryTag: 3));
+
+        await Task.Delay(150);
+        channelMock.Verify(c => c.BasicNack(3, false, false), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddMessageAsync_WithPartialBatchResults_ShouldNackFailedMessages()
+    {
+        var options = new BatchConsumerOptions { MaxBatchSize = 2, MinBatchSize = 1, BatchTimeout = TimeSpan.FromMilliseconds(200), RequeueOnFailure = true };
+        var services = new ServiceCollection();
+        services.AddSingleton<IBatchConsumer<TestOrderEvent>, PartialFailureBatchConsumer>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        var serializer = new JsonMessageSerializer();
+        ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
+        var channelMock = new Mock<IModel>();
+
+        await using var processor = new ChannelBatchProcessor<TestOrderEvent>(
+            options,
+            provider,
+            serializer,
+            logger,
+            channel: channelMock.Object);
+
+        processor.Start();
+        await processor.AddMessageAsync(CreateEventArgs(new TestOrderEvent { Name = "A" }, deliveryTag: 10));
+        await processor.AddMessageAsync(CreateEventArgs(new TestOrderEvent { Name = "B" }, deliveryTag: 11));
+
+        await Task.Delay(400);
+        channelMock.Verify(c => c.BasicNack(10, false, true), Times.Once);
+        channelMock.Verify(c => c.BasicAck(11, false), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddMessageAsync_AfterDispose_ShouldThrowObjectDisposedException()
+    {
+        BatchConsumerOptions options = BatchConsumerOptions.Default;
+        var services = new ServiceCollection();
+        ServiceProvider provider = services.BuildServiceProvider();
+        var serializer = new JsonMessageSerializer();
+        ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
+
+        var processor = new ChannelBatchProcessor<TestOrderEvent>(options, provider, serializer, logger);
+        await processor.DisposeAsync();
+
+        Func<Task> act = () => processor.AddMessageAsync(CreateEventArgs(new TestOrderEvent(), 1)).AsTask();
+
+        await act.Should().ThrowAsync<ObjectDisposedException>();
+    }
+
+    private static BasicDeliverEventArgs CreateEventArgs(TestOrderEvent message, ulong deliveryTag)
+    {
+        byte[] body = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(message));
+        var propertiesMock = new Mock<IBasicProperties>();
+        return new BasicDeliverEventArgs
+        {
+            Body = body,
+            DeliveryTag = deliveryTag,
+            BasicProperties = propertiesMock.Object,
+            RoutingKey = "orders",
+            Exchange = "exchange"
+        };
+    }
+
+    private sealed class TestBatchConsumer : IBatchConsumer<TestOrderEvent>
+    {
+        public Task<IEnumerable<IBatchMessageResult>?> ConsumeAsync(IBatchConsumeContext<TestOrderEvent> context, CancellationToken cancellationToken = default)
+        {
+            IEnumerable<IBatchMessageResult> results = context.Messages
+                .Select(m => (IBatchMessageResult)BatchMessageResult.Ack(m.DeliveryTag));
+            return Task.FromResult<IEnumerable<IBatchMessageResult>?>(results);
+        }
+    }
+
+    private sealed class PartialFailureBatchConsumer : IBatchConsumer<TestOrderEvent>
+    {
+        public Task<IEnumerable<IBatchMessageResult>?> ConsumeAsync(IBatchConsumeContext<TestOrderEvent> context, CancellationToken cancellationToken = default)
+        {
+            IEnumerable<IBatchMessageResult> results = context.Messages.Select(m =>
+                m.DeliveryTag % 2 == 1
+                    ? (IBatchMessageResult)BatchMessageResult.Ack(m.DeliveryTag)
+                    : BatchMessageResult.Nack(m.DeliveryTag, requeue: true));
+            return Task.FromResult<IEnumerable<IBatchMessageResult>?>(results);
+        }
     }
 }

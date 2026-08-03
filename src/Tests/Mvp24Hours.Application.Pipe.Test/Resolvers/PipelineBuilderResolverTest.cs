@@ -1,9 +1,8 @@
 using Mvp24Hours.Core.Contract.Application.Pipe;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe;
-using Mvp24Hours.Infrastructure.Pipe.Resolvers;
-
 using Mvp24Hours.Infrastructure.Pipe.Operations;
+using Mvp24Hours.Infrastructure.Pipe.Resolvers;
 
 namespace Mvp24Hours.Application.Pipe.Test.Resolvers;
 
@@ -74,16 +73,25 @@ public class PipelineBuilderResolverTest
 
     private sealed class TestPipelineBuilderImpl : ITestPipelineBuilder
     {
-        public IPipeline Builder(IPipeline pipeline) => pipeline;
+        public IPipeline Builder(IPipeline pipeline)
+        {
+            return pipeline;
+        }
     }
 
     private sealed class TestPipelineBuilderAlt : ITestPipelineBuilder
     {
-        public IPipeline Builder(IPipeline pipeline) => pipeline.Add(new TrackingOperation("alt"));
+        public IPipeline Builder(IPipeline pipeline)
+        {
+            return pipeline.Add(new TrackingOperation("alt"));
+        }
     }
 
     private sealed class TrackingOperation(string name) : OperationBase
     {
-        public override void Execute(IPipelineMessage input) => input.AddContent(name, true);
+        public override void Execute(IPipelineMessage input)
+        {
+            input.AddContent(name, true);
+        }
     }
 }

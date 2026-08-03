@@ -618,7 +618,7 @@ internal sealed class PermissiveValidator<T> : AbstractValidator<T>;
 
 internal sealed class StubSender : ISender
 {
-    private readonly Dictionary<Type, Func<object, CancellationToken, Task<object?>>> _handlers = new();
+    private readonly Dictionary<Type, Func<object, CancellationToken, Task<object?>>> _handlers = [];
     private Exception? _exception;
 
     public StubSender Returns<TRequest, TResponse>(Func<TRequest, CancellationToken, Task<TResponse>> handler)
@@ -661,5 +661,7 @@ internal sealed class TestAuthHandler(
     public const string SchemeName = "Test";
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-        => Task.FromResult(AuthenticateResult.NoResult());
+    {
+        return Task.FromResult(AuthenticateResult.NoResult());
+    }
 }

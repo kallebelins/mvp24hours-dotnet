@@ -256,7 +256,7 @@ public class ConventionBasedServiceCollectionExtensionsTest
             [typeof(OrderedConventionServiceFirst).Assembly],
             type => type == typeof(OrderedConventionServiceFirst) || type == typeof(OrderedConventionServiceSecond));
 
-        List<Type?> implementationTypes = services
+        var implementationTypes = services
             .Where(d => d.ImplementationType == typeof(OrderedConventionServiceFirst)
                      || d.ImplementationType == typeof(OrderedConventionServiceSecond))
             .Select(d => d.ImplementationType)

@@ -90,7 +90,7 @@ public class CacheableApplicationServiceBaseAsyncTest
     [Fact]
     public async Task ModifyAsync_OnSuccess_ShouldInvalidateEntityCache()
     {
-        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+        (Mock<IUnitOfWorkAsync> uow, _) =
             ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
         IQueryCacheProvider cache = ApplicationTestHelpers.CreateInMemoryQueryCacheProvider();
         CacheInvalidator invalidator = ApplicationTestHelpers.CreateCacheInvalidator(cache);
@@ -241,5 +241,112 @@ public class CacheableApplicationServiceBaseAsyncTest
 
         result.Data.Should().Be(0);
         repo.Verify(r => r.AddAsync(It.IsAny<AppTestEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ListCountAsync_WithCacheEnabled_ShouldUseCacheProvider()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        ApplicationTestHelpers.SetupListCount(repo, 7);
+        IQueryCacheProvider cache = ApplicationTestHelpers.CreateInMemoryQueryCacheProvider();
+        var service = new TestCacheableApplicationService(
+            uow.Object, cache, ApplicationTestHelpers.CreateCacheInvalidator(cache), new QueryCacheKeyGenerator());
+
+        await service.ListCountAsync();
+        await service.ListCountAsync();
+
+        repo.Verify(r => r.ListCountAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetByAnyAsync_WithCacheEnabled_ShouldUseCacheProvider()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        ApplicationTestHelpers.SetupGetByAnyExpression(repo, [new AppTestEntity { Id = 1, Name = "Active", Active = true }]);
+        IQueryCacheProvider cache = ApplicationTestHelpers.CreateInMemoryQueryCacheProvider();
+        var service = new TestCacheableApplicationService(
+            uow.Object, cache, ApplicationTestHelpers.CreateCacheInvalidator(cache), new QueryCacheKeyGenerator());
+
+        await service.GetByAnyAsync(e => e.Active);
+        await service.GetByAnyAsync(e => e.Active);
+
+        repo.Verify(r => r.GetByAnyAsync(It.IsAny<System.Linq.Expressions.Expression<Func<AppTestEntity, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetSingleBySpecificationAsync_WithCacheEnabled_ShouldUseCacheProvider()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        ApplicationTestHelpers.SetupGetByAnyExpression(repo, [new AppTestEntity { Id = 1, Name = "Single", Active = true }]);
+        IQueryCacheProvider cache = ApplicationTestHelpers.CreateInMemoryQueryCacheProvider();
+        var service = new TestCacheableApplicationService(
+            uow.Object, cache, ApplicationTestHelpers.CreateCacheInvalidator(cache), new QueryCacheKeyGenerator());
+        var spec = new ActiveAppTestEntitySpec();
+
+        await service.GetSingleBySpecificationAsync(spec);
+        await service.GetSingleBySpecificationAsync(spec);
+
+        repo.Verify(r => r.GetByAsync(It.IsAny<System.Linq.Expressions.Expression<Func<AppTestEntity, bool>>>(), It.IsAny<IPagingCriteria?>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetFirstBySpecificationAsync_WithNullSpec_ShouldReturnNull()
+    {
+        (Mock<IUnitOfWorkAsync> uow, _) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        IQueryCacheProvider cache = ApplicationTestHelpers.CreateInMemoryQueryCacheProvider();
+        var service = new TestCacheableApplicationService(
+            uow.Object, cache, ApplicationTestHelpers.CreateCacheInvalidator(cache), new QueryCacheKeyGenerator());
+
+        IBusinessResult<AppTestEntity?> result = await service.GetFirstBySpecificationAsync<ActiveAppTestEntitySpec>(null!);
+
+        result.Data.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ModifyAsync_Batch_OnSuccess_ShouldInvalidateCache()
+    {
+        (Mock<IUnitOfWorkAsync> uow, _) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        IQueryCacheProvider cache = ApplicationTestHelpers.CreateInMemoryQueryCacheProvider();
+        var service = new TestCacheableApplicationService(
+            uow.Object, cache, ApplicationTestHelpers.CreateCacheInvalidator(cache), new QueryCacheKeyGenerator(), new AppTestEntityValidator());
+        await cache.SetAsync("AppTestEntity:ListAsync", "cached",
+            new QueryCacheEntryOptions { Duration = TimeSpan.FromMinutes(5), Region = "AppTestEntity" });
+
+        await service.ModifyAsync([new AppTestEntity { Id = 1, Name = "Batch" }]);
+
+        (await cache.ExistsAsync("AppTestEntity:ListAsync")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task RemoveAsync_SingleEntity_OnSuccess_ShouldInvalidateCache()
+    {
+        (Mock<IUnitOfWorkAsync> uow, _) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        IQueryCacheProvider cache = ApplicationTestHelpers.CreateInMemoryQueryCacheProvider();
+        var service = new TestCacheableApplicationService(
+            uow.Object, cache, ApplicationTestHelpers.CreateCacheInvalidator(cache), new QueryCacheKeyGenerator());
+        await cache.SetAsync("AppTestEntity:ListAsync", "cached",
+            new QueryCacheEntryOptions { Duration = TimeSpan.FromMinutes(5), Region = "AppTestEntity" });
+
+        await service.RemoveAsync(new AppTestEntity { Id = 3, Name = "Remove" });
+
+        (await cache.ExistsAsync("AppTestEntity:ListAsync")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task RemoveByIdAsync_EmptyBatch_ShouldReturnZero()
+    {
+        (Mock<IUnitOfWorkAsync> uow, _) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        IQueryCacheProvider cache = ApplicationTestHelpers.CreateInMemoryQueryCacheProvider();
+        var service = new TestCacheableApplicationService(
+            uow.Object, cache, ApplicationTestHelpers.CreateCacheInvalidator(cache), new QueryCacheKeyGenerator());
+
+        IBusinessResult<int> result = await service.RemoveByIdAsync([]);
+
+        result.Data.Should().Be(0);
     }
 }

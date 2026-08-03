@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Application.Pipe.Test.Support;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Resiliency;
+using Polly.CircuitBreaker;
 
 namespace Mvp24Hours.Application.Pipe.Test.Resiliency;
 
@@ -127,5 +128,37 @@ public class NativePipelineResilienceExtensionsTest
         retryCalled.Should().BeFalse();
         circuitOpenCalled.Should().BeFalse();
         circuitResetCalled.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task NativePipelineResilienceMiddleware_Should_RejectWhenCircuitOpen()
+    {
+        var options = new NativePipelineResilienceOptions
+        {
+            EnableRetry = false,
+            EnableTimeout = false,
+            EnableCircuitBreaker = true,
+            CircuitBreakerMinimumThroughput = 2,
+            CircuitBreakerFailureRatio = 1.0,
+            CircuitBreakerSamplingDuration = TimeSpan.FromMinutes(1),
+            CircuitBreakerBreakDuration = TimeSpan.FromMinutes(1)
+        };
+        var middleware = new NativePipelineResilienceMiddleware(options);
+        IPipelineMessage message = PipeTestHelpers.CreateMessage();
+
+        for (int i = 0; i < 2; i++)
+        {
+            try
+            {
+                await middleware.ExecuteAsync(message, () => throw new IOException($"fail-{i + 1}"));
+            }
+            catch (IOException)
+            {
+            }
+        }
+
+        Func<Task> act = () => middleware.ExecuteAsync(message, () => Task.CompletedTask);
+
+        await act.Should().ThrowAsync<BrokenCircuitException>();
     }
 }

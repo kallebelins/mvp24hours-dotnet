@@ -32,7 +32,7 @@ public class TypedHttpClientTest
     [Fact]
     public void Constructor_ShouldExposeBaseAddressAndTimeout()
     {
-        var handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
         var client = new TypedHttpClient<TestApi>(new HttpClient(handler)
         {
             BaseAddress = new Uri("https://api.example.com/"),
@@ -53,7 +53,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task GetAsync_ShouldReturnStringContent()
     {
-        var handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "{\"ok\":true}");
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "{\"ok\":true}");
         TypedHttpClient<TestApi> client = CreateClient(handler);
 
         string? content = await client.GetAsync("/items");
@@ -65,7 +65,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task GetAsync_Generic_ShouldDeserializeJson()
     {
-        var handler = new TestHttpMessageHandler().WhenGet("/items/1", HttpStatusCode.OK, new ApiResponse { Id = 1, Name = "Alpha" });
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().WhenGet("/items/1", HttpStatusCode.OK, new ApiResponse { Id = 1, Name = "Alpha" });
         TypedHttpClient<TestApi> client = CreateClient(handler);
 
         ApiResponse? result = await client.GetAsync<ApiResponse>("/items/1");
@@ -78,7 +78,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task GetAsync_WithHeaders_ShouldForwardHeaders()
     {
-        var handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "{}");
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "{}");
         TypedHttpClient<TestApi> client = CreateClient(handler);
         var headers = new Dictionary<string, string> { ["X-Custom"] = "value" };
 
@@ -90,7 +90,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task GetStreamAsync_ShouldReturnStream()
     {
-        var handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "stream-data");
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "stream-data");
         TypedHttpClient<TestApi> client = CreateClient(handler);
 
         await using Stream? stream = await client.GetStreamAsync("/stream", cancellationToken: CancellationToken.None);
@@ -103,7 +103,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task GetBytesAsync_ShouldReturnByteArray()
     {
-        var handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "bytes");
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "bytes");
         TypedHttpClient<TestApi> client = CreateClient(handler);
 
         byte[]? bytes = await client.GetBytesAsync("/bytes");
@@ -115,7 +115,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task GetStreamAsync_Enumerable_ShouldYieldChunks()
     {
-        var handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "abcdefghij");
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "abcdefghij");
         TypedHttpClient<TestApi> client = CreateClient(handler);
         var chunks = new List<byte[]>();
 
@@ -131,7 +131,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task PostAsync_ShouldSendBodyAndDeserializeResponse()
     {
-        var handler = new TestHttpMessageHandler().WhenPost("/items", HttpStatusCode.OK, new ApiResponse { Id = 99, Name = "Created" });
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().WhenPost("/items", HttpStatusCode.OK, new ApiResponse { Id = 99, Name = "Created" });
         TypedHttpClient<TestApi> client = CreateClient(handler);
 
         ApiResponse? result = await client.PostAsync<ApiResponse>("/items", new { name = "Created" });
@@ -143,7 +143,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task PostFormAsync_ShouldPostFormUrlEncodedContent()
     {
-        var handler = new TestHttpMessageHandler().WhenPost("/form", HttpStatusCode.OK, new ApiResponse { Id = 1, Name = "Form" });
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().WhenPost("/form", HttpStatusCode.OK, new ApiResponse { Id = 1, Name = "Form" });
         TypedHttpClient<TestApi> client = CreateClient(handler);
 
         ApiResponse? result = await client.PostFormAsync<ApiResponse>(
@@ -156,7 +156,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task PostMultipartAsync_ShouldPostMultipartContent()
     {
-        var handler = new TestHttpMessageHandler().WhenPost("/upload", HttpStatusCode.OK, new ApiResponse { Id = 2, Name = "File" });
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().WhenPost("/upload", HttpStatusCode.OK, new ApiResponse { Id = 2, Name = "File" });
         TypedHttpClient<TestApi> client = CreateClient(handler);
         using var content = new MultipartFormDataContent();
         content.Add(new StringContent("hello"), "field");
@@ -169,7 +169,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task PutAsync_ShouldSendPutRequest()
     {
-        var handler = new TestHttpMessageHandler().WhenPut("/items/1", HttpStatusCode.OK, new ApiResponse { Id = 1, Name = "Updated" });
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().WhenPut("/items/1", HttpStatusCode.OK, new ApiResponse { Id = 1, Name = "Updated" });
         TypedHttpClient<TestApi> client = CreateClient(handler);
 
         ApiResponse? result = await client.PutAsync<ApiResponse>("/items/1", new { name = "Updated" });
@@ -197,7 +197,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task DeleteAsync_ShouldSendDeleteRequest()
     {
-        var handler = new TestHttpMessageHandler().WhenDelete("/items/1", HttpStatusCode.OK, new ApiResponse { Id = 1, Name = "Deleted" });
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().WhenDelete("/items/1", HttpStatusCode.OK, new ApiResponse { Id = 1, Name = "Deleted" });
         TypedHttpClient<TestApi> client = CreateClient(handler);
 
         ApiResponse? result = await client.DeleteAsync<ApiResponse>("/items/1");
@@ -208,7 +208,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task SendAsync_ShouldReturnRawResponse()
     {
-        var handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.Accepted);
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.Accepted);
         TypedHttpClient<TestApi> client = CreateClient(handler);
         using var request = new HttpRequestMessage(HttpMethod.Get, "https://api.example.com/status");
 
@@ -220,7 +220,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task SendAsync_Generic_ShouldDeserializeSuccessfulResponse()
     {
-        var handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, new ApiResponse { Id = 5, Name = "Sent" });
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, new ApiResponse { Id = 5, Name = "Sent" });
         TypedHttpClient<TestApi> client = CreateClient(handler);
         using var request = new HttpRequestMessage(HttpMethod.Get, "https://api.example.com/items/5");
 
@@ -232,7 +232,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task GetAsync_ShouldThrowHttpStatusCodeException_OnFailureStatus()
     {
-        var handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.BadRequest, "bad request");
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.BadRequest, "bad request");
         TypedHttpClient<TestApi> client = CreateClient(handler);
 
         Func<Task> act = () => client.GetAsync("/fail");
@@ -243,7 +243,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task GetAsync_ShouldCombineRelativeUrlWithBaseAddress()
     {
-        var handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "ok");
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "ok");
         TypedHttpClient<TestApi> client = CreateClient(handler, new Uri("https://api.example.com/v1/"));
 
         await client.GetAsync("items");
@@ -254,7 +254,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task GetAsync_ShouldUseAbsoluteUrl_WhenProvided()
     {
-        var handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "ok");
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "ok");
         TypedHttpClient<TestApi> client = CreateClient(handler);
 
         await client.GetAsync("https://other.example.com/data");
@@ -265,7 +265,7 @@ public class TypedHttpClientTest
     [Fact]
     public async Task GetAsync_Generic_ShouldReturnNull_WhenResponseBodyIsEmpty()
     {
-        var handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, string.Empty);
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, string.Empty);
         TypedHttpClient<TestApi> client = CreateClient(handler);
 
         ApiResponse? result = await client.GetAsync<ApiResponse>("/empty");
@@ -276,7 +276,7 @@ public class TypedHttpClientTest
     [Fact]
     public void Constructor_WithCustomSerializer_ShouldUseSerializer()
     {
-        var handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "{}");
+        TestHttpMessageHandler handler = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "{}");
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.example.com/") };
         var serializer = new JsonHttpClientSerializer();
         var client = new TypedHttpClient<TestApi>(httpClient, NullLogger<TypedHttpClient<TestApi>>.Instance, serializer);

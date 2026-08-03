@@ -23,7 +23,7 @@
     Skip TreatWarningsAsErrors build.
 
 .PARAMETER MinimumLineCoverage
-    Coverage floor (default 55 — Phase 1 gate).
+    Coverage floor (default 65 — Phase 2 gate).
 
 .EXAMPLE
     ./scripts/run-ci-local.ps1
@@ -35,7 +35,7 @@ param(
     [switch]$SkipIntegration,
     [switch]$SkipFormat,
     [switch]$SkipWarningsGate,
-    [double]$MinimumLineCoverage = 55
+    [double]$MinimumLineCoverage = 65
 )
 
 $ErrorActionPreference = 'Stop'

@@ -11,7 +11,7 @@ public class MaybeExtensionsTest
     [Fact]
     public void ToMaybe_OnValue_Should_CreateSome()
     {
-        Maybe<string> maybe = "hello".ToMaybe();
+        var maybe = "hello".ToMaybe();
 
         maybe.HasValue.Should().BeTrue();
         maybe.Value.Should().Be("hello");
@@ -22,7 +22,7 @@ public class MaybeExtensionsTest
     {
         int? value = null;
 
-        Maybe<int> maybe = value.ToMaybe();
+        var maybe = value.ToMaybe();
 
         maybe.HasNoValue.Should().BeTrue();
     }
@@ -93,7 +93,7 @@ public class MaybeExtensionsTest
     [Fact]
     public void ToBusinessResult_Should_MapMaybe()
     {
-        Maybe<string> some = Maybe<string>.Some("value");
+        var some = Maybe<string>.Some("value");
         Maybe<string> none = Maybe<string>.None;
 
         some.ToBusinessResult().HasErrors.Should().BeFalse();
@@ -103,8 +103,8 @@ public class MaybeExtensionsTest
     [Fact]
     public void EitherConversions_Should_MapLeftAndRight()
     {
-        Either<string, int> right = Either<string, int>.Right(7);
-        Either<string, int> left = Either<string, int>.Left("err");
+        var right = Either<string, int>.Right(7);
+        var left = Either<string, int>.Left("err");
 
         right.ToMaybe().Value.Should().Be(7);
         left.ToMaybe().HasNoValue.Should().BeTrue();
@@ -115,7 +115,7 @@ public class MaybeExtensionsTest
     [Fact]
     public async Task MapAsync_And_BindAsync_Should_TransformMaybe()
     {
-        Maybe<int> some = Maybe<int>.Some(2);
+        var some = Maybe<int>.Some(2);
         Maybe<int> none = Maybe<int>.None;
 
         Maybe<int> mapped = await some.MapAsync(x => Task.FromResult(x * 2));
@@ -129,9 +129,9 @@ public class MaybeExtensionsTest
     [Fact]
     public void Combine_Should_ReturnTupleWhenAllSome()
     {
-        Maybe<int> a = Maybe<int>.Some(1);
-        Maybe<int> b = Maybe<int>.Some(2);
-        Maybe<int> c = Maybe<int>.Some(3);
+        var a = Maybe<int>.Some(1);
+        var b = Maybe<int>.Some(2);
+        var c = Maybe<int>.Some(3);
 
         a.Combine(b).Value.Should().Be((1, 2));
         a.Combine(b, c).Value.Should().Be((1, 2, 3));

@@ -62,7 +62,7 @@ public class TypedPipelineFluentExtensionsTest
     [Fact]
     public void Then_Should_ChainTransformationOntoExistingPipeline()
     {
-        TypedPipeline<int, int> basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int>()
+        var basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int>()
             .Add(input => OperationResult<int>.Success(input + 1));
 
         TypedPipeline<int, string> pipeline = basePipeline.Then(x => x.ToString());
@@ -76,7 +76,7 @@ public class TypedPipelineFluentExtensionsTest
     [Fact]
     public void Then_Should_PropagateFailureFromBasePipeline()
     {
-        TypedPipeline<int, int> basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int> { IsBreakOnFail = true }
+        var basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int> { IsBreakOnFail = true }
             .Add(_ => OperationResult<int>.Failure("base failed"));
 
         TypedPipeline<int, string> pipeline = basePipeline.Then(x => x.ToString());
@@ -90,7 +90,7 @@ public class TypedPipelineFluentExtensionsTest
     [Fact]
     public void Then_Should_ReturnFailureWhenTransformThrows()
     {
-        TypedPipeline<int, int> basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int> { IsBreakOnFail = true }
+        var basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int> { IsBreakOnFail = true }
             .Add(input => OperationResult<int>.Success(input));
 
         TypedPipeline<int, string> pipeline = basePipeline.Then<int, int, string>(_ => throw new InvalidOperationException("transform failed"));
@@ -104,7 +104,7 @@ public class TypedPipelineFluentExtensionsTest
     [Fact]
     public void Then_Should_CopyPipelineConfiguration()
     {
-        TypedPipeline<int, int> basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int>
+        var basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int>
         {
             IsBreakOnFail = true,
             ForceRollbackOnFailure = true,
@@ -141,7 +141,7 @@ public class TypedPipelineFluentExtensionsTest
     [Fact]
     public async Task ThenAsync_Should_ChainAsyncTransformation()
     {
-        TypedPipelineAsync<int, int> basePipeline = (TypedPipelineAsync<int, int>)new TypedPipelineAsync<int, int>()
+        var basePipeline = (TypedPipelineAsync<int, int>)new TypedPipelineAsync<int, int>()
             .Add(async (input, ct) =>
             {
                 await Task.Delay(1, ct);
@@ -163,7 +163,7 @@ public class TypedPipelineFluentExtensionsTest
     [Fact]
     public async Task ThenAsync_Should_PropagateFailureFromBasePipeline()
     {
-        TypedPipelineAsync<int, int> basePipeline = (TypedPipelineAsync<int, int>)new TypedPipelineAsync<int, int> { IsBreakOnFail = true }
+        var basePipeline = (TypedPipelineAsync<int, int>)new TypedPipelineAsync<int, int> { IsBreakOnFail = true }
             .Add(async (_, _) => await Task.FromResult(OperationResult<int>.Failure("async base failed")));
 
         (await basePipeline.ExecuteAsync(1)).IsFailure.Should().BeTrue();
@@ -203,7 +203,7 @@ public class TypedPipelineFluentExtensionsTest
     [Fact]
     public void OnError_WithFallbackValue_Should_ReturnFallbackOnFailure()
     {
-        TypedPipeline<int, int> basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int> { IsBreakOnFail = true }
+        var basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int> { IsBreakOnFail = true }
             .Add(_ => OperationResult<int>.Failure("failed"));
 
         TypedPipeline<int, int> pipeline = basePipeline.OnError(-1);
@@ -217,7 +217,7 @@ public class TypedPipelineFluentExtensionsTest
     [Fact]
     public void OnError_WithFallbackFactory_Should_UseFactoryOnFailure()
     {
-        TypedPipeline<int, int> basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int> { IsBreakOnFail = true }
+        var basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int> { IsBreakOnFail = true }
             .Add(_ => OperationResult<int>.Failure("failed"));
 
         TypedPipeline<int, int> pipeline = basePipeline.OnError(input => input + 100);
@@ -231,7 +231,7 @@ public class TypedPipelineFluentExtensionsTest
     [Fact]
     public void OnError_WithFallbackFactory_Should_ReturnFailureWhenFactoryThrows()
     {
-        TypedPipeline<int, int> basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int> { IsBreakOnFail = true }
+        var basePipeline = (TypedPipeline<int, int>)new TypedPipeline<int, int> { IsBreakOnFail = true }
             .Add(_ => OperationResult<int>.Failure("failed"));
 
         TypedPipeline<int, int> pipeline = basePipeline.OnError<int, int>(_ => throw new InvalidOperationException("factory failed"));
@@ -444,5 +444,87 @@ public class TypedPipelineFluentExtensionsTest
         Action act = () => pipeline.Ensure(null!, "invalid");
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("predicate");
+    }
+
+    [Fact]
+    public void Tap_Should_AddOperationToPipeline()
+    {
+        TypedPipeline<int, int> pipeline = PipeFactory.Create<int, int>();
+        TypedPipeline<int, int> result = pipeline.Tap(_ => { });
+
+        result.OperationCount.Should().Be(1);
+        result.Should().BeSameAs(pipeline);
+    }
+
+    [Fact]
+    public void When_Should_AddOperationToPipeline()
+    {
+        TypedPipeline<int, int> pipeline = PipeFactory.Create<int, int>();
+        TypedPipeline<int, int> result = pipeline.When(_ => true, v => OperationResult<int>.Success(v));
+
+        result.OperationCount.Should().Be(1);
+    }
+
+    [Fact]
+    public void Branch_Should_AddOperationToPipeline()
+    {
+        TypedPipeline<int, int> pipeline = PipeFactory.Create<int, int>();
+        TypedPipeline<int, int> result = pipeline.Branch(
+            _ => true,
+            v => OperationResult<int>.Success(v),
+            v => OperationResult<int>.Success(v));
+
+        result.OperationCount.Should().Be(1);
+    }
+
+    [Fact]
+    public void Ensure_Should_AddOperationToPipeline()
+    {
+        TypedPipeline<int, int> pipeline = PipeFactory.Create<int, int>();
+        TypedPipeline<int, int> result = pipeline.Ensure(_ => true, "invalid");
+
+        result.OperationCount.Should().Be(1);
+    }
+
+    [Fact]
+    public void Pipe_From_Tap_Should_ExecuteSideEffectOnSuccess()
+    {
+        int captured = 0;
+        IOperationResult<int> result = PipeFactory.From<int>()
+            .Then(x => x * 2)
+            .Tap(value => captured = value)
+            .Finally(5);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(10);
+        captured.Should().Be(10);
+    }
+
+    [Fact]
+    public void Pipe_From_When_Should_ExecuteConditionalBranch()
+    {
+        IOperationResult<int> result = PipeFactory.From<int>()
+            .Then(x => x)
+            .When(
+                v => v > 0,
+                chain => chain.Then(v => v + 100))
+            .Finally(3);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(103);
+    }
+
+    [Fact]
+    public void Pipe_From_When_Should_SkipBranchWhenConditionFalse()
+    {
+        IOperationResult<int> result = PipeFactory.From<int>()
+            .Then(x => x)
+            .When(
+                v => v > 10,
+                chain => chain.Then(v => v + 100))
+            .Finally(3);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(3);
     }
 }

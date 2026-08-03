@@ -144,4 +144,144 @@ public class ResiliencyMiddlewareTest
 
         await act.Should().ThrowAsync<RateLimitExceededException>();
     }
+
+    [Fact]
+    [Obsolete]
+    public async Task CircuitBreakerPipelineMiddleware_Should_TripAfterNFailures()
+    {
+        var options = new CircuitBreakerOptions
+        {
+            Key = "trip-test",
+            FailureThreshold = 2,
+            OpenDuration = TimeSpan.FromMinutes(1),
+            SamplingDuration = TimeSpan.FromMinutes(1)
+        };
+        var middleware = new CircuitBreakerPipelineMiddleware(options);
+        IPipelineMessage message = PipeTestHelpers.CreateMessage()
+            .WithCurrentOperation(new TestCircuitBreakerOperation("trip-test", failureThreshold: 2));
+
+        for (int i = 0; i < 2; i++)
+        {
+            try
+            {
+                await middleware.ExecuteAsync(message, () => throw new InvalidOperationException($"fail-{i + 1}"));
+            }
+            catch (InvalidOperationException)
+            {
+            }
+        }
+
+        middleware.GetCircuitState("trip-test").Should().Be(PipelineCircuitState.Open);
+    }
+
+    [Fact]
+    [Obsolete]
+    public async Task CircuitBreakerPipelineMiddleware_Should_RejectWhenOpen()
+    {
+        var options = new CircuitBreakerOptions
+        {
+            Key = "reject-test",
+            FailureThreshold = 1,
+            OpenDuration = TimeSpan.FromMinutes(1),
+            SamplingDuration = TimeSpan.FromMinutes(1)
+        };
+        var middleware = new CircuitBreakerPipelineMiddleware(options);
+        IPipelineMessage message = PipeTestHelpers.CreateMessage()
+            .WithCurrentOperation(new TestCircuitBreakerOperation("reject-test", failureThreshold: 1));
+
+        try
+        {
+            await middleware.ExecuteAsync(message, () => throw new InvalidOperationException("trip"));
+        }
+        catch (InvalidOperationException)
+        {
+        }
+
+        Func<Task> act = () => middleware.ExecuteAsync(message, () => Task.CompletedTask);
+
+        await act.Should().ThrowAsync<PipelineCircuitBreakerOpenException>();
+    }
+
+    [Fact]
+    public async Task FallbackPipelineMiddleware_Should_ReturnFallbackOnFailure()
+    {
+        var fallbackOperation = new TestFallbackOperation();
+        var middleware = new FallbackPipelineMiddleware(new FallbackOptions());
+        IPipelineMessage message = PipeTestHelpers.CreateMessage().WithCurrentOperation(fallbackOperation);
+
+        await middleware.ExecuteAsync(message, () => throw new InvalidOperationException("primary failed"));
+
+        fallbackOperation.FallbackExecuted.Should().BeTrue();
+        message.HasContent("fallback").Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task FallbackPipelineMiddleware_Should_UseDefaultFallbackAction()
+    {
+        bool fallbackCalled = false;
+        var options = new FallbackOptions
+        {
+            FallbackAction = (_, _) =>
+            {
+                fallbackCalled = true;
+                return Task.CompletedTask;
+            }
+        };
+        var middleware = new FallbackPipelineMiddleware(options);
+        IPipelineMessage message = PipeTestHelpers.CreateMessage();
+
+        await middleware.ExecuteAsync(message, () => throw new InvalidOperationException("failed"));
+
+        fallbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    [Obsolete]
+    public async Task RetryPipelineMiddleware_Should_RetryThenSucceed()
+    {
+        int attempts = 0;
+        var options = new RetryOptions
+        {
+            MaxRetryAttempts = 3,
+            InitialRetryDelay = TimeSpan.FromMilliseconds(1),
+            UseJitter = false,
+            RetryableExceptions = [typeof(IOException)]
+        };
+        var middleware = new RetryPipelineMiddleware(options);
+        IPipelineMessage message = PipeTestHelpers.CreateMessage()
+            .WithCurrentOperation(new TestRetryableOperation(maxRetryAttempts: 3));
+
+        await middleware.ExecuteAsync(message, () =>
+        {
+            attempts++;
+            if (attempts < 3)
+            {
+                throw new IOException("transient");
+            }
+
+            return Task.CompletedTask;
+        });
+
+        attempts.Should().Be(3);
+    }
+
+    [Fact]
+    [Obsolete]
+    public async Task RetryPipelineMiddleware_Should_ExhaustRetriesAndThrow()
+    {
+        var options = new RetryOptions
+        {
+            MaxRetryAttempts = 2,
+            InitialRetryDelay = TimeSpan.FromMilliseconds(1),
+            UseJitter = false,
+            RetryableExceptions = [typeof(IOException)]
+        };
+        var middleware = new RetryPipelineMiddleware(options);
+        IPipelineMessage message = PipeTestHelpers.CreateMessage()
+            .WithCurrentOperation(new TestRetryableOperation(maxRetryAttempts: 2));
+
+        Func<Task> act = () => middleware.ExecuteAsync(message, () => throw new IOException("always fails"));
+
+        await act.Should().ThrowAsync<IOException>();
+    }
 }

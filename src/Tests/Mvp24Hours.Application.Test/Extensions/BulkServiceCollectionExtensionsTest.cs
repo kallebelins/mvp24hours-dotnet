@@ -144,58 +144,90 @@ public class BulkServiceCollectionExtensionsTest
     private sealed class TestBulkEntityService : IBulkCommandServiceAsync<AppTestEntity>
     {
         public Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(IList<AppTestEntity> entities, CancellationToken cancellationToken = default)
-            => Task.FromResult(BulkOperationResult.Success(entities.Count, TimeSpan.Zero).ToBusiness());
+        {
+            return Task.FromResult(BulkOperationResult.Success(entities.Count, TimeSpan.Zero).ToBusiness());
+        }
 
         public Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(IList<AppTestEntity> entities, BulkOperationOptions options, CancellationToken cancellationToken = default)
-            => BulkAddAsync(entities, cancellationToken);
+        {
+            return BulkAddAsync(entities, cancellationToken);
+        }
 
         public Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(IList<AppTestEntity> entities, CancellationToken cancellationToken = default)
-            => BulkAddAsync(entities, cancellationToken);
+        {
+            return BulkAddAsync(entities, cancellationToken);
+        }
 
         public Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(IList<AppTestEntity> entities, BulkOperationOptions options, CancellationToken cancellationToken = default)
-            => BulkAddAsync(entities, cancellationToken);
+        {
+            return BulkAddAsync(entities, cancellationToken);
+        }
 
         public Task<IBusinessResult<BulkOperationResult>> BulkRemoveAsync(IList<AppTestEntity> entities, CancellationToken cancellationToken = default)
-            => BulkAddAsync(entities, cancellationToken);
+        {
+            return BulkAddAsync(entities, cancellationToken);
+        }
 
         public Task<IBusinessResult<BulkOperationResult>> BulkRemoveAsync(IList<AppTestEntity> entities, BulkOperationOptions options, CancellationToken cancellationToken = default)
-            => BulkAddAsync(entities, cancellationToken);
+        {
+            return BulkAddAsync(entities, cancellationToken);
+        }
     }
 
     private sealed class TestBulkDtoServiceStub : IBulkCommandServiceWithDtoAsync<AppTestEntityDto>
     {
         public Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(IList<AppTestEntityDto> dtos, CancellationToken cancellationToken = default)
-            => Task.FromResult(BulkOperationResult.Success(dtos.Count, TimeSpan.Zero).ToBusiness());
+        {
+            return Task.FromResult(BulkOperationResult.Success(dtos.Count, TimeSpan.Zero).ToBusiness());
+        }
 
         public Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(IList<AppTestEntityDto> dtos, BulkOperationOptions options, CancellationToken cancellationToken = default)
-            => BulkAddAsync(dtos, cancellationToken);
+        {
+            return BulkAddAsync(dtos, cancellationToken);
+        }
 
         public Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(IList<AppTestEntityDto> dtos, CancellationToken cancellationToken = default)
-            => BulkAddAsync(dtos, cancellationToken);
+        {
+            return BulkAddAsync(dtos, cancellationToken);
+        }
 
         public Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(IList<AppTestEntityDto> dtos, BulkOperationOptions options, CancellationToken cancellationToken = default)
-            => BulkAddAsync(dtos, cancellationToken);
+        {
+            return BulkAddAsync(dtos, cancellationToken);
+        }
 
         public Task<IBusinessResult<BulkOperationResult>> BulkRemoveAsync(IList<AppTestEntityDto> dtos, CancellationToken cancellationToken = default)
-            => BulkAddAsync(dtos, cancellationToken);
+        {
+            return BulkAddAsync(dtos, cancellationToken);
+        }
 
         public Task<IBusinessResult<BulkOperationResult>> BulkRemoveAsync(IList<AppTestEntityDto> dtos, BulkOperationOptions options, CancellationToken cancellationToken = default)
-            => BulkAddAsync(dtos, cancellationToken);
+        {
+            return BulkAddAsync(dtos, cancellationToken);
+        }
     }
 
     private sealed class TestBulkSeparateDtosServiceStub
         : IBulkCommandServiceWithSeparateDtosAsync<AppTestCreateDto, AppTestUpdateDto>
     {
         public Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(IList<AppTestCreateDto> dtos, CancellationToken cancellationToken = default)
-            => Task.FromResult(BulkOperationResult.Success(dtos.Count, TimeSpan.Zero).ToBusiness());
+        {
+            return Task.FromResult(BulkOperationResult.Success(dtos.Count, TimeSpan.Zero).ToBusiness());
+        }
 
         public Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(IList<AppTestCreateDto> dtos, BulkOperationOptions options, CancellationToken cancellationToken = default)
-            => BulkAddAsync(dtos, cancellationToken);
+        {
+            return BulkAddAsync(dtos, cancellationToken);
+        }
 
         public Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(IList<AppTestUpdateDto> dtos, CancellationToken cancellationToken = default)
-            => Task.FromResult(BulkOperationResult.Success(dtos.Count, TimeSpan.Zero).ToBusiness());
+        {
+            return Task.FromResult(BulkOperationResult.Success(dtos.Count, TimeSpan.Zero).ToBusiness());
+        }
 
         public Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(IList<AppTestUpdateDto> dtos, BulkOperationOptions options, CancellationToken cancellationToken = default)
-            => BulkModifyAsync(dtos, cancellationToken);
+        {
+            return BulkModifyAsync(dtos, cancellationToken);
+        }
     }
 }

@@ -1,8 +1,9 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Mvp24Hours.Application.Pipe.Test.Operations;
-using Mvp24Hours.Application.Pipe.Test.Support;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Observability;
+using Mvp24Hours.Infrastructure.Pipe.Operations;
 
 namespace Mvp24Hours.Application.Pipe.Test.Observability;
 
@@ -105,6 +106,99 @@ public class ObservabilityTest
         mermaid.Should().Contain("OperationTest");
         ascii.Should().Contain("START");
         structure.Operations.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void PipelineVisualizer_Should_GenerateDotJsonAndAsyncPipelineFormats()
+    {
+        var syncPipeline = new Pipeline();
+        syncPipeline.Add<RequiredValidationOperation>();
+        syncPipeline.Add<ConditionalBranchOperation>();
+        syncPipeline.Add<ParallelGroupOperation>();
+
+        var asyncPipeline = new PipelineAsync();
+        asyncPipeline.Add<SubPipelineTestOperationAsync>();
+
+        var metrics = new PipelineMetrics();
+        metrics.RecordOperationStart("p1", "RequiredValidationOperation", 0);
+        metrics.RecordOperationEnd("p1", "RequiredValidationOperation", TimeSpan.FromMilliseconds(25), success: true);
+
+        var visualizer = new PipelineVisualizer();
+        var options = new PipelineVisualizationOptions
+        {
+            Title = "Coverage Pipeline",
+            Direction = DiagramDirection.LeftToRight,
+            IncludeInterceptors = true,
+            IncludeMetrics = true,
+            MetricsProvider = metrics,
+            HighlightRequiredOperations = true,
+            ShowOperationTypes = true,
+            UseShortNames = false
+        };
+
+        string dot = visualizer.ToDot(syncPipeline, options);
+        var bottomUpOptions = new PipelineVisualizationOptions
+        {
+            Title = options.Title,
+            Direction = DiagramDirection.BottomToTop,
+            IncludeInterceptors = options.IncludeInterceptors,
+            IncludeMetrics = options.IncludeMetrics,
+            MetricsProvider = options.MetricsProvider,
+            HighlightRequiredOperations = options.HighlightRequiredOperations,
+            ShowOperationTypes = options.ShowOperationTypes,
+            UseShortNames = options.UseShortNames
+        };
+        string ascii = visualizer.ToAscii(syncPipeline, bottomUpOptions);
+        string json = visualizer.ToJson(syncPipeline, options);
+        string asyncMermaid = visualizer.ToMermaid(asyncPipeline, options);
+        PipelineStructure asyncStructure = visualizer.GetStructure(asyncPipeline);
+
+        dot.Should().Contain("digraph");
+        dot.Should().Contain("hexagon");
+        ascii.Should().Contain("END");
+        json.Should().Contain("operations");
+        asyncMermaid.Should().Contain("flowchart LR");
+        asyncStructure.Operations.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void PipelineVisualizer_EmptyPipeline_ShouldRenderStartToEnd()
+    {
+        var visualizer = new PipelineVisualizer();
+        string mermaid = visualizer.ToMermaid(new Pipeline());
+
+        mermaid.Should().Contain("Start --> End");
+    }
+
+    private sealed class RequiredValidationOperation : OperationBase
+    {
+        public override bool IsRequired => true;
+
+        public override void Execute(IPipelineMessage input)
+        {
+        }
+    }
+
+    private sealed class ConditionalBranchOperation : OperationBase
+    {
+        public override void Execute(IPipelineMessage input)
+        {
+        }
+    }
+
+    private sealed class ParallelGroupOperation : OperationBase
+    {
+        public override void Execute(IPipelineMessage input)
+        {
+        }
+    }
+
+    private sealed class SubPipelineTestOperationAsync : OperationBaseAsync
+    {
+        public override Task ExecuteAsync(IPipelineMessage input)
+        {
+            return Task.CompletedTask;
+        }
     }
 
     [Fact]

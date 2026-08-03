@@ -74,6 +74,39 @@ internal sealed class TestBulkheadOperation(string key, int maxConcurrency, int 
     }
 }
 
+internal sealed class TestCircuitBreakerOperation(
+    string key = "test-circuit",
+    int failureThreshold = 2,
+    TimeSpan? openDuration = null) : ICircuitBreakerOperation
+{
+    public string CircuitBreakerKey { get; } = key;
+    public int FailureThreshold { get; } = failureThreshold;
+    public TimeSpan OpenDuration { get; } = openDuration ?? TimeSpan.FromMinutes(1);
+}
+
+internal sealed class TestRetryableOperation(
+    int maxRetryAttempts = 2,
+    TimeSpan? initialDelay = null) : IRetryableOperation
+{
+    public int MaxRetryAttempts { get; } = maxRetryAttempts;
+    public TimeSpan InitialRetryDelay { get; } = initialDelay ?? TimeSpan.FromMilliseconds(1);
+    public double BackoffMultiplier { get; } = 1.0;
+    public TimeSpan? MaxRetryDelay { get; } = TimeSpan.FromMilliseconds(10);
+    public Type[]? RetryableExceptions { get; } = [typeof(IOException)];
+}
+
+internal sealed class TestFallbackOperation : IFallbackOperation
+{
+    public bool FallbackExecuted { get; private set; }
+
+    public Task ExecuteFallbackAsync(IPipelineMessage input, Exception? exception)
+    {
+        FallbackExecuted = true;
+        input.AddContent("fallback", true);
+        return Task.CompletedTask;
+    }
+}
+
 internal sealed class TestRateLimitedOperation : IRateLimitedOperation
 {
     public string RateLimiterKey { get; init; } = "pipe-test";
