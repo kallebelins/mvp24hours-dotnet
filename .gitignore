@@ -369,7 +369,19 @@ prompts.md
 **/prompts.md
 prompts-*.md
 tasks/
+
+# Test results, coverage collection, and ReportGenerator output (local/CI artifacts)
 **/TestResults/
+test-results/
+coverage-results/
+coverage-results-all/
+**/coverage-report/
+**/coverage-report-*/
+**/coveragereport/
 *.trx
 coverage.cobertura.xml
-test-results/
+*.cobertura.xml
+coverage.json
+lcov.info
+*.lcov
+CoverletSourceRootsMapping_*
