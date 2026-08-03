@@ -54,6 +54,20 @@ function Invoke-Step {
     }
 }
 
+function Get-LatestCoverageReports {
+    param([string]$RootDirectory)
+
+    Get-ChildItem $RootDirectory -Directory | ForEach-Object {
+        $reports = Get-ChildItem $_.FullName -Recurse -Filter coverage.cobertura.xml
+        if ($reports.Count -eq 0) {
+            return
+        }
+
+        # Prefer the largest report when retries exist (failed runs often produce empty/minimal coverage).
+        $reports | Sort-Object Length -Descending | Select-Object -First 1 | ForEach-Object { $_.FullName }
+    }
+}
+
 function Invoke-TestProjectsWithCoverage {
     param(
         [string]$Filter,
@@ -144,11 +158,12 @@ try {
             dotnet tool install -g dotnet-reportgenerator-globaltool --ignore-failed-sources 2>$null
             $reports = @()
             if (Test-Path ./test-results/unit) {
-                $reports += Get-ChildItem ./test-results/unit -Recurse -Filter coverage.cobertura.xml | ForEach-Object { $_.FullName }
+                $reports += Get-LatestCoverageReports ./test-results/unit
             }
             if ((-not $SkipIntegration) -and (Test-Path ./test-results/integration)) {
-                $reports += Get-ChildItem ./test-results/integration -Recurse -Filter coverage.cobertura.xml | ForEach-Object { $_.FullName }
+                $reports += Get-LatestCoverageReports ./test-results/integration
             }
+            Write-Host "Merging $($reports.Count) coverage reports (latest per test project)"
             if ($reports.Count -eq 0) {
                 throw 'No coverage.cobertura.xml files found.'
             }
