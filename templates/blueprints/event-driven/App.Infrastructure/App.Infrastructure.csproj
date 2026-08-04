@@ -7,6 +7,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
     <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.Data.EFCore\Mvp24Hours.Infrastructure.Data.EFCore.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.RabbitMQ\Mvp24Hours.Infrastructure.RabbitMQ.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\App.Application\App.Application.csproj" />

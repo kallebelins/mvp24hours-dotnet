@@ -60,6 +60,37 @@ dotnet build Mvp24Hours.Templates.slnx --configuration Release
 
 HTTP blueprints use **EF Core InMemory** by default so they run without Docker. Swap to SQL Server (or another provider) when you need durable storage.
 
+## Production-ready baseline included
+
+Templates now include a robust baseline based on mvp24hours:
+
+- Native OpenAPI for HTTP hosts
+- FluentValidation wiring in domain/application boundaries
+- Request observability middleware for HTTP hosts
+- Resilient HttpClient setup with `Microsoft.Extensions.Http.Resilience`
+- Hybrid caching registration (`Mvp24Hours.Infrastructure.Caching`)
+- HTTP middleware hardening for WebAPI/BFF: rate limiting, idempotency, output cache
+- Keycloak identity baseline for WebAPI/BFF templates
+- CronJob observability + health checks for worker templates
+
+For HTTP templates, tune middleware behavior in `HttpHardening` section of each `appsettings*.json`.
+
+## Docker compose per template
+
+Each template folder now includes its own `docker-compose.yml` with the required local dependencies for that template shape.
+
+Typical stacks by host type:
+
+- Blueprints and HTTP hosts: SQL Server, Redis, RabbitMQ, Keycloak, Jaeger, Prometheus, Grafana
+- Worker hosts: observability + messaging dependencies according to complexity level
+- Function hosts: Azurite + observability dependencies
+
+Run from the template folder:
+
+```bash
+docker compose up -d
+```
+
 ## Related documentation
 
 - [Architecture guides](../docs/en-us/guides/architecture/home.md)

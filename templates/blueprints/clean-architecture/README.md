@@ -18,6 +18,27 @@ Compilable Clean Architecture scaffold with a placeholder `Item` resource. Copy,
 - `App.WebAPI` — controllers, mediator DI, OpenAPI, health
 - `App.Test` — smoke tests
 
+## Production baseline included
+
+The template includes a robust baseline using mvp24hours building blocks:
+
+- Native OpenAPI
+- FluentValidation + mediator validation behavior
+- Keycloak authentication/authorization baseline
+- HTTP request observability middleware
+- Hybrid caching registration
+- Resilient HttpClient registration
+- HTTP middleware hardening: rate limiting, idempotency, and output cache
+- Health checks (`self` + Keycloak)
+
+These HTTP middleware features are configurable through `HttpHardening` in `App.WebAPI/appsettings*.json`.
+
+Local dependencies can be started with:
+
+```bash
+docker compose up -d
+```
+
 ## Inward dependency rule
 
 ```

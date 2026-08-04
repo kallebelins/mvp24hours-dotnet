@@ -33,12 +33,27 @@ public class ItemService(
                 .ToBusinessPaging<IList<ItemResult>>();
         }
 
-        return mapper.MapPagingTo<IList<Item>, IList<ItemResult>>(result);
+        var mapped = mapper.MapPagingTo<IList<Item>, IList<ItemResult>>(result);
+        if (mapped is null)
+        {
+            return "OPERATION_FAIL".ToMessageResult("OPERATION_FAIL", MessageType.Error)
+                .ToBusinessPaging<IList<ItemResult>>();
+        }
+
+        return mapped;
     }
 
     public async Task<IBusinessResult<ItemResult>> GetById(int id, CancellationToken cancellationToken = default)
     {
-        return await mapper.MapBusinessToAsync<Item, ItemResult>(GetByIdAsync(id, cancellationToken: cancellationToken));
+        var entity = await Repository.GetByIdAsync(id, cancellationToken: cancellationToken);
+        if (entity is null)
+        {
+            return "RECORD_NOT_FOUND".ToMessageResult("RECORD_NOT_FOUND", MessageType.Error)
+                .ToBusiness<ItemResult>();
+        }
+
+        return mapper.Map<ItemResult>(entity)
+            .ToBusiness("OPERATION_SUCCESS".ToMessageResult("OPERATION_SUCCESS", MessageType.Success));
     }
 
     public async Task<IBusinessResult<int>> Create(ItemCreate dto, CancellationToken cancellationToken = default)

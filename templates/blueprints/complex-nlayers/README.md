@@ -16,6 +16,27 @@ Compilable Complex N-Layers scaffold with a placeholder `Item` resource. Copy, r
 - `App.WebAPI` — controllers, DI, OpenAPI, health
 - `App.Test` — smoke tests
 
+## Production baseline included
+
+- Native OpenAPI
+- FluentValidation registration
+- Keycloak baseline (authentication and authorization pipeline)
+- Request observability middleware
+- Hybrid cache registration
+- Resilient HttpClient defaults
+- HTTP middleware hardening: rate limiting, idempotency, and output cache
+- Health checks (`self` + Keycloak)
+
+These HTTP middleware features are configurable through `HttpHardening` in `App.WebAPI/appsettings*.json`.
+
+## Local dependencies
+
+Start required services from this folder:
+
+```bash
+docker compose up -d
+```
+
 ## Rename checklist
 
 1. Rename projects/namespaces `App` → your service name

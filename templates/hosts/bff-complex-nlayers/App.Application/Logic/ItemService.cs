@@ -71,6 +71,11 @@ public class ItemService(
         }
 
         var id = await gateway.CreateAsync(entity, cancellationToken);
+        if (id <= 0)
+        {
+            return "OPERATION_FAIL".ToMessageResult("OPERATION_FAIL", MessageType.Error).ToBusiness<int>();
+        }
+
         logger.LogInformation("Created item {ItemId} via gateway", id);
         return id.ToBusiness("OPERATION_SUCCESS".ToMessageResult("OPERATION_SUCCESS", MessageType.Success));
     }

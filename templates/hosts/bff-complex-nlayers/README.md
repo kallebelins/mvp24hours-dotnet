@@ -18,7 +18,35 @@ BFF-style Complex N-Layers scaffold **without a required DbContext**. Aggregates
 
 ## Auth
 
-In **Development**, authorization is not enforced by default (no auth middleware configured). Add JWT/OAuth and policy attributes before production.
+This template already includes a Keycloak baseline (`AddKeycloakServices`, authentication middleware, current-user context, and authorization pipeline). Configure the `Keycloak` section in `appsettings*.json` for your realm/client.
+
+## HTTP hardening
+
+The BFF enables mvp24hours HTTP hardening middleware by default:
+
+- Rate limiting
+- Idempotency (disabled automatically in `Testing` environment)
+- Output cache
+
+Tune or disable these features through `HttpHardening` in `appsettings*.json`:
+
+- `HttpHardening:RateLimiting` (`Enabled`, `PermitLimit`, `WindowSeconds`)
+- `HttpHardening:Idempotency` (`Enabled`, `RequireKey`)
+- `HttpHardening:OutputCache` (`Enabled`, `DefaultExpirationSeconds`)
+
+## Downstream gateway mode
+
+The BFF supports two gateway modes through `Downstream:ItemApi` options:
+
+- `UseHttpGateway=false` (default): uses `InMemoryItemGateway` for local-first development.
+- `UseHttpGateway=true`: uses `HttpItemGateway` with resilient HttpClient, response caching, and cache invalidation on writes.
+
+Available options:
+
+- `BaseAddress`
+- `TimeoutSeconds`
+- `ListCacheMinutes`
+- `ItemCacheMinutes`
 
 To wire a real downstream API, replace `InMemoryItemGateway` with `HttpItemGateway` in `ServiceBuilderExtensions` and set `Downstream:ItemApi:BaseAddress`.
 
@@ -26,6 +54,12 @@ To wire a real downstream API, replace `InMemoryItemGateway` with `HttpItemGatew
 
 ```bash
 dotnet run --project App.BFF
+```
+
+To start required local dependencies:
+
+```bash
+docker compose up -d
 ```
 
 - OpenAPI: `http://localhost:5200/openapi/v1.json`

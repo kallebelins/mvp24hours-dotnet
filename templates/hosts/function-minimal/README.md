@@ -6,6 +6,17 @@ Single-project Azure Functions **isolated worker** (.NET 10) with HTTP and timer
 
 - `App.Function` — `Program.cs`, `ItemFunctions` (GET/POST), `HeartbeatFunction` (timer)
 
+## Production baseline included
+
+- Application Insights worker integration
+- Resilient HttpClient defaults
+
+## Local dependencies
+
+```bash
+docker compose up -d
+```
+
 ## Run locally
 
 ```bash

@@ -8,6 +8,17 @@ Azure Functions isolated worker with **Core + Application + Function** layers an
 - `App.Application` — `ItemService` (in-memory store)
 - `App.Function` — HTTP triggers calling `IItemService`
 
+## Production baseline included
+
+- Application Insights worker integration
+- Resilient HttpClient defaults
+
+## Local dependencies
+
+```bash
+docker compose up -d
+```
+
 ## Run
 
 ```bash

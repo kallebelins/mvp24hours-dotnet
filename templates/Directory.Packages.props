@@ -23,6 +23,7 @@
     <PackageVersion Include="Mvp24Hours.Infrastructure.CronJob" Version="$(Mvp24HoursPackageVersion)" />
     <PackageVersion Include="Mvp24Hours.Infrastructure.Cqrs" Version="$(Mvp24HoursPackageVersion)" />
     <PackageVersion Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Identity.Keycloak" Version="$(Mvp24HoursPackageVersion)" />
     <PackageVersion Include="Mvp24Hours.Infrastructure.Pipe" Version="$(Mvp24HoursPackageVersion)" />
     <PackageVersion Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="$(Mvp24HoursPackageVersion)" />
     <PackageVersion Include="Mvp24Hours.WebAPI" Version="$(Mvp24HoursPackageVersion)" />

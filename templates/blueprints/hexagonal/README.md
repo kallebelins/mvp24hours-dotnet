@@ -17,6 +17,26 @@ Compilable Hexagonal (Ports & Adapters) scaffold with a placeholder `Item` resou
 - `App.WebAPI` — DI wiring, controllers, OpenAPI, health
 - `App.Test` — smoke tests
 
+## Production baseline included
+
+- Native OpenAPI
+- Keycloak baseline (authentication and authorization pipeline)
+- Request observability middleware
+- Hybrid cache registration
+- Resilient HttpClient defaults
+- HTTP middleware hardening: rate limiting, idempotency, and output cache
+- Health checks (`self` + Keycloak)
+
+These HTTP middleware features are configurable through `HttpHardening` in `App.WebAPI/appsettings*.json`.
+
+## Local dependencies
+
+Start required services from this folder:
+
+```bash
+docker compose up -d
+```
+
 ## Rename checklist
 
 1. Rename projects/namespaces `App` → your service name

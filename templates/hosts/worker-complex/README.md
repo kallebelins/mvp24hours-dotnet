@@ -9,6 +9,18 @@ CronJob worker with **Core + Application + Infrastructure + Worker** layers.
 - `App.Infrastructure` — `InMemoryItemStore`
 - `App.Worker` — CronJob host + health
 
+## Production baseline included
+
+- CronJob observability
+- CronJob health checks
+- Resilient HttpClient defaults
+
+## Local dependencies
+
+```bash
+docker compose up -d
+```
+
 ## Run
 
 ```bash

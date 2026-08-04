@@ -8,6 +8,18 @@ CronJob worker with **Core + Application + Worker** layers.
 - `App.Application` — `ItemProcessor`
 - `App.Worker` — `ItemProcessingJob` CronJob + health
 
+## Production baseline included
+
+- CronJob observability
+- CronJob health checks
+- Resilient HttpClient defaults
+
+## Local dependencies
+
+```bash
+docker compose up -d
+```
+
 ## Run
 
 ```bash

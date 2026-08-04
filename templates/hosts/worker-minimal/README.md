@@ -10,6 +10,18 @@ Single-project **CronJob worker** with health endpoints.
 
 Uses `Mvp24Hours.Infrastructure.CronJob` with dual PackageReference/ProjectReference pattern and `AspNetCore.HealthChecks.UI.Client`.
 
+## Production baseline included
+
+- CronJob observability
+- CronJob health checks
+- Resilient HttpClient defaults
+
+## Local dependencies
+
+```bash
+docker compose up -d
+```
+
 ## Run
 
 ```bash

@@ -9,6 +9,17 @@ Azure Functions isolated worker with **Core + Application + Infrastructure + Fun
 - `App.Infrastructure` — `InMemoryItemRepository`
 - `App.Function` — DI wiring, HTTP + timer triggers
 
+## Production baseline included
+
+- Application Insights worker integration
+- Resilient HttpClient defaults
+
+## Local dependencies
+
+```bash
+docker compose up -d
+```
+
 ## Run
 
 ```bash

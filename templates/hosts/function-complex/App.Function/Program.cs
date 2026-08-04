@@ -10,6 +10,10 @@ var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()
     .ConfigureServices(services =>
     {
+        services.AddApplicationInsightsTelemetryWorkerService();
+        services.ConfigureFunctionsApplicationInsights();
+        services.AddHttpClient("external-dependency")
+            .AddStandardResilienceHandler();
         services.AddSingleton<IItemRepository, InMemoryItemRepository>();
         services.AddSingleton<IItemService, ItemService>();
     })
