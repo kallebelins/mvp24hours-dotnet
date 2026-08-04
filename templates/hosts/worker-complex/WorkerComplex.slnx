@@ -3,4 +3,5 @@
   <Project Path="App.Core/App.Core.csproj" />
   <Project Path="App.Infrastructure/App.Infrastructure.csproj" />
   <Project Path="App.Worker/App.Worker.csproj" />
+  <Project Path="docker-compose.dcproj" />
 </Solution>
