@@ -17,6 +17,46 @@ dotnet build -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion
 
 Inside this repository, project references to `src/` are the default.
 
+## Automated rename script
+
+Use the PowerShell script to rename folder names, file names, and text content recursively in the copied template.
+
+Script path:
+
+- `scripts/Replace-TextEverywhere.ps1`
+
+Recommended flow:
+
+1. Copy one template folder to your new repository.
+2. Run a dry-run with `-WhatIf` to preview all changes.
+3. Run again without `-WhatIf` to apply changes.
+
+Dry-run example:
+
+```powershell
+pwsh ./scripts/Replace-TextEverywhere.ps1 \
+	-DestinationPath "./my-new-service" \
+	-SearchText "App" \
+	-ReplaceText "Orders" \
+	-WhatIf
+```
+
+Apply changes:
+
+```powershell
+pwsh ./scripts/Replace-TextEverywhere.ps1 \
+	-DestinationPath "./my-new-service" \
+	-SearchText "App" \
+	-ReplaceText "Orders"
+```
+
+Notes:
+
+- Search is case-insensitive.
+- Replacement preserves common case patterns (APP, App, app).
+- The script processes the destination folder and all subfolders/files.
+- Common generated folders are ignored (`bin`, `obj`, `.git`, `.vs`, `node_modules`).
+
 ## Rename checklist
 
 - Solution and project file names (`App.*.csproj`)
