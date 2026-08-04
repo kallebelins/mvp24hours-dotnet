@@ -18,7 +18,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional;
 /// </para>
 /// <para>
 /// When processing a message, you may need to publish follow-up messages as part of
-/// the same logical transaction. Using <see cref="PublishWithinTransactionAsync{T}"/>
+/// the same logical transaction. Using <see cref="PublishWithinTransactionAsync{T}(T, string, CancellationToken)"/>
 /// ensures that:
 /// </para>
 /// <list type="bullet">

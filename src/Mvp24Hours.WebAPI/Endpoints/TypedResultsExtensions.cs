@@ -212,7 +212,7 @@ public static class TypedResultsExtensions
     #region TypedResults.Problem() Extensions
 
     /// <summary>
-    /// Converts an exception to a ProblemDetails result using <see cref="TypedResults.Problem"/>.
+    /// Converts an exception to a ProblemDetails result using <see cref="M:Microsoft.AspNetCore.Http.TypedResults.Problem(System.String,System.String,System.Nullable{System.Int32},System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})"/>.
     /// </summary>
     /// <param name="exception">The exception to convert.</param>
     /// <param name="includeDetails">Whether to include exception details (default: false).</param>

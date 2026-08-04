@@ -23,9 +23,9 @@ namespace Mvp24Hours.Extensions;
 /// These extensions provide a convenient way to perform bulk operations
 /// directly on the MongoDB context without needing a repository:
 /// <list type="bullet">
-///   <item><see cref="BulkInsertAsync{TEntity}"/> - Efficient multi-document inserts</item>
-///   <item><see cref="BulkUpdateAsync{TEntity}"/> - Batch updates using BulkWrite</item>
-///   <item><see cref="BulkDeleteAsync{TEntity}"/> - Batch deletes using BulkWrite</item>
+///   <item><see cref="BulkInsertAsync{TEntity}(Mvp24HoursContext, IList{TEntity}, CancellationToken)"/> - Efficient multi-document inserts</item>
+///   <item><see cref="BulkUpdateAsync{TEntity}(Mvp24HoursContext, IList{TEntity}, Expression{Func{TEntity, object}}, CancellationToken)"/> - Batch updates using BulkWrite</item>
+///   <item><see cref="BulkDeleteAsync{TEntity}(Mvp24HoursContext, IList{TEntity}, Expression{Func{TEntity, object}}, CancellationToken)"/> - Batch deletes using BulkWrite</item>
 ///   <item><see cref="UpdateManyAsync{TEntity}"/> - Update all matching documents</item>
 ///   <item><see cref="DeleteManyAsync{TEntity}"/> - Delete all matching documents</item>
 /// </list>

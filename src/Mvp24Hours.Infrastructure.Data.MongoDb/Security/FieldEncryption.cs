@@ -322,7 +322,7 @@ public class EncryptedStringSerializer(IFieldEncryptor encryptor) : SerializerBa
 /// </summary>
 /// <remarks>
 /// Use this attribute to mark properties that should be encrypted.
-/// Register the <see cref="EncryptedFieldConvention"/> to automatically
+/// Register the <c>EncryptedFieldConvention</c> to automatically
 /// apply encryption to marked properties.
 /// </remarks>
 /// <example>

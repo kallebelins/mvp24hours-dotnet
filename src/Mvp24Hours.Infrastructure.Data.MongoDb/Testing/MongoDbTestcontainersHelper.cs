@@ -195,7 +195,7 @@ public class MongoDbTestcontainersOptions
 /// <para>
 /// <strong>Usage Pattern:</strong>
 /// <list type="number">
-/// <item>Create a container using <see cref="CreateContainerAsync"/></item>
+/// <item>Create a container using the test fixture bootstrap flow (for example, <c>StartContainerAsync</c> in your test host).</item>
 /// <item>Get the connection string from the returned container</item>
 /// <item>Create your MongoDB context using the connection string</item>
 /// <item>Dispose the container after tests complete</item>

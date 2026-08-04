@@ -383,7 +383,7 @@ public class RabbitMQConfigurationBuilder(IServiceCollection services)
     /// <remarks>
     /// <para>
     /// The in-memory outbox is not suitable for production as messages will be lost on restart.
-    /// Use <see cref="UseEntityFrameworkOutbox{TDbContext}"/> for production scenarios.
+    /// Use <see cref="UseEntityFrameworkOutbox{TDbContext}(Action{OutboxOptions})"/> for production scenarios.
     /// </para>
     /// </remarks>
     public RabbitMQConfigurationBuilder UseInMemoryOutbox()

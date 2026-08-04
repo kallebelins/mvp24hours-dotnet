@@ -23,8 +23,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Core.Contract.Data;
 ///   <item><see cref="BulkUpdateAsync(IList{TEntity}, MongoDbBulkOperationOptions, CancellationToken)"/> - BulkWrite with UpdateOne operations</item>
 ///   <item><see cref="BulkDeleteAsync(IList{TEntity}, MongoDbBulkOperationOptions, CancellationToken)"/> - BulkWrite with DeleteOne operations</item>
 ///   <item><see cref="BulkWriteAsync"/> - Full BulkWrite access for mixed operations</item>
-///   <item><see cref="UpdateManyAsync"/> - Update all documents matching a filter</item>
-///   <item><see cref="DeleteManyAsync"/> - Delete all documents matching a filter</item>
+///   <item><see cref="UpdateManyAsync(Expression{Func{TEntity, bool}}, UpdateDefinition{TEntity}, CancellationToken)"/> - Update all documents matching a filter</item>
+///   <item><see cref="DeleteManyAsync(Expression{Func{TEntity, bool}}, CancellationToken)"/> - Delete all documents matching a filter</item>
 /// </list>
 /// </para>
 /// </remarks>
@@ -89,7 +89,7 @@ public interface IBulkOperationsMongoDbAsync<TEntity> : IBulkOperationsAsync<TEn
     /// <remarks>
     /// <para>
     /// Entities are matched by their _id field and completely replaced.
-    /// For partial updates, use <see cref="UpdateManyAsync"/> or <see cref="BulkWriteAsync"/>.
+    /// For partial updates, use <see cref="UpdateManyAsync(Expression{Func{TEntity, bool}}, UpdateDefinition{TEntity}, CancellationToken)"/> or <see cref="BulkWriteAsync"/>.
     /// </para>
     /// </remarks>
     Task<BulkOperationResult> BulkUpdateAsync(

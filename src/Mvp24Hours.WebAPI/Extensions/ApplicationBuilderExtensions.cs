@@ -277,7 +277,7 @@ public static class ApplicationBuilderExtensions
     /// </list>
     /// </para>
     /// <para>
-    /// Requires prior registration via <see cref="ServiceCollectionExtentions.AddMvp24HoursProblemDetails"/>.
+    /// Requires prior registration via <see cref="M:Mvp24Hours.WebAPI.Extensions.ServiceCollectionExtentions.AddMvp24HoursProblemDetails(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Mvp24Hours.WebAPI.Configuration.MvpProblemDetailsOptions})"/>.
     /// </para>
     /// </remarks>
     /// <example>
@@ -379,7 +379,7 @@ public static class ApplicationBuilderExtensions
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <strong>DEPRECATED:</strong> Use <see cref="OutputCachingExtensions.UseMvp24HoursOutputCache"/> instead.
+    /// <strong>DEPRECATED:</strong> Use <see cref="M:Mvp24Hours.WebAPI.Extensions.OutputCachingExtensions.UseMvp24HoursOutputCache(Microsoft.AspNetCore.Builder.IApplicationBuilder)"/> instead.
     /// </para>
     /// <para>
     /// <strong>Prerequisites:</strong>

@@ -21,7 +21,7 @@ namespace Mvp24Hours.WebAPI.Extensions;
 /// </para>
 /// <para>
 /// <b>Usage:</b>
-/// Call <see cref="UseMvp24HoursNativeOpenApi"/> after <c>UseRouting()</c> and before <c>UseEndpoints()</c>.
+/// Call <see cref="UseMvp24HoursNativeOpenApi(IApplicationBuilder)"/> after <c>UseRouting()</c> and before <c>UseEndpoints()</c>.
 /// </para>
 /// </remarks>
 /// <example>

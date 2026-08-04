@@ -94,7 +94,7 @@ public class NativeValidationEndpointFilter<TRequest> : IEndpointFilter
 /// This filter catches exceptions and converts them to appropriate HTTP responses:
 /// <list type="bullet">
 /// <item><see cref="NotFoundException"/> → 404 Not Found</item>
-/// <item><see cref="ValidationException"/> → 400 Bad Request</item>
+/// <item><see cref="Mvp24Hours.Core.Exceptions.ValidationException"/> → 400 Bad Request</item>
 /// <item><see cref="ConflictException"/> → 409 Conflict</item>
 /// <item><see cref="UnauthorizedException"/> → 401 Unauthorized</item>
 /// <item><see cref="ForbiddenException"/> → 403 Forbidden</item>

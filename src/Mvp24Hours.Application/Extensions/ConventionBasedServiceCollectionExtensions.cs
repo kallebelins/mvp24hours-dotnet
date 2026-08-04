@@ -26,14 +26,14 @@ namespace Mvp24Hours.Application.Extensions;
 /// <item><see cref="IScopedService"/> - Registered with Scoped lifetime</item>
 /// <item><see cref="ISingletonService"/> - Registered with Singleton lifetime</item>
 /// <item><see cref="ITransientService"/> - Registered with Transient lifetime</item>
-/// <item><see cref="IKeyedService"/> - Registered as keyed service (requires <see cref="ServiceKeyAttribute"/>)</item>
+/// <item><see cref="IKeyedService"/> - Registered as keyed service (requires <see cref="Mvp24Hours.Core.Contract.Infrastructure.DependencyInjection.ServiceKeyAttribute"/>)</item>
 /// <item><see cref="ISelfRegistering"/> - Also registered by concrete type</item>
 /// </list>
 /// </para>
 /// <para>
 /// <strong>Supported attributes:</strong>
 /// <list type="bullet">
-/// <item><see cref="ServiceKeyAttribute"/> - Specifies the key for keyed services</item>
+/// <item><see cref="Mvp24Hours.Core.Contract.Infrastructure.DependencyInjection.ServiceKeyAttribute"/> - Specifies the key for keyed services</item>
 /// <item><see cref="ServiceOrderAttribute"/> - Controls registration order</item>
 /// <item><see cref="ServiceReplaceAttribute"/> - Replaces existing registrations</item>
 /// <item><see cref="ServiceTryAddAttribute"/> - Only adds if not already registered</item>

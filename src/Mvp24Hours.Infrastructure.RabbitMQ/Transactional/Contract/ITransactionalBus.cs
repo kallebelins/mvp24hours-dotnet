@@ -32,7 +32,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional.Contract;
 /// <list type="number">
 /// <item>Begin database transaction</item>
 /// <item>Perform business operations</item>
-/// <item>Call <see cref="PublishAsync{TMessage}"/> to stage messages</item>
+/// <item>Call <see cref="PublishAsync{TMessage}(TMessage, string, CancellationToken)"/> to stage messages</item>
 /// <item>Commit transaction - messages are stored in outbox</item>
 /// <item>Background process publishes messages to RabbitMQ</item>
 /// </list>

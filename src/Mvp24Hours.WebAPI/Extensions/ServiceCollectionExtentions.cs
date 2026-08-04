@@ -1312,7 +1312,7 @@ public static class ServiceCollectionExtentions
     /// </list>
     /// </para>
     /// <para>
-    /// Use <see cref="ApplicationBuilderExtensions.UseMvp24HoursRateLimiting"/> to add
+    /// Use <see cref="ApplicationBuilderExtensions.UseMvp24HoursRateLimiting(IApplicationBuilder)"/> to add
     /// the middleware to the pipeline.
     /// </para>
     /// </remarks>
@@ -1803,7 +1803,7 @@ public static class ServiceCollectionExtentions
     /// </list>
     /// </para>
     /// <para>
-    /// Use <see cref="ApplicationBuilderExtensions.UseMvp24HoursIdempotency"/> to add
+    /// Use <see cref="ApplicationBuilderExtensions.UseMvp24HoursIdempotency(IApplicationBuilder)"/> to add
     /// the middleware to the pipeline.
     /// </para>
     /// </remarks>
@@ -2175,7 +2175,7 @@ public static class ServiceCollectionExtentions
     /// format query parameter (?format=json), and URL suffix (.json, .xml).
     /// </para>
     /// <para>
-    /// Use <see cref="ApplicationBuilderExtensions.UseMvp24HoursContentNegotiation"/> to add
+    /// Use <see cref="ApplicationBuilderExtensions.UseMvp24HoursContentNegotiation(IApplicationBuilder)"/> to add
     /// the middleware to the pipeline.
     /// </para>
     /// </remarks>

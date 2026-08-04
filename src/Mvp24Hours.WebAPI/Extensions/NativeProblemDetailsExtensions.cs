@@ -36,7 +36,7 @@ namespace Mvp24Hours.WebAPI.Extensions;
 /// </para>
 /// <para>
 /// This is the recommended approach for .NET 8+ applications. For applications using
-/// the custom middleware approach, see <see cref="ServiceCollectionExtentions.AddMvp24HoursProblemDetails"/>.
+/// the custom middleware approach, see <see cref="M:Mvp24Hours.WebAPI.Extensions.ServiceCollectionExtentions.AddMvp24HoursProblemDetails(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Mvp24Hours.WebAPI.Configuration.MvpProblemDetailsOptions})"/>.
 /// </para>
 /// </remarks>
 public static class NativeProblemDetailsExtensions

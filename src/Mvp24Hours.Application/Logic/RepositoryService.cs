@@ -154,7 +154,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
     }
 
     /// <summary>
-    /// <see cref="Mvp24Hours.Core.Contract.Logic.IQueryService{T}.GetById(int)"/>
+    /// <see cref="Mvp24Hours.Core.Contract.Logic.IQueryService{T}.GetById(object)"/>
     /// </summary>
     public virtual IBusinessResult<TEntity?> GetById(object id)
     {
@@ -162,7 +162,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
     }
 
     /// <summary>
-    /// <see cref="Mvp24Hours.Core.Contract.Logic.IQueryService{T}.GetById(int, IPagingCriteria)"/>
+    /// <see cref="Mvp24Hours.Core.Contract.Logic.IQueryService{T}.GetById(object, IPagingCriteria)"/>
     /// </summary>
     public virtual IBusinessResult<TEntity?> GetById(object id, IPagingCriteria? criteria)
     {
