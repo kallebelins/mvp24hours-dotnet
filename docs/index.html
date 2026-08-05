@@ -34,6 +34,15 @@
 
   <div id="app">Please wait...</div>
   <script>
+    (function () {
+      const hash = window.location.hash || '';
+      const route = hash.startsWith('#/') ? hash.slice(2) : '';
+
+      if (route && !route.startsWith('en-us/') && route !== 'en-us' && !route.startsWith('mvp24hours.mdc') && !route.startsWith('llms_')) {
+        window.location.replace(`${window.location.pathname}#/en-us/${route}`);
+      }
+    })();
+
     window.$docsify = {
       name: 'Mvp24Hours',
       repo: 'https://github.com/kallebelins/mvp24hours-dotnet',
