@@ -6,14 +6,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AnalysisLevel>latest</AnalysisLevel>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <Mvp24HoursSourceRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\src'))</Mvp24HoursSourceRoot>
 
     <!--
-      In-repository builds use the current source projects. Set this to false
-      (and optionally Mvp24HoursPackageVersion) when copying a template out of
-      the monorepo and consuming published NuGet packages.
+      Use local source projects only when the monorepo source tree is available.
+      Copied templates fall back to published NuGet packages automatically.
     -->
-    <Mvp24HoursUseProjectReferences Condition="'$(Mvp24HoursUseProjectReferences)' == ''">true</Mvp24HoursUseProjectReferences>
+    <Mvp24HoursUseProjectReferences Condition="'$(Mvp24HoursUseProjectReferences)' == '' and Exists('$(Mvp24HoursSourceRoot)\Mvp24Hours.Core\Mvp24Hours.Core.csproj')">true</Mvp24HoursUseProjectReferences>
+    <Mvp24HoursUseProjectReferences Condition="'$(Mvp24HoursUseProjectReferences)' == ''">false</Mvp24HoursUseProjectReferences>
     <Mvp24HoursPackageVersion Condition="'$(Mvp24HoursPackageVersion)' == ''">10.0.0</Mvp24HoursPackageVersion>
-    <Mvp24HoursSourceRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\src'))</Mvp24HoursSourceRoot>
   </PropertyGroup>
 </Project>

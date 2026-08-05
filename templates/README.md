@@ -9,13 +9,13 @@ Compilable scaffolding for .NET 10. Copy a folder, rename `App` / `Item`, and im
 1. Copy the template folder out of this repository (or clone and start from it).
 2. Rename projects and namespaces: `App` → your service name (for example `Orders`).
 3. Rename the placeholder: `Item` → your aggregate/entity.
-4. When leaving the monorepo, build with NuGet packages:
+4. The template automatically uses local `src/` projects inside this monorepo and published NuGet packages when copied elsewhere.
+
+If you need to force NuGet mode while still inside the monorepo, you can override the default:
 
 ```bash
 dotnet build -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.0.0
 ```
-
-Inside this repository, project references to `src/` are the default.
 
 ## Automated rename script
 

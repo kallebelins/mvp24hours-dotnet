@@ -5,7 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation" />
-    <PackageReference Include="Mvp24Hours.Core" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <PackageReference Include="Mvp24Hours.Core" Version="10.0.0" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
     <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Core\Mvp24Hours.Core.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
   </ItemGroup>
 </Project>

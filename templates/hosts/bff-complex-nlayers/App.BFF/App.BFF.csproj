@@ -6,11 +6,11 @@
   <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
-    <PackageReference Include="Mvp24Hours.Infrastructure.Caching" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.Caching" Version="10.0.0" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
     <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.Caching\Mvp24Hours.Infrastructure.Caching.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
-    <PackageReference Include="Mvp24Hours.Infrastructure.Identity.Keycloak" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.Identity.Keycloak" Version="10.0.0" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
     <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.Identity.Keycloak\Mvp24Hours.Infrastructure.Identity.Keycloak.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
-    <PackageReference Include="Mvp24Hours.WebAPI" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <PackageReference Include="Mvp24Hours.WebAPI" Version="10.0.0" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
     <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.WebAPI\Mvp24Hours.WebAPI.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
   </ItemGroup>
   <ItemGroup>
