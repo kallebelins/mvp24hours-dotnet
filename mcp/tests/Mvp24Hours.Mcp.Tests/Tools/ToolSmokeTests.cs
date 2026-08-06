@@ -38,4 +38,25 @@ public class ToolSmokeTests : McpTestFixture
         Assert.Contains("MyProduct.Test", result, StringComparison.Ordinal);
         Assert.Contains("MyDbContext", result, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void VerifyDocClaim_returns_usage_when_api_name_is_missing()
+    {
+        var source = new SourceIndexService(CreatePaths());
+
+        var result = ValidationTools.VerifyDocClaim(source);
+
+        Assert.Contains("Usage: verify_doc_claim", result, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void VerifyDocClaim_reports_known_symbol_status()
+    {
+        var source = new SourceIndexService(CreatePaths());
+
+        var result = ValidationTools.VerifyDocClaim(source, "IMediator");
+
+        Assert.Contains("API 'IMediator':", result, StringComparison.Ordinal);
+        Assert.Contains("Status:", result, StringComparison.Ordinal);
+    }
 }

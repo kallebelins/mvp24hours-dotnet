@@ -53,8 +53,13 @@ public static class ValidationTools
     [McpServerTool, Description("Verify that an API name mentioned in docs exists in src/ or src/Tests/.")]
     public static string VerifyDocClaim(
         SourceIndexService sourceIndex,
-        [Description("API or type name from documentation")] string apiName)
+        [Description("API or type name from documentation")] string apiName = "")
     {
+        if (string.IsNullOrWhiteSpace(apiName))
+        {
+            return "Usage: verify_doc_claim(apiName=\"AddMvpMediator\")";
+        }
+
         var inSource = sourceIndex.SymbolExists(apiName);
         var inTests = sourceIndex.FindTestsForModule(apiName).Count > 0;
 

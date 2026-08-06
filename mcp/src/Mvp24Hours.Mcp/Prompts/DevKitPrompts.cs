@@ -52,7 +52,7 @@ public static class DevKitPrompts
             Use MCP tools:
             1. get_scenario_playbook — scenarioId review-solution
             2. run_compliance_check on provided paths
-            3. verify_doc_claim for any Mvp24Hours APIs used
+            3. verify_doc_claim(apiName=<Mvp24Hours API>) for any Mvp24Hours APIs used
             4. find_tests_for_module for modules under test
             5. get_doc compliance-checklist.md for full rule set
 
@@ -80,7 +80,7 @@ public static class DevKitPrompts
             6. run_compliance_check — templateId={targetTemplate}, scenarioId=architecture-migration
 
             Preserve business behavior. Apply layer boundaries from target template.
-            Verify every Mvp24Hours API with verify_doc_claim.
+            Verify every Mvp24Hours API with verify_doc_claim(apiName=<API name>).
             """;
     }
 
@@ -105,7 +105,7 @@ public static class DevKitPrompts
             5. search_sample_patterns + get_sample_file — concrete reference implementations
             6. get_di_registration_hints — Program.cs wiring
             7. suggest_project_structure — target solution tree
-            8. verify_doc_claim — confirm each Mvp24Hours API in src/
+            8. verify_doc_claim(apiName=<API name>) — confirm each Mvp24Hours API in src/
             9. run_compliance_check — scenarioId=port-to-mvp24hours
 
             Do NOT use language-specific maps. Infer structure from source code.
@@ -128,7 +128,7 @@ public static class DevKitPrompts
             3. get_sample_tree + get_sample_file — from reference sample in resolve_feature result
             4. search_sample_patterns — find registration and handler patterns
             5. get_di_registration_hints — from reference sample
-            6. verify_doc_claim — for each Mvp24Hours API used
+            6. verify_doc_claim(apiName=<API name>) — for each Mvp24Hours API used
             7. run_compliance_check — templateId={templateId}, scenarioId=add-feature
 
             Match existing project conventions. Do not introduce MediatR or Startup.cs.
@@ -151,7 +151,7 @@ public static class DevKitPrompts
             3. get_doc — modernization/migration-guide.md
             4. search_docs — query related to focus area
             5. search_sample_patterns — find native replacement patterns in samples
-            6. verify_doc_claim — confirm native APIs exist in src/
+            6. verify_doc_claim(apiName=<API name>) — confirm native APIs exist in src/
             7. run_compliance_check — scenarioId=legacy-migration
 
             Replace TelemetryHelper, Swashbuckle, MultiLevelCache, custom resilience with native APIs.
@@ -171,7 +171,7 @@ public static class DevKitPrompts
             2. get_migration_playbook — playbookId=package-9-to-10
             3. get_doc — migration.md
             4. run_compliance_check — verify net10.0, nullable, Program.cs patterns
-            5. verify_doc_claim — for package APIs referenced after upgrade
+            5. verify_doc_claim(apiName=<API name>) — for package APIs referenced after upgrade
 
             Target net10.0 with nullable reference types enabled.
             """;
