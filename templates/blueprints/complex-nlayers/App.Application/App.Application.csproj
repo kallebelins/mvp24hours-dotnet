@@ -4,7 +4,7 @@
     <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Mvp24Hours.Application" Version="10.0.0" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <PackageReference Include="Mvp24Hours.Application" Version="10.8.0" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
     <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Application\Mvp24Hours.Application.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
   </ItemGroup>
   <ItemGroup>

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [10.0.0] - 2026-07 🚀 Major Release
+## [10.8.0] - 2026-08 🚀 Major Release
 
 > **Migration to .NET 10** — This release aligns the entire solution with .NET 10 / C# 14, enables
 > Nullable Reference Types across all projects, and removes/replaces obsolete APIs. The quality gate
@@ -128,6 +128,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   interceptors, specifications, resilience, testing fakes, migrations, converters, CQRS,
   read/write splitting, schema validation). Async soft-delete aligned with sync in
   `RepositoryAsync.RemoveAsync` (`IEntityDateLog`).
+
+### Added (incremental updates)
+
+- **WebAPI request body tracing**: introduced `RequestBodyTracingMiddleware` with
+  configurable capture controls (`RequestBodyTracingOptions`) including method/content-type filters,
+  size limits, path exclusions, and JSON field redaction before writing Activity tags.
+- **WebAPI idempotency atomic acquisition**: `DistributedCacheIdempotencyStore` now supports optional
+  atomic acquisition using `IDistributedLockFactory` with configurable provider, timeout, and duration
+  (`EnableAtomicAcquisitionUsingDistributedLock`, `DistributedLockProviderName`,
+  `DistributedLockAcquisitionTimeout`, `DistributedLockDuration`).
+- **EF Core observability central wiring**: `AddMvp24HoursEFCoreObservabilityInterceptors` now has
+  explicit usage guidance and coverage for composing built-in interceptors with custom interceptors in
+  `AddDbContext`.
+- **CronJob resilient distributed locking**: `ResilientCronJobService<T>` now supports optional
+  cluster-safe execution lock acquisition through `IDistributedCronJobLock`, with skip metrics/logging
+  on contention and guaranteed async disposal of lock handles.
+
+### Changed (incremental updates)
+
+- `CronJobResilienceConfig<T>` and `ICronJobResilienceConfig<T>` expanded with distributed-lock settings:
+  `EnableDistributedLocking`, `DistributedLockDuration`, `DistributedLockWaitTimeout`, and
+  `DistributedLockInstanceId`.
+- `CronJobOptions<T>` now maps distributed-lock fields in both directions
+  (`ToResilienceConfig` and `FromResilienceConfig`) so configuration binding reflects runtime behavior.
+- CronJob and EF Core advanced documentation updated with end-to-end usage examples for resilient
+  distributed locking and custom interceptor composition.
+
+### Tests (incremental updates)
+
+- Added focused CronJob tests for resilient distributed lock behavior:
+  lock-unavailable skip path, release-after-success, metrics skip reason (`distributed_lock`), and
+  configured instance-id propagation.
+- Added EF Core observability tests to validate custom interceptor composition with
+  `AddMvp24HoursEFCoreObservabilityInterceptors` and structured logging opt-in behavior.
+- Validation runs completed successfully:
+  - `Mvp24Hours.Infrastructure.CronJob.Test`: **272 passed · 0 failed** (with coverage run artifact).
+  - `EFCoreObservabilityExtensionsTest` subset: **9 passed · 0 failed**.
 
 ### CI/CD
 

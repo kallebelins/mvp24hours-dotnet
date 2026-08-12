@@ -93,6 +93,18 @@ public class CronJobResilienceConfig<T> : ICronJobResilienceConfig<T>
     /// <inheritdoc />
     public TimeSpan OverlappingWaitTimeout { get; set; } = TimeSpan.Zero;
 
+    /// <inheritdoc />
+    public bool EnableDistributedLocking { get; set; }
+
+    /// <inheritdoc />
+    public TimeSpan DistributedLockDuration { get; set; } = TimeSpan.FromMinutes(5);
+
+    /// <inheritdoc />
+    public TimeSpan DistributedLockWaitTimeout { get; set; } = TimeSpan.FromSeconds(1);
+
+    /// <inheritdoc />
+    public string? DistributedLockInstanceId { get; set; }
+
     #endregion
 
     #region Graceful Shutdown Configuration
@@ -216,6 +228,11 @@ public class CronJobResilienceConfig<T> : ICronJobResilienceConfig<T>
         if (PreventOverlapping)
         {
             features.Add("PreventOverlapping");
+        }
+
+        if (EnableDistributedLocking)
+        {
+            features.Add($"DistributedLock({DistributedLockDuration.TotalSeconds}s)");
         }
 
         if (ExecutionTimeout.HasValue)

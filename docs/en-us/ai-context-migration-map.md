@@ -140,7 +140,7 @@ Transition bridge: `docs/en-us/ai-resources/home.md` as a collapsed sidebar entr
 
 ## Phase 5 quality flags
 
-- Replace stale `9.*` pins and .NET 9 container images with v10.0.0 / `net10.0`.
+- Replace stale `9.*` pins and .NET 9 container images with v10.8.0 / `net10.0`.
 - Rewrite MediatR APIs in retained blueprints to Mvp24Hours Mediator APIs.
 - Mark NLog-first observability guidance as deprecated relative to OpenTelemetry.
 - Prefer Native OpenAPI / current WebAPI extensions over Swagger-only or `Startup.cs` examples where inappropriate.

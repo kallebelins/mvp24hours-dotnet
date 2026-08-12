@@ -242,6 +242,24 @@ public class ServiceCollectionExtensionsTest
     }
 
     [Fact]
+    public void AddMvp24HoursRequestBodyTracing_Should_RegisterOptions()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMvp24HoursRequestBodyTracing(options =>
+        {
+            options.Enabled = true;
+            options.MaxBodySizeBytes = 4096;
+        });
+
+        RequestBodyTracingOptions options = services.BuildServiceProvider()
+            .GetRequiredService<IOptions<RequestBodyTracingOptions>>().Value;
+
+        options.Enabled.Should().BeTrue();
+        options.MaxBodySizeBytes.Should().Be(4096);
+    }
+
+    [Fact]
     public void AddMvp24HoursSecurity_Should_RegisterSecurityOptions()
     {
         var services = new ServiceCollection();

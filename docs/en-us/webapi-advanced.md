@@ -55,12 +55,33 @@ app.UseMvp24HoursOutputCache();
 | API-key rate limit | `ApiKeyRateLimitOptions` | disabled; 60/min | Enable only when per-key limits are needed. |
 | CORS | `CorsOptions` | deny-by-default; OPTIONS allowed | Enumerate origins, methods and headers; avoid credentialed wildcards. |
 | Request telemetry | `RequestTelemetryOptions` | traces/metrics on; exception details off | Exclude health/metrics routes and avoid sensitive header enrichment. |
+| Request body tracing | `RequestBodyTracingOptions` | disabled; POST/PUT/PATCH; 16 KiB max | Enable only where needed and always keep redaction lists updated. |
 | IP filtering | `IpFilteringOptions` | disabled; localhost allowed | Configure trusted proxies before forwarded headers. |
 | Swashbuckle | `SwaggerOptions` | title `API`; OpenAPI 3.1; UI at `swagger` | Restrict UI exposure in production. |
 | Native OpenAPI | `NativeOpenApiOptions` | document `v1`; UI on; ReDoc off | Prefer this .NET 10 path for new APIs when its feature set is sufficient. |
 | Anti-forgery | `AntiForgeryOptions` | enabled for unsafe methods | Use for cookie-authenticated browser clients. |
 | Request context | `RequestContextOptions` | response/outgoing propagation on; W3C flag off | Enable W3C mode when integrating with distributed tracing. |
 | Request logging | `RequestLoggingOptions` | basic; bodies/headers off; 3 s slow threshold | Keep bodies off by default and extend sensitive-field lists. |
+
+### Request body tracing
+
+Use request body tracing to enrich the current Activity with a sanitized payload snapshot.
+
+```csharp
+builder.Services.AddMvp24HoursRequestObservability(
+    configureBodyTracing: bodyTracing =>
+    {
+        bodyTracing.Enabled = true;
+        bodyTracing.MaxBodySizeBytes = 8 * 1024;
+        bodyTracing.ExcludedPaths.Add("/api/payments/webhook");
+        bodyTracing.SensitiveProperties.Add("document");
+    });
+
+var app = builder.Build();
+app.UseMvp24HoursRequestObservability(); // telemetry -> body tracing -> logging
+```
+
+`RequestBodyTracingOptions` captures only selected methods/content-types and stores redacted payload data in Activity tags (`http.request.body`, `http.request.body_truncated`, and `http.request.body_redacted_fields`).
 
 ## Core option tables
 
@@ -96,6 +117,10 @@ app.UseMvp24HoursOutputCache();
 | `CacheDuration` | `TimeSpan` | `24 h` | Replay retention. |
 | `RequireIdempotencyKey` | `bool` | `false` | Rejects protected writes without a key. |
 | `IntegrateWithCqrs` | `bool` | `true` | Enables CQRS-aware key behavior. |
+| `EnableAtomicAcquisitionUsingDistributedLock` | `bool` | `true` | Uses distributed locking for atomic key acquisition when available. |
+| `DistributedLockProviderName` | `string?` | `null` | Specific distributed lock provider name; default provider when null. |
+| `DistributedLockAcquisitionTimeout` | `TimeSpan` | `1 s` | Timeout for atomic acquisition lock. |
+| `DistributedLockDuration` | `TimeSpan` | `10 s` | Lease duration for atomic acquisition lock. |
 
 ### Performance and content
 

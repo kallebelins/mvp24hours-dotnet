@@ -48,7 +48,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddMvp24HoursAspireDefaults(options =>
 {
     options.ServiceName = "orders-api";
-    options.ServiceVersion = "10.0.0";
+    options.ServiceVersion = "10.8.0";
     options.ResourceAttributes["service.region"] = "us-east-1";
 });
 
@@ -207,7 +207,7 @@ All nested properties bind through the normal .NET configuration binder:
 {
   "Aspire": {
     "ServiceName": "orders-api",
-    "ServiceVersion": "10.0.0",
+    "ServiceVersion": "10.8.0",
     "Environment": "Production",
     "EnableOpenTelemetry": true,
     "EnableHealthChecks": true,

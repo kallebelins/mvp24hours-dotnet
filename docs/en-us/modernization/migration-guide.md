@@ -3,7 +3,7 @@
 This guide provides step-by-step instructions for replacing legacy Mvp24Hours
 implementations with native APIs introduced in .NET 9 and retained in .NET 10.
 For the SDK, target-framework, package, and breaking-change upgrade, use the
-[9.1.x → 10.0.0 migration](../migration.md?id=_91x-1000).
+[9.1.x → 10.8.0 migration](../migration.md?id=_91x-1000).
 
 ## Overview
 
@@ -24,11 +24,11 @@ keyed services, native OpenAPI, `System.Threading.RateLimiting`,
 
 The current source tree targets `net10.0`, uses Central Package Management,
 enables nullable reference types, and defaults to `LangVersion=latest`.
-This does not mean that a `10.0.0` NuGet package is already available: the
+This does not mean that a `10.8.0` NuGet package is already available: the
 production projects still declare package version `9.1.21`. Check the package
 feed before changing consumer package references.
 
-Use the canonical [9.1.x → 10.0.0 migration](../migration.md?id=_91x-1000)
+Use the canonical [9.1.x → 10.8.0 migration](../migration.md?id=_91x-1000)
 for the SDK, target framework, package readiness, nullable diagnostics,
 breaking API changes, security audit, and release-build checklist. The rest of
 this page is intentionally limited to replacing legacy implementations with

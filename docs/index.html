@@ -37,9 +37,15 @@
     (function () {
       const hash = window.location.hash || '';
       const route = hash.startsWith('#/') ? hash.slice(2) : '';
+      const normalizedRoute = route.replace(/^\/+/, '');
 
-      if (route && !route.startsWith('en-us/') && route !== 'en-us' && !route.startsWith('mvp24hours.mdc') && !route.startsWith('llms_')) {
-        window.location.replace(`${window.location.pathname}#/en-us/${route}`);
+      if (!normalizedRoute) {
+        window.location.replace(`${window.location.pathname}#/en-us/home.md`);
+        return;
+      }
+
+      if (!normalizedRoute.startsWith('en-us/') && normalizedRoute !== 'en-us' && !normalizedRoute.startsWith('mvp24hours.mdc') && !normalizedRoute.startsWith('llms_')) {
+        window.location.replace(`${window.location.pathname}#/en-us/${normalizedRoute}`);
       }
     })();
 

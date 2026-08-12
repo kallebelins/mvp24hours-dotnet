@@ -81,6 +81,69 @@ builder.Services.AddMvp24HoursDbContextResilienceInfrastructure(options =>
 
 Presets are `Production()`, `Development()`, `AzureSql()`, and `NoResilience()`.
 
+## Observability interceptors
+
+`AddMvp24HoursEFCoreObservability` registers the observability services and interceptors. Use `AddMvp24HoursEFCoreObservabilityInterceptors` to apply registered interceptors to each DbContext without repeating manual `AddInterceptors` wiring.
+
+```csharp
+builder.Services.AddMvp24HoursEFCoreObservability(options =>
+{
+    options.SlowQueryThresholdMs = 500;
+    options.EnableDiagnosticsListener = true;
+});
+
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
+{
+    options.UseSqlServer(connectionString)
+           .AddMvp24HoursEFCoreObservabilityInterceptors(sp, includeStructuredLogging: false);
+});
+```
+
+When development diagnostics are needed, combine `AddMvp24HoursEFCoreDevObservability` with `includeStructuredLogging: true`.
+
+### Adding a custom interceptor
+
+`AddMvp24HoursEFCoreObservabilityInterceptors` wires the built-in observability interceptors (`SlowQueryInterceptor` and optionally `StructuredLoggingInterceptor`).
+To include your own interceptor, register it in DI and chain `AddInterceptors` in the same DbContext configuration.
+
+```csharp
+using Microsoft.EntityFrameworkCore.Diagnostics;
+
+public sealed class TenantCommandInterceptor : DbCommandInterceptor
+{
+    // Override the command callbacks you need, for example ReaderExecuting/NonQueryExecuting.
+}
+
+builder.Services.AddScoped<TenantCommandInterceptor>();
+
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
+{
+    options.UseSqlServer(connectionString)
+           .AddMvp24HoursEFCoreObservabilityInterceptors(sp, includeStructuredLogging: true)
+           .AddInterceptors(sp.GetRequiredService<TenantCommandInterceptor>());
+});
+```
+
+### Adding multiple custom interceptors
+
+When several custom interceptors are needed, resolve all of them and add in one call:
+
+```csharp
+builder.Services.AddScoped<TenantCommandInterceptor>();
+builder.Services.AddScoped<OutboxCommandInterceptor>();
+
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
+{
+    options.UseSqlServer(connectionString)
+           .AddMvp24HoursEFCoreObservabilityInterceptors(sp)
+           .AddInterceptors(
+               sp.GetRequiredService<TenantCommandInterceptor>(),
+               sp.GetRequiredService<OutboxCommandInterceptor>());
+});
+```
+
+Order matters. Keep `AddMvp24HoursEFCoreObservabilityInterceptors` first, then append custom interceptors so behavior stays explicit and predictable.
+
 ## Migrations
 
 ```csharp

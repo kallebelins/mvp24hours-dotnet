@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -245,6 +246,45 @@ public static class EFCoreObservabilityExtensions
     #endregion
 
     #region Combined Observability
+
+    /// <summary>
+    /// Applies registered EF Core observability interceptors to a <see cref="DbContextOptionsBuilder"/>.
+    /// </summary>
+    /// <param name="optionsBuilder">The DbContext options builder.</param>
+    /// <param name="serviceProvider">The service provider used to resolve interceptors.</param>
+    /// <param name="includeStructuredLogging">If true, attempts to add <see cref="StructuredLoggingInterceptor"/> when registered.</param>
+    /// <returns>The options builder for chaining.</returns>
+    /// <remarks>
+    /// <para>
+    /// This method centralizes observability wiring and avoids repeating manual interceptor registration
+    /// in every DbContext configuration.
+    /// </para>
+    /// </remarks>
+    public static DbContextOptionsBuilder AddMvp24HoursEFCoreObservabilityInterceptors(
+        this DbContextOptionsBuilder optionsBuilder,
+        IServiceProvider serviceProvider,
+        bool includeStructuredLogging = false)
+    {
+        ArgumentNullException.ThrowIfNull(optionsBuilder);
+        ArgumentNullException.ThrowIfNull(serviceProvider);
+
+        SlowQueryInterceptor? slowQueryInterceptor = serviceProvider.GetService<SlowQueryInterceptor>();
+        if (slowQueryInterceptor != null)
+        {
+            optionsBuilder.AddInterceptors(slowQueryInterceptor);
+        }
+
+        if (includeStructuredLogging)
+        {
+            StructuredLoggingInterceptor? structuredLoggingInterceptor = serviceProvider.GetService<StructuredLoggingInterceptor>();
+            if (structuredLoggingInterceptor != null)
+            {
+                optionsBuilder.AddInterceptors(structuredLoggingInterceptor);
+            }
+        }
+
+        return optionsBuilder;
+    }
 
     /// <summary>
     /// Adds complete EFCore observability including metrics, tracing, and logging.

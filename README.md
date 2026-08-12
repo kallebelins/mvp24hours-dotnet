@@ -1,4 +1,4 @@
-# <img src="docs/_media/icon.png" width="32" height="32" alt="icon" /> Mvp24Hours - .NET 10 (v10.0.0 source) 🚀
+# <img src="docs/_media/icon.png" width="32" height="32" alt="icon" /> Mvp24Hours - .NET 10 (v10.8.0 source) 🚀
 
 Enterprise-ready library for rapid .NET application development with CQRS, Event Sourcing, Domain Events, and modern observability.
 
@@ -30,10 +30,10 @@ dotnet add package Mvp24Hours.WebAPI
 - 🧪 **Samples**: [`samples/`](samples/README.md) — 32 runnable .NET 10 solutions (Minimal, Simple, Complex, Blueprints, Capabilities); see the [catalog](samples/README.md#complete-catalog) and [decision matrix](samples/README.md#which-sample-should-i-open-first)
 
 > **Release status:** the repository targets `net10.0`, but its package project metadata
-> remains at `9.1.21` and the public `Mvp24Hours.Core` feed does not include 10.0.0.
-> Treat 10.0.0 as the source release until metadata is finalized and publication is confirmed.
+> remains at `9.1.21` and the public `Mvp24Hours.Core` feed does not include 10.8.0.
+> Treat 10.8.0 as the source release until metadata is finalized and publication is confirmed.
 
-## 🆕 What's New in v10.0.0
+## 🆕 What's New in v10.8.0
 
 - 🔄 **.NET 10** - All production and test projects target `net10.0`; C# defaults to `latest`
 - ✅ **Strict quality gate** - Nullable enabled and Release builds run with warnings as errors

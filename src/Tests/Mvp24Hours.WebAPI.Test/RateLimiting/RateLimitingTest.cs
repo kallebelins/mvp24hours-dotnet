@@ -31,14 +31,14 @@ public class RateLimitingTest
     public void DefaultRateLimitKeyGenerator_Should_UseIpAndUser()
     {
         DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
-        context.Connection.RemoteIpAddress = IPAddress.Parse("10.0.0.1");
+        context.Connection.RemoteIpAddress = IPAddress.Parse("10.8.0.1");
         context.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user-1")], "test"));
         var policy = new RateLimitPolicy { Name = "api", KeySource = RateLimitKeySource.ClientIp | RateLimitKeySource.UserId };
         var sut = new DefaultRateLimitKeyGenerator(Options.Create(new RateLimitingOptions()));
 
         string key = sut.GenerateKey(context, policy);
 
-        key.Should().Contain("ip:10.0.0.1").And.Contain("user:user-1");
+        key.Should().Contain("ip:10.8.0.1").And.Contain("user:user-1");
     }
 
     [Fact]
@@ -169,7 +169,7 @@ public class RateLimitingTest
     {
         DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.Connection.RemoteIpAddress = IPAddress.Parse("127.0.0.1");
-        context.Request.Headers["X-Forwarded-For"] = "203.0.113.10, 10.0.0.1";
+        context.Request.Headers["X-Forwarded-For"] = "203.0.113.10, 10.8.0.1";
         var options = new RateLimitingOptions { UseForwardedHeaders = true };
         var policy = new RateLimitPolicy { Name = "api", KeySource = RateLimitKeySource.ClientIp };
         var sut = new DefaultRateLimitKeyGenerator(Options.Create(options));
@@ -215,7 +215,7 @@ public class RateLimitingTest
         options.EndpointPolicies["/api/orders/**"] = "orders";
         var sut = new RateLimitPartitionResolver(Options.Create(options), new DefaultRateLimitKeyGenerator(Options.Create(options)));
         DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/orders/123");
-        context.Connection.RemoteIpAddress = IPAddress.Parse("10.0.0.5");
+        context.Connection.RemoteIpAddress = IPAddress.Parse("10.8.0.5");
 
         RateLimitPartition<string> partition = sut.GetPartition(context);
 

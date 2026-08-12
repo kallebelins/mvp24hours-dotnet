@@ -7,6 +7,9 @@ using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Mvp24Hours.Infrastructure.DistributedLocking.Contract;
+using Mvp24Hours.Infrastructure.DistributedLocking.Options;
+using Mvp24Hours.Infrastructure.DistributedLocking.Results;
 using Mvp24Hours.WebAPI.Configuration;
 
 namespace Mvp24Hours.WebAPI.Idempotency;
@@ -40,6 +43,7 @@ public class DistributedCacheIdempotencyStore : IIdempotencyStore
     private readonly IDistributedCache _cache;
     private readonly ILogger<DistributedCacheIdempotencyStore>? _logger;
     private readonly IdempotencyOptions _options;
+    private readonly IDistributedLockFactory? _distributedLockFactory;
     private readonly JsonSerializerOptions _jsonOptions;
 
     private const string LockSuffix = ":lock";
@@ -51,13 +55,16 @@ public class DistributedCacheIdempotencyStore : IIdempotencyStore
     /// <param name="cache">The distributed cache.</param>
     /// <param name="options">Idempotency options.</param>
     /// <param name="logger">Optional logger.</param>
+    /// <param name="distributedLockFactory">Optional distributed lock factory used for atomic acquisition.</param>
     public DistributedCacheIdempotencyStore(
         IDistributedCache cache,
         IOptions<IdempotencyOptions> options,
-        ILogger<DistributedCacheIdempotencyStore>? logger = null)
+        ILogger<DistributedCacheIdempotencyStore>? logger = null,
+        IDistributedLockFactory? distributedLockFactory = null)
     {
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         _options = options?.Value ?? new IdempotencyOptions();
+        _distributedLockFactory = distributedLockFactory;
         _logger = logger;
 
         _jsonOptions = new JsonSerializerOptions
@@ -83,6 +90,21 @@ public class DistributedCacheIdempotencyStore : IIdempotencyStore
 
         try
         {
+            if (_options.EnableAtomicAcquisitionUsingDistributedLock && _distributedLockFactory != null)
+            {
+                return await TryAcquireWithAtomicDistributedLockAsync(
+                    key,
+                    requestPath,
+                    requestMethod,
+                    requestBodyHash,
+                    duration,
+                    correlationId,
+                    fullKey,
+                    lockKey,
+                    dataKey,
+                    cancellationToken);
+            }
+
             // First, check if there's an existing record
             string? existingJson = await _cache.GetStringAsync(dataKey, cancellationToken);
             if (!string.IsNullOrEmpty(existingJson))
@@ -156,6 +178,131 @@ public class DistributedCacheIdempotencyStore : IIdempotencyStore
             // On error, allow the request to proceed (fail open)
             return IdempotencyLockResult.Success();
         }
+    }
+
+    private async Task<IdempotencyLockResult> TryAcquireWithAtomicDistributedLockAsync(
+        string key,
+        string requestPath,
+        string requestMethod,
+        string? requestBodyHash,
+        TimeSpan duration,
+        string? correlationId,
+        string fullKey,
+        string lockKey,
+        string dataKey,
+        CancellationToken cancellationToken)
+    {
+        IDistributedLock distributedLock = CreateDistributedLock();
+        DistributedLockOptions lockOptions = CreateAcquisitionLockOptions();
+        string resource = $"{fullKey}:acquire";
+
+        LockAcquisitionResult lockResult = await distributedLock.TryAcquireAsync(resource, lockOptions, cancellationToken);
+        if (!lockResult.IsAcquired || lockResult.LockHandle == null)
+        {
+            IdempotencyRecord? existingRecord = await ReadExistingRecordAsync(dataKey, cancellationToken);
+            if (existingRecord != null)
+            {
+                return IdempotencyLockResult.Existing(existingRecord);
+            }
+
+            return IdempotencyLockResult.Existing(CreateProcessingRecord(key, duration));
+        }
+
+        await using (lockResult.LockHandle)
+        {
+            IdempotencyRecord? existingRecord = await ReadExistingRecordAsync(dataKey, cancellationToken);
+            if (existingRecord != null)
+            {
+                return IdempotencyLockResult.Existing(existingRecord);
+            }
+
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            var record = new IdempotencyRecord
+            {
+                Key = key,
+                Status = IdempotencyRecordStatus.Processing,
+                CreatedAt = now,
+                ExpiresAt = now.Add(duration),
+                RequestPath = requestPath,
+                RequestMethod = requestMethod,
+                RequestBodyHash = requestBodyHash,
+                CorrelationId = correlationId
+            };
+
+            string recordJson = JsonSerializer.Serialize(record, _jsonOptions);
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = duration
+            };
+
+            await _cache.SetStringAsync(lockKey, Guid.NewGuid().ToString(), cacheOptions, cancellationToken);
+            await _cache.SetStringAsync(dataKey, recordJson, cacheOptions, cancellationToken);
+
+            _logger?.LogDebug(
+                "[Idempotency] Acquired atomic lock for key {Key}. Path: {Path}, Method: {Method}",
+                key, requestPath, requestMethod);
+
+            return IdempotencyLockResult.Success();
+        }
+    }
+
+    private async Task<IdempotencyRecord?> ReadExistingRecordAsync(string dataKey, CancellationToken cancellationToken)
+    {
+        string? existingJson = await _cache.GetStringAsync(dataKey, cancellationToken);
+        if (string.IsNullOrEmpty(existingJson))
+        {
+            return null;
+        }
+
+        IdempotencyRecord? existing = JsonSerializer.Deserialize<IdempotencyRecord>(existingJson, _jsonOptions);
+        return existing != null && !existing.IsExpired ? existing : null;
+    }
+
+    private IDistributedLock CreateDistributedLock()
+    {
+        if (_distributedLockFactory == null)
+        {
+            throw new InvalidOperationException("Distributed lock factory is not configured.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(_options.DistributedLockProviderName))
+        {
+            return _distributedLockFactory.Create(_options.DistributedLockProviderName);
+        }
+
+        return _distributedLockFactory.Create();
+    }
+
+    private DistributedLockOptions CreateAcquisitionLockOptions()
+    {
+        TimeSpan acquisitionTimeout = _options.DistributedLockAcquisitionTimeout <= TimeSpan.Zero
+            ? TimeSpan.FromSeconds(1)
+            : _options.DistributedLockAcquisitionTimeout;
+
+        TimeSpan lockDuration = _options.DistributedLockDuration <= TimeSpan.Zero
+            ? TimeSpan.FromSeconds(10)
+            : _options.DistributedLockDuration;
+
+        return new DistributedLockOptions
+        {
+            AcquisitionTimeout = acquisitionTimeout,
+            LockDuration = lockDuration,
+            EnableAutoRenewal = false,
+            RetryDelay = TimeSpan.FromMilliseconds(50),
+            ThrowOnFailure = false
+        };
+    }
+
+    private static IdempotencyRecord CreateProcessingRecord(string key, TimeSpan duration)
+    {
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        return new IdempotencyRecord
+        {
+            Key = key,
+            Status = IdempotencyRecordStatus.Processing,
+            CreatedAt = now,
+            ExpiresAt = now.Add(duration)
+        };
     }
 
     /// <inheritdoc />

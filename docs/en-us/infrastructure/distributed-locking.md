@@ -87,9 +87,9 @@ else
 
 Always dispose the handle with `using` or `await using`. `ReleaseAsync` can release early, and `RenewAsync` can extend a held lock. A second release returns `false`; renewal after release also returns `false`. `IsLockedAsync` is only an observation and must not be used as a check-then-act synchronization primitive.
 
-### Release behavior in 10.0.0
+### Release behavior in 10.8.0
 
-The 10.0.0 changelog and current `LockHandleBase` source verify a disposal fix: `Dispose` and `DisposeAsync` now call `ReleaseAsync` before setting `_disposed`. Previously, setting `_disposed` first caused `ReleaseAsync` to return without releasing the provider lock, leaving it held until expiry.
+The 10.8.0 changelog and current `LockHandleBase` source verify a disposal fix: `Dispose` and `DisposeAsync` now call `ReleaseAsync` before setting `_disposed`. Previously, setting `_disposed` first caused `ReleaseAsync` to return without releasing the provider lock, leaving it held until expiry.
 
 ## `DistributedLockOptions`
 
@@ -175,5 +175,5 @@ Snapshots include attempts, successes, failures, approximate timeout count, rele
 - [CronJob resilience and locking](../cronjob-resilience.md)
 - [CronJob advanced features](../cronjob-advanced.md)
 - [Observability](../observability/home.md)
-- [10.0.0 release notes](../release.md)
+- [10.8.0 release notes](../release.md)
 - [Redis distributed-lock pattern](https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/)

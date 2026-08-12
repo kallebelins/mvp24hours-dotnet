@@ -4,12 +4,12 @@ Use the section matching your installed package version. This page covers
 version upgrades; migrations from legacy Mvp24Hours abstractions to native .NET
 APIs live in the [.NET 9+ modernization guide](modernization/migration-guide.md).
 
-## 9.1.x → 10.0.0
+## 9.1.x → 10.8.0
 
-> **Package availability:** the repository and changelog describe 10.0.0, but
+> **Package availability:** the repository and changelog describe 10.8.0, but
 > production package metadata remains at `9.1.21` and the public
-> `Mvp24Hours.Core` feed has no 10.0.0 package. Complete the preparation and
-> validation steps below, but do not request 10.0.0 until publication is
+> `Mvp24Hours.Core` feed has no 10.8.0 package. Complete the preparation and
+> validation steps below, but do not request 10.8.0 until publication is
 > confirmed.
 
 ### 1. Prepare the toolchain
@@ -31,14 +31,14 @@ APIs live in the [.NET 9+ modernization guide](modernization/migration-guide.md)
 
 ### 2. Upgrade packages together
 
-Keep all Mvp24Hours packages on the same release. After 10.0.0 is published:
+Keep all Mvp24Hours packages on the same release. After 10.8.0 is published:
 
 ```bash
-dotnet add package Mvp24Hours.Core --version 10.0.0
-dotnet add package Mvp24Hours.Application --version 10.0.0
-dotnet add package Mvp24Hours.Infrastructure --version 10.0.0
-dotnet add package Mvp24Hours.Infrastructure.Cqrs --version 10.0.0
-dotnet add package Mvp24Hours.WebAPI --version 10.0.0
+dotnet add package Mvp24Hours.Core --version 10.8.0
+dotnet add package Mvp24Hours.Application --version 10.8.0
+dotnet add package Mvp24Hours.Infrastructure --version 10.8.0
+dotnet add package Mvp24Hours.Infrastructure.Cqrs --version 10.8.0
+dotnet add package Mvp24Hours.WebAPI --version 10.8.0
 ```
 
 Install only the modules your application uses. Restore and verify that no
@@ -72,7 +72,7 @@ control.
 
 #### SMTP certificate validation
 
-`SmtpEmailOptions.ServerCertificateValidationCallback` is ignored in 10.0.0.
+`SmtpEmailOptions.ServerCertificateValidationCallback` is ignored in 10.8.0.
 The old implementation relied on the obsolete process-wide
 `ServicePointManager.ServerCertificateValidationCallback`. SMTP now uses the
 operating system trust store and logs a warning if the callback is configured.
@@ -105,8 +105,8 @@ ciphertext-compatibility regression suite in `src/Tests`. Treat existing
 ciphertext as a consumer verification step before rollout:
 
 1. decrypt representative values with the old release;
-2. decrypt the same values with 10.0.0;
-3. encrypt new values with 10.0.0 and verify round trips;
+2. decrypt the same values with 10.8.0;
+3. encrypt new values with 10.8.0 and verify round trips;
 4. retain a tested rollback and key-recovery procedure.
 
 ### 5. Audit dependencies and build strictly
@@ -117,7 +117,7 @@ dotnet list package --vulnerable --include-transitive
 dotnet build --configuration Release /p:TreatWarningsAsErrors=true
 ```
 
-The 10.0.0 source pins `System.Security.Cryptography.Xml` to `10.0.10`. Do not
+The 10.8.0 source pins `System.Security.Cryptography.Xml` to `10.0.10`. Do not
 downgrade or remove that direct pin without confirming that the transitive
 `System.ServiceModel` dependency is patched.
 
@@ -251,7 +251,7 @@ For applications predating 4.2.101, remove the generic type from
 
 ## Using samples with published NuGet packages
 
-The [`samples/`](https://github.com/kallebelins/mvp24hours-dotnet/tree/main/samples) folder defaults to **ProjectReference** mode so in-repo development tracks unreleased library changes. After Mvp24Hours **10.0.0** (or a matching release) is published, validate standalone consumption as follows.
+The [`samples/`](https://github.com/kallebelins/mvp24hours-dotnet/tree/main/samples) folder defaults to **ProjectReference** mode so in-repo development tracks unreleased library changes. After Mvp24Hours **10.8.0** (or a matching release) is published, validate standalone consumption as follows.
 
 ### 1. Flip the MSBuild switch
 
@@ -260,7 +260,7 @@ From the repository root or `samples/` directory:
 ```bash
 dotnet build samples/Mvp24Hours.Samples.slnx \
   -p:Mvp24HoursUseProjectReferences=false \
-  -p:Mvp24HoursPackageVersion=10.0.0
+  -p:Mvp24HoursPackageVersion=10.8.0
 ```
 
 Each sample `.csproj` already declares conditional `PackageReference` entries; the properties above disable local project references and pin the NuGet version through Central Package Management.
@@ -268,7 +268,7 @@ Each sample `.csproj` already declares conditional `PackageReference` entries; t
 ### 2. Verify restore from nuget.org
 
 1. Clone the repository to a clean directory (or temporarily rename `src/Mvp24Hours.*` folders) so MSBuild cannot resolve local projects.
-2. Run `dotnet restore samples/Mvp24Hours.Samples.slnx -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.0.0`.
+2. Run `dotnet restore samples/Mvp24Hours.Samples.slnx -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.8.0`.
 3. Confirm every `Mvp24Hours.*` package resolves from nuget.org (or your private feed) at the expected version — no 4.x, 8.x, or 9.x packages in the dependency graph.
 
 ### 3. Smoke-test one sample

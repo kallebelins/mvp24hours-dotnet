@@ -14,7 +14,7 @@ Compilable scaffolding for .NET 10. Copy a folder, rename `App` / `Item`, and im
 If you need to force NuGet mode while still inside the monorepo, you can override the default:
 
 ```bash
-dotnet build -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.0.0
+dotnet build -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.8.0
 ```
 
 ## Automated rename script

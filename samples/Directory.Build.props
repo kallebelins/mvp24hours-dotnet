@@ -14,7 +14,7 @@
       only when validating a sample against published Mvp24Hours packages.
     -->
     <Mvp24HoursUseProjectReferences Condition="'$(Mvp24HoursUseProjectReferences)' == ''">true</Mvp24HoursUseProjectReferences>
-    <Mvp24HoursPackageVersion Condition="'$(Mvp24HoursPackageVersion)' == ''">10.0.0</Mvp24HoursPackageVersion>
+    <Mvp24HoursPackageVersion Condition="'$(Mvp24HoursPackageVersion)' == ''">10.8.0</Mvp24HoursPackageVersion>
     <Mvp24HoursSourceRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\src'))</Mvp24HoursSourceRoot>
   </PropertyGroup>
 </Project>

@@ -15,6 +15,6 @@
     -->
     <Mvp24HoursUseProjectReferences Condition="'$(Mvp24HoursUseProjectReferences)' == '' and Exists('$(Mvp24HoursSourceRoot)\Mvp24Hours.Core\Mvp24Hours.Core.csproj')">true</Mvp24HoursUseProjectReferences>
     <Mvp24HoursUseProjectReferences Condition="'$(Mvp24HoursUseProjectReferences)' == ''">false</Mvp24HoursUseProjectReferences>
-    <Mvp24HoursPackageVersion Condition="'$(Mvp24HoursPackageVersion)' == ''">10.0.0</Mvp24HoursPackageVersion>
+    <Mvp24HoursPackageVersion Condition="'$(Mvp24HoursPackageVersion)' == ''">10.8.0</Mvp24HoursPackageVersion>
   </PropertyGroup>
 </Project>

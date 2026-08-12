@@ -78,6 +78,8 @@ job.CronExpression = "0 2 * * *";
 | `GracefulShutdownTimeout` | `TimeSpan` | `30 s` | Shutdown wait. |
 | `EnableDistributedLocking` | `bool` | `false` | Enables advanced distributed-lock behavior. |
 | `DistributedLockExpiry` | `TimeSpan` | `5 min` | Distributed lock lease. |
+| `DistributedLockWaitTimeout` | `TimeSpan` | `1 s` | Maximum wait when acquiring resilient distributed lock. |
+| `DistributedLockInstanceId` | `string?` | `null` | Optional resilient lock owner ID; runtime fallback when null. |
 | `EnableObservability` | `bool` | `true` | Registers CronJob observability services in option-based registration. |
 | `EnableHealthCheck` | `bool` | `true` | Per-job health intent. |
 | `DependsOn` | `string[]?` | `null` | Names of prerequisite jobs. |
@@ -95,7 +97,11 @@ job.CronExpression = "0 2 * * *";
       "CronExpression": "0 2 * * *",
       "TimeZone": "UTC",
       "EnableRetry": true,
-      "MaxRetryAttempts": 3
+      "MaxRetryAttempts": 3,
+      "EnableDistributedLocking": true,
+      "DistributedLockExpiry": "00:05:00",
+      "DistributedLockWaitTimeout": "00:00:02",
+      "DistributedLockInstanceId": "node-a"
     }
   }
 }

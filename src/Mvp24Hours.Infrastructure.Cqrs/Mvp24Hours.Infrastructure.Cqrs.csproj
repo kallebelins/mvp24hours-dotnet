@@ -10,9 +10,9 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<NoWarn>$(NoWarn);CS1591</NoWarn>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>10.0.0</Version>
-		<AssemblyVersion>10.0.0.1</AssemblyVersion>
-		<FileVersion>10.0.0.1</FileVersion>
+		<Version>10.8.0</Version>
+		<AssemblyVersion>10.8.0.1</AssemblyVersion>
+		<FileVersion>10.8.0.1</FileVersion>
 		<RepositoryUrl>https://github.com/kallebelins/mvp24hours-dotnet</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageTags>mediator;cqrs;commands;queries;domain-events;inbox-outbox;event-sourcing;saga;mvp24hours;aspnetcore</PackageTags>

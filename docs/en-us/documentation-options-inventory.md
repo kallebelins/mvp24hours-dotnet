@@ -77,7 +77,7 @@ Primary DI: `AddMvp24HoursObservability`, `AddMvp24HoursLogging`, `AddMvp24Hours
 | `MvpChannelOptions` | Unbounded, Bounded, HighThroughput, Drop* | Missing | — |
 | `ProducerConsumerOptions` | — | Partial | — |
 | `BulkOperationOptions` | — | Partial | — |
-| `EncryptionOptions` | `Key` required in 10.0.0 | Missing | — |
+| `EncryptionOptions` | `Key` required in 10.8.0 | Missing | — |
 | `LoggingOptions`, `MetricsOptions`, `TracingOptions` | — | Partial / Missing | Observability tests |
 | `ObservabilityOptions` + nested | — | Missing | Observability tests |
 | `OpenTelemetryExporterOptions`, `OtlpExporterOptions`, `ConsoleExporterOptions`, `PrometheusExporterOptions` | Development/Production defaults | Partial — `observability/exporters.md` | — |

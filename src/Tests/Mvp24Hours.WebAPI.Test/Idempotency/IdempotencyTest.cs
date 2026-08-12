@@ -2,6 +2,9 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Mvp24Hours.Infrastructure.DistributedLocking.Contract;
+using Mvp24Hours.Infrastructure.DistributedLocking.Options;
+using Mvp24Hours.Infrastructure.DistributedLocking.Results;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.Idempotency;
 using Mvp24Hours.WebAPI.Test.Support;
@@ -98,5 +101,104 @@ public class IdempotencyTest
         second.Acquired.Should().BeFalse();
         second.ExistingRecord.Should().NotBeNull();
         second.ExistingRecord!.IsProcessing.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DistributedCacheIdempotencyStore_Should_ReturnInFlight_WhenAtomicLockNotAcquired()
+    {
+        var factory = new FakeDistributedLockFactory(new FakeDistributedLock(acquired: false));
+        var options = new IdempotencyOptions
+        {
+            CacheKeyPrefix = "test:",
+            EnableAtomicAcquisitionUsingDistributedLock = true
+        };
+
+        var store = new DistributedCacheIdempotencyStore(
+            WebApiTestHelpers.CreateMemoryDistributedCache(),
+            Options.Create(options),
+            NullLogger<DistributedCacheIdempotencyStore>.Instance,
+            distributedLockFactory: factory);
+
+        IdempotencyLockResult result = await store.TryAcquireLockAsync("k-atomic", "/api", "POST", null, TimeSpan.FromMinutes(5));
+
+        result.Acquired.Should().BeFalse();
+        result.IsInFlight.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DistributedCacheIdempotencyStore_Should_Acquire_WhenAtomicLockAcquired()
+    {
+        var factory = new FakeDistributedLockFactory(new FakeDistributedLock(acquired: true));
+        var options = new IdempotencyOptions
+        {
+            CacheKeyPrefix = "test:",
+            EnableAtomicAcquisitionUsingDistributedLock = true
+        };
+
+        var store = new DistributedCacheIdempotencyStore(
+            WebApiTestHelpers.CreateMemoryDistributedCache(),
+            Options.Create(options),
+            NullLogger<DistributedCacheIdempotencyStore>.Instance,
+            distributedLockFactory: factory);
+
+        IdempotencyLockResult result = await store.TryAcquireLockAsync("k-atomic", "/api", "POST", null, TimeSpan.FromMinutes(5));
+
+        result.Acquired.Should().BeTrue();
+    }
+
+    private sealed class FakeDistributedLockFactory(IDistributedLock distributedLock) : IDistributedLockFactory
+    {
+        public IDistributedLock Create() => distributedLock;
+
+        public IDistributedLock Create(string providerName) => distributedLock;
+    }
+
+    private sealed class FakeDistributedLock(bool acquired) : IDistributedLock
+    {
+        public Task<bool> IsLockedAsync(string resource, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(!acquired);
+        }
+
+        public Task<LockAcquisitionResult> TryAcquireAsync(string resource, DistributedLockOptions? options = null, CancellationToken cancellationToken = default)
+        {
+            if (!acquired)
+            {
+                return Task.FromResult(LockAcquisitionResult.Timeout());
+            }
+
+            return Task.FromResult(LockAcquisitionResult.Acquired(new FakeLockHandle(resource)));
+        }
+
+        public Task<LockAcquisitionResult> TryAcquireWithFenceAsync(string resource, DistributedLockOptions? options = null, CancellationToken cancellationToken = default)
+        {
+            return TryAcquireAsync(resource, options, cancellationToken);
+        }
+    }
+
+    private sealed class FakeLockHandle(string resource) : ILockHandle
+    {
+        public string Resource { get; } = resource;
+        public long? FencedToken => null;
+        public bool IsValid => true;
+        public DateTimeOffset AcquiredAt { get; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset ExpiresAt { get; } = DateTimeOffset.UtcNow.AddMinutes(1);
+
+        public void Dispose() { }
+
+        public ValueTask DisposeAsync()
+        {
+            return ValueTask.CompletedTask;
+        }
+
+        public Task<bool> ReleaseAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> RenewAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(true);
+        }
     }
 }

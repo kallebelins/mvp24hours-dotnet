@@ -5,9 +5,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
-    <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="10.0.0" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="10.8.0" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
     <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.Data.EFCore\Mvp24Hours.Infrastructure.Data.EFCore.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
-    <PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="10.0.0" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="10.8.0" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
     <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.RabbitMQ\Mvp24Hours.Infrastructure.RabbitMQ.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
   </ItemGroup>
   <ItemGroup>

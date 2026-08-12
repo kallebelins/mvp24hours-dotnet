@@ -271,4 +271,224 @@ public class ResilientAndAdvancedServiceAdvancedTest
         (await distributedLock.IsLockedAsync(nameof(TestAdvancedCronJob))).Should().BeFalse();
         job.ExecuteCount.Should().Be(1);
     }
+
+    [Fact]
+    public async Task Resilient_ShouldSkip_WhenDistributedLockUnavailable()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(new ExecutionTracker());
+        services.AddSingleton<IDistributedCronJobLock, InMemoryDistributedCronJobLock>();
+        ServiceProvider sp = services.BuildServiceProvider();
+
+        IDistributedCronJobLock distributedLock = sp.GetRequiredService<IDistributedCronJobLock>();
+        await using IDistributedCronJobLockHandle? held = await distributedLock.TryAcquireAsync(
+            nameof(TestResilientCronJob),
+            "other-instance",
+            TimeSpan.FromMinutes(5));
+        held.Should().NotBeNull();
+
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+            resilience: new CronJobResilienceConfig<TestResilientCronJob>
+            {
+                PreventOverlapping = false,
+                EnableDistributedLocking = true,
+                DistributedLockDuration = TimeSpan.FromMinutes(1),
+                DistributedLockWaitTimeout = TimeSpan.FromMilliseconds(50)
+            });
+
+        var job = new TestResilientCronJob(
+            config,
+            new Mock<IHostApplicationLifetime>().Object,
+            sp,
+            new InMemoryCronJobExecutionLock(),
+            new CronJobCircuitBreaker(),
+            NullLogger<ResilientCronJobService<TestResilientCronJob>>.Instance);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await job.StartAsync(cts.Token);
+        await Task.Delay(200);
+        await job.StopAsync(CancellationToken.None);
+
+        job.DoWorkInvocationCount.Should().Be(0);
+        job.SkippedCount.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task Resilient_ShouldRecordDistributedLockSkipReason_WhenLockUnavailable()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(new ExecutionTracker());
+        services.AddSingleton<IDistributedCronJobLock, InMemoryDistributedCronJobLock>();
+
+        var metricsMock = new Mock<ICronJobMetrics>();
+        services.AddSingleton(metricsMock.Object);
+        ServiceProvider sp = services.BuildServiceProvider();
+
+        IDistributedCronJobLock distributedLock = sp.GetRequiredService<IDistributedCronJobLock>();
+        await using IDistributedCronJobLockHandle? held = await distributedLock.TryAcquireAsync(
+            nameof(TestResilientCronJob),
+            "other-instance",
+            TimeSpan.FromMinutes(5));
+        held.Should().NotBeNull();
+
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+            resilience: new CronJobResilienceConfig<TestResilientCronJob>
+            {
+                PreventOverlapping = false,
+                EnableDistributedLocking = true,
+                DistributedLockDuration = TimeSpan.FromMinutes(1),
+                DistributedLockWaitTimeout = TimeSpan.FromMilliseconds(50)
+            });
+
+        var job = new TestResilientCronJob(
+            config,
+            new Mock<IHostApplicationLifetime>().Object,
+            sp,
+            new InMemoryCronJobExecutionLock(),
+            new CronJobCircuitBreaker(),
+            NullLogger<ResilientCronJobService<TestResilientCronJob>>.Instance);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await job.StartAsync(cts.Token);
+        await Task.Delay(200);
+        await job.StopAsync(CancellationToken.None);
+
+        metricsMock.Verify(
+            m => m.RecordSkippedExecution(nameof(TestResilientCronJob), "distributed_lock"),
+            Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task Resilient_ShouldReleaseDistributedLock_AfterSuccess()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(new ExecutionTracker());
+        services.AddSingleton<IDistributedCronJobLock, InMemoryDistributedCronJobLock>();
+        ServiceProvider sp = services.BuildServiceProvider();
+
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+            resilience: new CronJobResilienceConfig<TestResilientCronJob>
+            {
+                PreventOverlapping = false,
+                EnableDistributedLocking = true,
+                DistributedLockDuration = TimeSpan.FromMinutes(1)
+            });
+
+        var job = new TestResilientCronJob(
+            config,
+            new Mock<IHostApplicationLifetime>().Object,
+            sp,
+            new InMemoryCronJobExecutionLock(),
+            new CronJobCircuitBreaker(),
+            NullLogger<ResilientCronJobService<TestResilientCronJob>>.Instance);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await job.StartAsync(cts.Token);
+        await Task.Delay(200);
+        await job.StopAsync(CancellationToken.None);
+
+        IDistributedCronJobLock distributedLock = sp.GetRequiredService<IDistributedCronJobLock>();
+        (await distributedLock.IsLockedAsync(nameof(TestResilientCronJob))).Should().BeFalse();
+        job.DoWorkInvocationCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Resilient_ShouldUseConfiguredDistributedLockInstanceId()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(new ExecutionTracker());
+        var capturingLock = new CapturingDistributedCronJobLock();
+        services.AddSingleton<IDistributedCronJobLock>(capturingLock);
+        ServiceProvider sp = services.BuildServiceProvider();
+
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+            resilience: new CronJobResilienceConfig<TestResilientCronJob>
+            {
+                PreventOverlapping = false,
+                EnableDistributedLocking = true,
+                DistributedLockDuration = TimeSpan.FromMinutes(1),
+                DistributedLockInstanceId = "node-custom"
+            });
+
+        var job = new TestResilientCronJob(
+            config,
+            new Mock<IHostApplicationLifetime>().Object,
+            sp,
+            new InMemoryCronJobExecutionLock(),
+            new CronJobCircuitBreaker(),
+            NullLogger<ResilientCronJobService<TestResilientCronJob>>.Instance);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await job.StartAsync(cts.Token);
+        await Task.Delay(200);
+        await job.StopAsync(CancellationToken.None);
+
+        capturingLock.LastInstanceId.Should().Be("node-custom");
+        capturingLock.AcquisitionCount.Should().BeGreaterThan(0);
+    }
+
+    private sealed class CapturingDistributedCronJobLock : IDistributedCronJobLock
+    {
+        public int AcquisitionCount { get; private set; }
+
+        public string? LastInstanceId { get; private set; }
+
+        public Task<IDistributedCronJobLockHandle?> TryAcquireAsync(
+            string jobName,
+            string instanceId,
+            TimeSpan lockDuration,
+            CancellationToken cancellationToken = default)
+        {
+            AcquisitionCount++;
+            LastInstanceId = instanceId;
+            IDistributedCronJobLockHandle handle = new NoOpHandle(jobName, instanceId, DateTimeOffset.UtcNow + lockDuration);
+            return Task.FromResult<IDistributedCronJobLockHandle?>(handle);
+        }
+
+        public Task<bool> IsLockedAsync(string jobName, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(false);
+        }
+
+        public Task<DistributedLockInfo?> GetLockInfoAsync(string jobName, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<DistributedLockInfo?>(null);
+        }
+
+        private sealed class NoOpHandle : IDistributedCronJobLockHandle
+        {
+            public NoOpHandle(string jobName, string instanceId, DateTimeOffset expiresAt)
+            {
+                JobName = jobName;
+                InstanceId = instanceId;
+                AcquiredAt = DateTimeOffset.UtcNow;
+                ExpiresAt = expiresAt;
+            }
+
+            public string JobName { get; }
+
+            public string InstanceId { get; }
+
+            public DateTimeOffset AcquiredAt { get; }
+
+            public DateTimeOffset ExpiresAt { get; }
+
+            public bool IsValid => true;
+
+            public ValueTask DisposeAsync()
+            {
+                return ValueTask.CompletedTask;
+            }
+
+            public Task<bool> ExtendAsync(TimeSpan extension, CancellationToken cancellationToken = default)
+            {
+                return Task.FromResult(true);
+            }
+
+            public Task ReleaseAsync(CancellationToken cancellationToken = default)
+            {
+                return Task.CompletedTask;
+            }
+        }
+    }
 }

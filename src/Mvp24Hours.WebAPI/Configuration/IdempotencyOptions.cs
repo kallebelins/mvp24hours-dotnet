@@ -268,6 +268,30 @@ public class IdempotencyOptions
     public bool IntegrateWithCqrs { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets whether to use distributed locking for atomic acquisition when available.
+    /// Default: true.
+    /// </summary>
+    public bool EnableAtomicAcquisitionUsingDistributedLock { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the provider name used by distributed lock factory.
+    /// When null or empty, the default provider is used.
+    /// </summary>
+    public string? DistributedLockProviderName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the maximum time to wait for acquisition of the internal distributed lock.
+    /// Default: 1 second.
+    /// </summary>
+    public TimeSpan DistributedLockAcquisitionTimeout { get; set; } = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    /// Gets or sets the duration of the internal distributed lock used during atomic acquisition.
+    /// Default: 10 seconds.
+    /// </summary>
+    public TimeSpan DistributedLockDuration { get; set; } = TimeSpan.FromSeconds(10);
+
+    /// <summary>
     /// Gets or sets whether to log idempotency events.
     /// Default: true.
     /// </summary>

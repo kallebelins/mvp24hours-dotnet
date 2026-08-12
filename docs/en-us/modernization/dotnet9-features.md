@@ -6,8 +6,8 @@ the linked module pages for API and option details.
 
 > **Package readiness:** the source tree targets .NET 10, but production
 > projects still declare package version `9.1.21`. Verify the NuGet feed before
-> referencing `10.0.0`. See the
-> [9.1.x → 10.0.0 migration](../migration.md?id=_91x-1000).
+> referencing `10.8.0`. See the
+> [9.1.x → 10.8.0 migration](../migration.md?id=_91x-1000).
 
 ## Platform baseline
 
@@ -96,7 +96,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddMvp24HoursAspireDefaults(options =>
 {
     options.ServiceName = "orders-api";
-    options.ServiceVersion = "10.0.0";
+    options.ServiceVersion = "10.8.0";
 });
 
 builder.Services.AddMvpHybridCache();

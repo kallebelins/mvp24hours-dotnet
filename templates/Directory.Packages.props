@@ -4,7 +4,7 @@
     Copied templates fall back to this self-contained package version set.
   -->
   <PropertyGroup>
-    <Mvp24HoursPackageVersion Condition="'$(Mvp24HoursPackageVersion)' == ''">10.0.0</Mvp24HoursPackageVersion>
+    <Mvp24HoursPackageVersion Condition="'$(Mvp24HoursPackageVersion)' == ''">10.8.0</Mvp24HoursPackageVersion>
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)..\src\Directory.Packages.props" Condition="Exists('$(MSBuildThisFileDirectory)..\src\Directory.Packages.props')" />
   <ItemGroup Condition="!Exists('$(MSBuildThisFileDirectory)..\src\Directory.Packages.props')">
@@ -99,15 +99,15 @@
   </ItemGroup>
   <!-- Published-package fallback for standalone template consumption. -->
   <ItemGroup Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'">
-    <PackageVersion Include="Mvp24Hours.Application" Version="10.0.0" />
-    <PackageVersion Include="Mvp24Hours.Core" Version="10.0.0" />
-    <PackageVersion Include="Mvp24Hours.Infrastructure.Caching" Version="10.0.0" />
-    <PackageVersion Include="Mvp24Hours.Infrastructure.CronJob" Version="10.0.0" />
-    <PackageVersion Include="Mvp24Hours.Infrastructure.Cqrs" Version="10.0.0" />
-    <PackageVersion Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="10.0.0" />
-    <PackageVersion Include="Mvp24Hours.Infrastructure.Identity.Keycloak" Version="10.0.0" />
-    <PackageVersion Include="Mvp24Hours.Infrastructure.Pipe" Version="10.0.0" />
-    <PackageVersion Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="10.0.0" />
-    <PackageVersion Include="Mvp24Hours.WebAPI" Version="10.0.0" />
+    <PackageVersion Include="Mvp24Hours.Application" Version="10.8.0" />
+    <PackageVersion Include="Mvp24Hours.Core" Version="10.8.0" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Caching" Version="10.8.0" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.CronJob" Version="10.8.0" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Cqrs" Version="10.8.0" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="10.8.0" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Identity.Keycloak" Version="10.8.0" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Pipe" Version="10.8.0" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="10.8.0" />
+    <PackageVersion Include="Mvp24Hours.WebAPI" Version="10.8.0" />
   </ItemGroup>
 </Project>

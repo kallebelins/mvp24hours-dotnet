@@ -30,7 +30,7 @@ Use this context when implementing or reviewing .NET solutions with Mvp24Hours.
 
 ## Accuracy rules
 
-- The current source targets `net10.0`; check release notes before assuming package 10.0.0 is published.
+- The current source targets `net10.0`; check release notes before assuming package 10.8.0 is published.
 - Do not copy stale `9.*` package pins. Follow the consuming solution's package-version policy.
 - For CQRS use Mvp24Hours APIs: `AddMvpMediator`, `IMediatorCommand<T>`, `IMediatorQuery<T>`, their handler interfaces, and `IMediator.SendAsync`.
 - Prefer current `Program.cs`, native OpenAPI, `ILogger<T>`, OpenTelemetry, health checks, `TimeProvider`, and native resilience guidance.

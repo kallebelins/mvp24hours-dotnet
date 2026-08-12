@@ -4,11 +4,11 @@ This page summarizes what shipped and what is staged in the current source. For
 complete change history, see [`CHANGELOG.md`](../../CHANGELOG.md). For upgrade
 steps, use the [Migration guide](migration.md).
 
-## 10.0.0 (July 2026) — source release
+## 10.8.0 (July 2026) — source release
 
 > **Publication blocker:** all projects build for `net10.0`, but production
 > `.csproj` files still report `9.1.21` and the public `Mvp24Hours.Core` feed has
-> no 10.0.0 package. Do not request `--version 10.0.0` until package metadata is
+> no 10.8.0 package. Do not request `--version 10.8.0` until package metadata is
 > changed and publication is confirmed.
 
 ### Platform and compatibility
@@ -32,7 +32,7 @@ steps, use the [Migration guide](migration.md).
   retained for source compatibility but ignored. `SmtpClient` now uses the
   operating system trust store; a warning is logged when the callback is set.
 
-Follow the complete [9.1.x → 10.0.0 migration](migration.md?id=_91x-1000).
+Follow the complete [9.1.x → 10.8.0 migration](migration.md?id=_91x-1000).
 
 ### Security and internal substitutions
 
@@ -78,7 +78,7 @@ Follow the complete [9.1.x → 10.0.0 migration](migration.md?id=_91x-1000).
 
 ## 9.1.200 (January 2026)
 
-This .NET 9 release introduced the broad feature baseline retained by 10.0.0:
+This .NET 9 release introduced the broad feature baseline retained by 10.8.0:
 
 - the Mvp24Hours Mediator and CQRS stack, including behaviors, events,
   inbox/outbox, event sourcing, sagas, and scheduling;

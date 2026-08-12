@@ -2,7 +2,7 @@
 
 Mvp24Hours infrastructure modules provide adapters for messaging, storage, notifications, secrets, distributed coordination, background work, HTTP clients, and cross-cutting runtime concerns. Start with the module that owns the external dependency, then follow its page for registration, options, health checks, and test doubles.
 
-> The source currently targets .NET 10, but package publication must be verified before pinning a `10.0.0` version. The examples below intentionally omit a package version.
+> The source currently targets .NET 10, but package publication must be verified before pinning a `10.8.0` version. The examples below intentionally omit a package version.
 
 ## Install
 

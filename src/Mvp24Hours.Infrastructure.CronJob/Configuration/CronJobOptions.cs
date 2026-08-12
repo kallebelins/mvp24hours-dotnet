@@ -205,6 +205,17 @@ public class CronJobOptions<T> : IResilientScheduleConfig<T>
     /// <value>Default is <c>5 minutes</c>.</value>
     public TimeSpan DistributedLockExpiry { get; set; } = TimeSpan.FromMinutes(5);
 
+    /// <summary>
+    /// Gets or sets the maximum time to wait for distributed lock acquisition.
+    /// </summary>
+    /// <value>Default is <c>1 second</c>.</value>
+    public TimeSpan DistributedLockWaitTimeout { get; set; } = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    /// Gets or sets the optional distributed lock owner instance identifier.
+    /// </summary>
+    public string? DistributedLockInstanceId { get; set; }
+
     #endregion
 
     #region Observability Settings
@@ -257,7 +268,11 @@ public class CronJobOptions<T> : IResilientScheduleConfig<T>
             CircuitBreakerFailureThreshold = CircuitBreakerFailureThreshold,
             CircuitBreakerDuration = CircuitBreakerBreakDuration,
             PreventOverlapping = PreventOverlapping,
-            GracefulShutdownTimeout = GracefulShutdownTimeout
+            GracefulShutdownTimeout = GracefulShutdownTimeout,
+            EnableDistributedLocking = EnableDistributedLocking,
+            DistributedLockDuration = DistributedLockExpiry,
+            DistributedLockWaitTimeout = DistributedLockWaitTimeout,
+            DistributedLockInstanceId = DistributedLockInstanceId
         };
     }
 
@@ -275,6 +290,10 @@ public class CronJobOptions<T> : IResilientScheduleConfig<T>
         CircuitBreakerBreakDuration = config.CircuitBreakerDuration;
         PreventOverlapping = config.PreventOverlapping;
         GracefulShutdownTimeout = config.GracefulShutdownTimeout;
+        EnableDistributedLocking = config.EnableDistributedLocking;
+        DistributedLockExpiry = config.DistributedLockDuration;
+        DistributedLockWaitTimeout = config.DistributedLockWaitTimeout;
+        DistributedLockInstanceId = config.DistributedLockInstanceId;
     }
 
     /// <summary>

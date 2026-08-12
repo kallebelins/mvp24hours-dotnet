@@ -260,6 +260,16 @@ public class ApplicationBuilderExtensionsTest
     }
 
     [Fact]
+    public void UseMvp24HoursRequestBodyTracing_ShouldReturnBuilder()
+    {
+        IApplicationBuilder app = CreateAppBuilder();
+
+        IApplicationBuilder result = app.UseMvp24HoursRequestBodyTracing();
+
+        result.Should().BeSameAs(app);
+    }
+
+    [Fact]
     public void UseMvp24HoursRequestTelemetry_ShouldReturnBuilder()
     {
         IApplicationBuilder app = CreateAppBuilder();

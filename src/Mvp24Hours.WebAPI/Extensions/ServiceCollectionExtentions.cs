@@ -907,6 +907,38 @@ public static class ServiceCollectionExtentions
     }
 
     /// <summary>
+    /// Adds request body tracing services for Activity tag enrichment with redaction.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This feature captures request bodies for selected methods/content-types and stores
+    /// them in Activity tags using configurable masking for sensitive fields.
+    /// </para>
+    /// <para>
+    /// Use <see cref="ApplicationBuilderExtensions.UseMvp24HoursRequestBodyTracing"/> to add
+    /// the middleware to the request pipeline.
+    /// </para>
+    /// </remarks>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configureOptions">Optional action to configure request body tracing options.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMvp24HoursRequestBodyTracing(
+        this IServiceCollection services,
+        Action<RequestBodyTracingOptions>? configureOptions = null)
+    {
+        if (configureOptions != null)
+        {
+            services.Configure(configureOptions);
+        }
+        else
+        {
+            services.Configure<RequestBodyTracingOptions>(_ => { });
+        }
+
+        return services;
+    }
+
+    /// <summary>
     /// Adds both request logging and telemetry services.
     /// </summary>
     /// <remarks>
@@ -936,14 +968,17 @@ public static class ServiceCollectionExtentions
     /// <param name="services">The service collection.</param>
     /// <param name="configureLogging">Optional action to configure logging options.</param>
     /// <param name="configureTelemetry">Optional action to configure telemetry options.</param>
+    /// <param name="configureBodyTracing">Optional action to configure request body tracing options.</param>
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddMvp24HoursRequestObservability(
         this IServiceCollection services,
         Action<RequestLoggingOptions>? configureLogging = null,
-        Action<RequestTelemetryOptions>? configureTelemetry = null)
+        Action<RequestTelemetryOptions>? configureTelemetry = null,
+        Action<RequestBodyTracingOptions>? configureBodyTracing = null)
     {
         services.AddMvp24HoursRequestLogging(configureLogging);
         services.AddMvp24HoursRequestTelemetry(configureTelemetry);
+        services.AddMvp24HoursRequestBodyTracing(configureBodyTracing);
 
         return services;
     }
@@ -1856,6 +1891,10 @@ public static class ServiceCollectionExtentions
             opt.CacheKeyPrefix = options.CacheKeyPrefix;
             opt.NonCacheableStatusCodes = options.NonCacheableStatusCodes;
             opt.IntegrateWithCqrs = options.IntegrateWithCqrs;
+            opt.EnableAtomicAcquisitionUsingDistributedLock = options.EnableAtomicAcquisitionUsingDistributedLock;
+            opt.DistributedLockProviderName = options.DistributedLockProviderName;
+            opt.DistributedLockAcquisitionTimeout = options.DistributedLockAcquisitionTimeout;
+            opt.DistributedLockDuration = options.DistributedLockDuration;
             opt.EnableLogging = options.EnableLogging;
             opt.InFlightMessage = options.InFlightMessage;
             opt.MissingKeyMessage = options.MissingKeyMessage;

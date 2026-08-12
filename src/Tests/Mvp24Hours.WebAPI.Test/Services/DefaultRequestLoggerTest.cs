@@ -175,7 +175,7 @@ public class DefaultRequestLoggerTest
         var loggerMock = new Mock<ILogger<DefaultRequestLogger>>();
         var sut = new DefaultRequestLogger(loggerMock.Object, Options.Create(new RequestLoggingOptions()));
         DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
-        context.Request.Headers["X-Forwarded-For"] = "203.0.113.10, 10.0.0.1";
+        context.Request.Headers["X-Forwarded-For"] = "203.0.113.10, 10.8.0.1";
 
         await sut.LogRequestAsync(context);
 

@@ -1,4 +1,4 @@
-# <img  style="vertical-align:middle" width="42" height="42" src="https://kallebelins.github.io/mvp24hours-dotnet/_media/icon.png" alt="Mvp24Hours" /> Mvp24Hours - .NET 10 (v10.0.0 source) 🚀
+# <img  style="vertical-align:middle" width="42" height="42" src="https://kallebelins.github.io/mvp24hours-dotnet/_media/icon.png" alt="Mvp24Hours" /> Mvp24Hours - .NET 10 (v10.8.0 source) 🚀
 
 This project was developed to contribute to the rapid construction of services with [.NET](https://learn.microsoft.com/en-us/training/dotnet/). I used the reference of market solutions for building microservices.
 
@@ -15,7 +15,7 @@ Start here:
 
 > **Release status:** this repository targets `net10.0`, but production package
 > metadata remains at `9.1.21` and the public `Mvp24Hours.Core` feed does not
-> include 10.0.0. See [Release & Migration](release.md) before upgrading.
+> include 10.8.0. See [Release & Migration](release.md) before upgrading.
 
 ## 🎯 Characteristics
 
@@ -72,7 +72,7 @@ All **32** runnable sample solutions live in [`samples/`](https://github.com/kal
 * Record training videos for the community
 * Implement GraphQL support
 
-## ✅ Recently Completed (v10.0.0 source)
+## ✅ Recently Completed (v10.8.0 source)
 * **Platform alignment**: All production and test projects target `net10.0`; the shared language default is `latest`
 * **Build quality**: Nullable enabled solution-wide and a strict warnings-as-errors Release gate
 * **Dependency management**: Central Package Management in `Directory.Packages.props`

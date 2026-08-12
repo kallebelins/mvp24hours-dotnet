@@ -69,6 +69,7 @@ public abstract class ResilientCronJobService<T> : BackgroundService, IAsyncDisp
     private readonly IHostApplicationLifetime _hostApplication;
     private readonly IServiceProvider _rootServiceProvider;
     private readonly ICronJobExecutionLock _executionLock;
+    private readonly IDistributedCronJobLock? _distributedLock;
     private readonly CronJobCircuitBreaker _circuitBreaker;
     private readonly ILogger<ResilientCronJobService<T>> _logger;
     private readonly TimeProvider _timeProvider;
@@ -155,6 +156,7 @@ public abstract class ResilientCronJobService<T> : BackgroundService, IAsyncDisp
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _timeProvider = timeProvider ?? TimeProvider.System;
         _resilienceConfig = config.Resilience;
+        _distributedLock = rootServiceProvider.GetService<IDistributedCronJobLock>();
         _metrics = rootServiceProvider.GetService<ICronJobMetrics>();
 
         CronExpression = config.CronExpression ?? string.Empty;
@@ -367,9 +369,51 @@ public abstract class ResilientCronJobService<T> : BackgroundService, IAsyncDisp
             }
         }
 
+        // Check distributed lock when enabled for cluster-safe execution
+        IDistributedCronJobLockHandle? distributedLockHandle = null;
+        if (_resilienceConfig.EnableDistributedLocking && _distributedLock != null)
+        {
+            string instanceId = string.IsNullOrWhiteSpace(_resilienceConfig.DistributedLockInstanceId)
+                ? $"{Environment.MachineName}_{Environment.ProcessId}"
+                : _resilienceConfig.DistributedLockInstanceId;
+
+            TimeSpan waitTimeout = _resilienceConfig.DistributedLockWaitTimeout <= TimeSpan.Zero
+                ? TimeSpan.FromSeconds(1)
+                : _resilienceConfig.DistributedLockWaitTimeout;
+
+            TimeSpan lockDuration = _resilienceConfig.DistributedLockDuration <= TimeSpan.Zero
+                ? TimeSpan.FromMinutes(5)
+                : _resilienceConfig.DistributedLockDuration;
+
+            CancellationToken acquireToken = cancellationToken;
+            using CancellationTokenSource? waitTimeoutCts = waitTimeout > TimeSpan.Zero
+                ? new CancellationTokenSource(waitTimeout)
+                : null;
+
+            if (waitTimeoutCts != null)
+            {
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, waitTimeoutCts.Token);
+                acquireToken = linkedCts.Token;
+                distributedLockHandle = await _distributedLock.TryAcquireAsync(JobName, instanceId, lockDuration, acquireToken);
+            }
+            else
+            {
+                distributedLockHandle = await _distributedLock.TryAcquireAsync(JobName, instanceId, lockDuration, acquireToken);
+            }
+
+            if (distributedLockHandle == null)
+            {
+                Interlocked.Increment(ref _skippedCount);
+                _metrics?.RecordSkippedExecution(JobName, "distributed_lock");
+                _logger.LogDebug("CronJob distributed lock skipped. Name: {CronJobName}, InstanceId: {InstanceId}", JobName, instanceId);
+                return;
+            }
+        }
+
         try
         {
             await using ICronJobLockHandle? _ = lockHandle;
+            await using IDistributedCronJobLockHandle? __ = distributedLockHandle;
             await ExecuteScheduledWorkAsync(cancellationToken);
         }
         catch (Exception)

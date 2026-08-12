@@ -168,6 +168,30 @@ public static class ApplicationBuilderExtensions
     }
 
     /// <summary>
+    /// Adds request body tracing middleware for Activity tag enrichment.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This middleware captures and redacts selected request bodies and writes them to
+    /// activity tags for observability and diagnostics.
+    /// </para>
+    /// <para>
+    /// <strong>Prerequisites:</strong>
+    /// Call <c>services.AddMvp24HoursRequestBodyTracing()</c> to configure options.
+    /// </para>
+    /// <para>
+    /// <strong>Pipeline Position:</strong>
+    /// Use after request telemetry so the current Activity is available.
+    /// </para>
+    /// </remarks>
+    /// <param name="builder">The application builder.</param>
+    /// <returns>The application builder for chaining.</returns>
+    public static IApplicationBuilder UseMvp24HoursRequestBodyTracing(this IApplicationBuilder builder)
+    {
+        return builder.UseMiddleware<RequestBodyTracingMiddleware>();
+    }
+
+    /// <summary>
     /// Adds both request logging and telemetry middlewares.
     /// </summary>
     /// <remarks>
@@ -194,6 +218,7 @@ public static class ApplicationBuilderExtensions
     public static IApplicationBuilder UseMvp24HoursRequestObservability(this IApplicationBuilder builder)
     {
         builder.UseMvp24HoursRequestTelemetry();
+        builder.UseMvp24HoursRequestBodyTracing();
         builder.UseMvp24HoursRequestLogging();
         return builder;
     }
@@ -235,6 +260,7 @@ public static class ApplicationBuilderExtensions
     {
         builder.UseMvp24HoursRequestContext();
         builder.UseMvp24HoursRequestTelemetry();
+        builder.UseMvp24HoursRequestBodyTracing();
         builder.UseMvp24HoursRequestLogging();
         return builder;
     }

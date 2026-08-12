@@ -27,7 +27,7 @@ namespace Mvp24Hours.WebAPI.Configuration;
 /// {
 ///     options.Mode = IpFilteringMode.Whitelist;
 ///     options.WhitelistedIps.Add("192.168.1.0/24");
-///     options.WhitelistedIps.Add("10.0.0.1");
+///     options.WhitelistedIps.Add("10.8.0.1");
 /// });
 /// </code>
 /// </example>
@@ -52,7 +52,7 @@ public class IpFilteringOptions
     /// <example>
     /// <code>
     /// options.WhitelistedIps.Add("192.168.1.1");       // Single IP
-    /// options.WhitelistedIps.Add("10.0.0.0/8");        // CIDR range
+    /// options.WhitelistedIps.Add("10.8.0.0/8");        // CIDR range
     /// options.WhitelistedIps.Add("::1");               // IPv6 localhost
     /// options.WhitelistedIps.Add("2001:db8::/32");     // IPv6 range
     /// </code>
@@ -78,7 +78,7 @@ public class IpFilteringOptions
     /// </remarks>
     /// <example>
     /// <code>
-    /// options.PathWhitelists["/api/admin/*"] = new HashSet&lt;string&gt; { "10.0.0.0/8" };
+    /// options.PathWhitelists["/api/admin/*"] = new HashSet&lt;string&gt; { "10.8.0.0/8" };
     /// options.PathWhitelists["/api/internal/*"] = new HashSet&lt;string&gt; { "192.168.1.0/24" };
     /// </code>
     /// </example>

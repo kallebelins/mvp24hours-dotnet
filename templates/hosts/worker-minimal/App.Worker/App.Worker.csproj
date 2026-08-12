@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
-    <PackageReference Include="Mvp24Hours.Infrastructure.CronJob" Version="10.0.0" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.CronJob" Version="10.8.0" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
     <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.CronJob\Mvp24Hours.Infrastructure.CronJob.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
   </ItemGroup>
 </Project>

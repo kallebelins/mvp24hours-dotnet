@@ -134,6 +134,30 @@ public interface ICronJobResilienceConfig<T>
     /// <value>Default is <c>TimeSpan.Zero</c> (no wait, skip immediately).</value>
     TimeSpan OverlappingWaitTimeout { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether distributed locking is enabled for cluster-safe execution.
+    /// </summary>
+    /// <value>Default is <c>false</c>.</value>
+    bool EnableDistributedLocking { get; set; }
+
+    /// <summary>
+    /// Gets or sets how long the distributed lock should be held.
+    /// </summary>
+    /// <value>Default is <c>5 minutes</c>.</value>
+    TimeSpan DistributedLockDuration { get; set; }
+
+    /// <summary>
+    /// Gets or sets the maximum time to wait for acquiring the distributed lock.
+    /// </summary>
+    /// <value>Default is <c>1 second</c>.</value>
+    TimeSpan DistributedLockWaitTimeout { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional instance ID used for distributed lock ownership.
+    /// When null or empty, a machine and process based identifier is used.
+    /// </summary>
+    string? DistributedLockInstanceId { get; set; }
+
     #endregion
 
     #region Graceful Shutdown Configuration

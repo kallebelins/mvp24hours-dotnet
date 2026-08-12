@@ -5,4 +5,4 @@
 
 ---
 
-Version 10.0.0 source. [.NET 10](https://dotnet.microsoft.com/en-us/download/dotnet/10.0). Maintained by [@kallebelins](https://www.linkedin.com/in/kallebelins). Proudly published with [Docsify](https://docsify.js.org).
+Version 10.8.0 source. [.NET 10](https://dotnet.microsoft.com/en-us/download/dotnet/10.0). Maintained by [@kallebelins](https://www.linkedin.com/in/kallebelins). Proudly published with [Docsify](https://docsify.js.org).

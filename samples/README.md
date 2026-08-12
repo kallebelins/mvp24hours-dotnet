@@ -57,10 +57,10 @@ This repository uses the current projects under [`src/`](../src/) by default. [`
 For a standalone checkout after matching packages are published, switch to NuGet:
 
 ```bash
-dotnet build Mvp24Hours.Samples.slnx -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.0.0
+dotnet build Mvp24Hours.Samples.slnx -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.8.0
 ```
 
-See [Using samples with published NuGet packages](../docs/en-us/migration.md?id=using-samples-with-published-nuget-packages) for the full consumer checklist once `10.0.0` is on nuget.org.
+See [Using samples with published NuGet packages](../docs/en-us/migration.md?id=using-samples-with-published-nuget-packages) for the full consumer checklist once `10.8.0` is on nuget.org.
 
 [`Directory.Packages.props`](Directory.Packages.props) imports shared versions from [`src/Directory.Packages.props`](../src/Directory.Packages.props) and adds sample-only packages. Never mix Mvp24Hours 4.x, 8.x, 9.x, and 10.x packages in one sample. The source and published-package modes are alternatives; do not enable both.
 

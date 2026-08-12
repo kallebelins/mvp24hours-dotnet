@@ -48,6 +48,10 @@ services.AddResilientCronJobWithOptions<ImportJob>(options =>
 | `PreventOverlapping` | `bool` | `true` | Prevents concurrent execution in one process. |
 | `LogOverlappingSkipped` | `bool` | `true` | Logs skipped overlaps. |
 | `OverlappingWaitTimeout` | `TimeSpan` | `TimeSpan.Zero` | Local-lock wait; zero skips immediately. |
+| `EnableDistributedLocking` | `bool` | `false` | Enables distributed lock acquisition before each resilient execution. |
+| `DistributedLockDuration` | `TimeSpan` | `5 min` | Lease duration requested for the distributed execution lock. |
+| `DistributedLockWaitTimeout` | `TimeSpan` | `1 s` | Maximum wait while acquiring distributed lock before skipping. |
+| `DistributedLockInstanceId` | `string?` | `null` | Optional lock owner ID; machine/process fallback when omitted. |
 | `GracefulShutdownTimeout` | `TimeSpan` | `30 s` | Maximum shutdown wait. |
 | `WaitForExecutionOnShutdown` | `bool` | `true` | Waits for an active execution. |
 | `PropagateCancellation` | `bool` | `true` | Passes cancellation into job work. |
@@ -61,20 +65,62 @@ Factory methods are `Default()`, `WithRetry(...)`, `WithCircuitBreaker(...)`, an
 
 ## Local versus distributed overlap prevention
 
-`ICronJobExecutionLock` and `PreventOverlapping` protect one process. Cluster deployments must additionally use advanced `IDistributedCronJobLock` infrastructure and a production implementation registered through `AddCronJobDistributedLock<TLock>()`.
+`ICronJobExecutionLock` and `PreventOverlapping` protect one process. Cluster deployments can enable resilient distributed locking through `EnableDistributedLocking` and a production `IDistributedCronJobLock` registered via `AddCronJobDistributedLock<TLock>()`.
 
 ```csharp
 services.AddCronJobAdvancedInfrastructure(o => o.UseDistributedLocking = true);
 services.AddCronJobDistributedLock<RedisCronJobLock>();
-services.AddAdvancedCronJobWithOptions<ImportJob>(o =>
+services.AddResilientCronJob<ImportJob>(o =>
 {
     o.CronExpression = "*/5 * * * *";
-    o.EnableDistributedLocking = true;
-    o.DistributedLockExpiry = TimeSpan.FromMinutes(5);
+    o.Resilience.EnableDistributedLocking = true;
+    o.Resilience.DistributedLockDuration = TimeSpan.FromMinutes(5);
+    o.Resilience.DistributedLockWaitTimeout = TimeSpan.FromSeconds(2);
 });
 ```
 
 Do not describe the built-in `InMemoryDistributedCronJobLock` as cluster safe.
+
+## How to use the resilient distributed lock
+
+Use this checklist in production:
+
+- Register distributed-lock infrastructure and your implementation.
+- Enable resilient distributed locking per job.
+- Tune lease and wait timeout to your execution profile.
+- Optionally set a stable `DistributedLockInstanceId` per node.
+
+```csharp
+services.AddCronJobAdvancedInfrastructure(o => o.UseDistributedLocking = true);
+services.AddCronJobDistributedLock<RedisCronJobLock>();
+
+services.AddResilientCronJobWithOptions<ImportJob>(o =>
+{
+        o.CronExpression = "*/5 * * * *";
+        o.TimeZone = "UTC";
+        o.EnableDistributedLocking = true;
+        o.DistributedLockExpiry = TimeSpan.FromMinutes(5);
+        o.DistributedLockWaitTimeout = TimeSpan.FromSeconds(2);
+        o.DistributedLockInstanceId = "node-a";
+});
+```
+
+`EnableDistributedLocking`, `DistributedLockExpiry`, `DistributedLockWaitTimeout`, and `DistributedLockInstanceId` are bindable through `CronJobOptions<T>`. They are mapped into `CronJobResilienceConfig<T>` at runtime.
+
+```json
+{
+    "CronJobs": {
+        "ImportJob": {
+            "CronExpression": "*/5 * * * *",
+            "TimeZone": "UTC",
+            "EnableDistributedLocking": true,
+            "DistributedLockExpiry": "00:05:00",
+            "DistributedLockWaitTimeout": "00:00:02",
+            "DistributedLockInstanceId": "node-a"
+        }
+    }
+}
+```
 
 ## Operational guidance
 
@@ -86,4 +132,4 @@ Do not describe the built-in `InMemoryDistributedCronJobLock` as cluster safe.
 
 ## Test reference
 
-The module tests cover retry delay and jitter, circuit transitions, local overlap locks, cancellation, timeouts, graceful shutdown and the in-memory distributed lock under `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Resiliency`.
+The module tests cover retry delay and jitter, circuit transitions, local overlap locks, cancellation, timeouts, graceful shutdown, resilient distributed-lock execution/skip paths, and the in-memory distributed lock under `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test`.

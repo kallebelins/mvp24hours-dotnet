@@ -119,6 +119,32 @@ public class CronJobConfigurationExtensionsTest
     }
 
     [Fact]
+    public void AddResilientCronJobWithOptions_ShouldBindDistributedLockSettingsIntoResilienceConfig()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+
+        IConfiguration configuration = CronJobTestHelpers.CreateConfiguration(new Dictionary<string, string?>
+        {
+            ["CronJobs:TestResilientCronJob:CronExpression"] = "*/5 * * * *",
+            ["CronJobs:TestResilientCronJob:EnableDistributedLocking"] = "true",
+            ["CronJobs:TestResilientCronJob:DistributedLockExpiry"] = "00:02:00",
+            ["CronJobs:TestResilientCronJob:DistributedLockWaitTimeout"] = "00:00:03",
+            ["CronJobs:TestResilientCronJob:DistributedLockInstanceId"] = "node-a"
+        });
+
+        services.AddResilientCronJobWithOptions<TestResilientCronJob>(_ => { }, configuration);
+
+        ICronJobResilienceConfig<TestResilientCronJob> resilience = services.BuildServiceProvider()
+            .GetRequiredService<IResilientScheduleConfig<TestResilientCronJob>>().Resilience;
+
+        resilience.EnableDistributedLocking.Should().BeTrue();
+        resilience.DistributedLockDuration.Should().Be(TimeSpan.FromMinutes(2));
+        resilience.DistributedLockWaitTimeout.Should().Be(TimeSpan.FromSeconds(3));
+        resilience.DistributedLockInstanceId.Should().Be("node-a");
+    }
+
+    [Fact]
     public void AddAdvancedCronJobWithOptions_ShouldRegisterAdvancedInfrastructure()
     {
         var services = new ServiceCollection();
