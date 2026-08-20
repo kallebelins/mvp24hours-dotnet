@@ -4,7 +4,7 @@
 
 ## Overview
 
-This skills ecosystem provides **26 specialized architect/specialist skills** organized into **13 categories**, covering the complete Mvp24Hours .NET 10 framework. Each skill uses a **MCP-first approach**, querying the Mvp24Hours MCP DevKit for canonical documentation, architecture templates, and runnable samples.
+This skills ecosystem provides **30 specialized architect/specialist skills** organized into **13 categories**, covering the complete Mvp24Hours .NET 10 framework. Each skill uses a **MCP-first approach**, querying the Mvp24Hours MCP DevKit for canonical documentation, architecture templates, and runnable samples.
 
 ### What are these skills?
 
@@ -258,15 +258,19 @@ Scheduled tasks, hosted services, overlap prevention.
 
 ---
 
-### 🚀 .NET Modernization (1 skill)
+### 🚀 Modernization & Transformation (5 skills)
 
-.NET 10 features: TimeProvider, Channels, Keyed Services, Aspire.
+Native .NET 10 APIs **and** a pipeline for existing systems: analyze → propose → port (foreign stack) or rewrite (Mvp24Hours template-to-template).
 
 | Skill | Type | Focus | When to Use |
 |-------|------|-------|-------------|
-| **[dotnet-modernization-specialist](modernization/dotnet-modernization-specialist.md)** | 🔧 Specialist | Native .NET 10 APIs | Adopting modern platform features |
+| **[architecture-analyst](modernization/architecture-analyst.md)** | 🎯 Architect | Discovery report / compliance review | Analyze legacy or existing Mvp24Hours apps (no implementation) |
+| **[architecture-proposal-architect](modernization/architecture-proposal-architect.md)** | 🎯 Architect | ADR, structure then blueprint | Target template, tree, phases, next skill |
+| **[port-transpilation-specialist](modernization/port-transpilation-specialist.md)** | 🔧 Specialist | Semantic port to Mvp24Hours | Any language → .NET 10 (`port-to-mvp24hours`) |
+| **[architecture-rewrite-architect](modernization/architecture-rewrite-architect.md)** | 🎯 Architect | Template-to-template rewrite | Already on Mvp24Hours (`architecture-migration`) |
+| **[dotnet-modernization-specialist](modernization/dotnet-modernization-specialist.md)** | 🔧 Specialist | Native .NET 10 APIs | HybridCache, TimeProvider, OpenAPI, package 9→10 |
 
-**Features**: HybridCache, TimeProvider, Channels, Keyed DI, Native OpenAPI, Aspire
+**MCP**: `get_discovery_playbook`, `resolve_architecture`, `plan_architecture_migration`, `get_migration_playbook`, `run_compliance_check`. **Transpilation** = semantic port, not a compiler.
 
 ---
 
@@ -337,9 +341,22 @@ What do you need help with?
 ├─ Adding tests
 │  → @testing-architect
 │
-└─ Migrating architecture
-   → @solution-architect (migration paths)
-   → Relevant specialist for target pattern
+├─ Analyzing a legacy or existing system
+│  → @architecture-analyst (report only)
+│  → @architecture-proposal-architect (ADR)
+│
+├─ Porting non-Mvp24Hours code (any language)
+│  → @port-transpilation-specialist
+│
+├─ Rewriting between Mvp24Hours templates
+│  → @architecture-rewrite-architect
+│  → @solution-architect (structure vs blueprint vocabulary)
+│
+├─ Native APIs / net10 package bump (same template)
+│  → @dotnet-modernization-specialist
+│
+└─ Migrating architecture (legacy wording)
+   → same as rewrite / proposal pipeline above
 ```
 
 ### I need implementation guidance...
@@ -358,6 +375,9 @@ What do you need help with?
 | **Keycloak JWT auth** | `@identity-architect` | `@webapi-architect` |
 | **Cron jobs** | `@cronjob-architect` | - |
 | **.NET 10 features** | `@dotnet-modernization-specialist` | Relevant architect |
+| **Legacy analysis** | `@architecture-analyst` | `@architecture-proposal-architect` |
+| **Port / transpile to Mvp24Hours** | `@port-transpilation-specialist` | `@architecture-analyst`, `@webapi-architect` |
+| **Template rewrite** | `@architecture-rewrite-architect` | `@solution-architect` |
 
 ---
 
@@ -382,9 +402,11 @@ All skills require the **Mvp24Hours MCP DevKit** to be configured. The MCP serve
 | `list_samples` | List available samples | `list_samples` |
 | `get_sample_tree` | Browse sample structure | `get_sample_tree "sampleId": "complex-cqrs-ef-customer-api"` |
 | `get_sample_file` | Read sample file | `get_sample_file "sampleId": "...", "filePath": "..."` |
-| `resolve_architecture` | Match constraints to pattern | `resolve_architecture "constraints": {...}` |
-| `plan_architecture_migration` | Get migration steps | `plan_architecture_migration "current": "...", "target": "..."` |
-| `get_scenario_playbook` | Get implementation playbook | `get_scenario_playbook "scenarioId": "..."` |
+| `resolve_architecture` | Match constraints to pattern | `resolve_architecture "situation": "..."` |
+| `plan_architecture_migration` | Layer diff between templates | `plan_architecture_migration "sourceTemplateId": "simple-nlayers" "targetTemplateId": "complex-nlayers"` |
+| `get_migration_playbook` | Structured migration playbook | `get_migration_playbook "playbookId": "crud-to-cqrs"` |
+| `get_discovery_playbook` | Language-agnostic port discovery | `get_discovery_playbook` |
+| `get_scenario_playbook` | Get implementation playbook | `get_scenario_playbook "scenarioId": "port-to-mvp24hours"` |
 
 ### Setting Up MCP
 
@@ -490,7 +512,7 @@ Each skill follows this layered structure (~300-500 lines):
 | **Testing** | testing-architect | - | Mvp24Hours.Infrastructure (test helpers) |
 | **Identity** | identity-architect | - | Mvp24Hours.Infrastructure.Identity.Keycloak |
 | **CronJob** | cronjob-architect | - | Mvp24Hours.Infrastructure.CronJob |
-| **Modernization** | - | dotnet-modernization | All packages (.NET 10) |
+| **Modernization** | architecture-analyst, architecture-proposal-architect, architecture-rewrite-architect | port-transpilation, dotnet-modernization | All packages (.NET 10) |
 
 ---
 
@@ -533,7 +555,7 @@ dotnet add package Mvp24Hours.Infrastructure.Identity.Keycloak
 
 ### Completed Skills
 
-All **26 catalog skills** are complete (architecture 6, data 4, messaging 3, CQRS 3, observability 2, plus pipeline, caching, infrastructure, webapi, testing, identity, cronjob, modernization).
+All **30 catalog skills** are complete (architecture 6, data 4, messaging 3, CQRS 3, observability 2, plus pipeline, caching, infrastructure, webapi, testing, identity, cronjob, modernization 5).
 
 See [COMPLETION_STATUS.md](COMPLETION_STATUS.md). To revise a skill, follow [SKILL_TEMPLATE.md](SKILL_TEMPLATE.md) and verify APIs with MCP (`get_doc`, `find_source_symbol`, `get_sample_tree`).
 
@@ -603,10 +625,11 @@ These skills are provided as-is to assist with Mvp24Hours development. They refe
 
 **Architecture Migration**:
 ```
-1. @solution-architect plan_architecture_migration
-2. Review migration playbook via MCP
-3. Consult target pattern specialist
-4. Implement incrementally with tests
+1. @architecture-analyst — inventory or compliance review
+2. @architecture-proposal-architect — structure first, optional blueprint
+3. @port-transpilation-specialist (external) OR @architecture-rewrite-architect (already Mvp24Hours)
+4. @dotnet-modernization-specialist if only native APIs / package bump
+5. run_compliance_check for the matching scenario
 ```
 
 **Production Readiness**:

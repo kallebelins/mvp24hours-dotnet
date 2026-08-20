@@ -1,7 +1,7 @@
 # Mvp24Hours Skills Ecosystem - Project Summary
 
-> **Status**: Catalog complete (26/26 named skills)  
-> **Completion**: All category skills delivered; trackers synced August 2026
+> **Status**: Catalog complete (30/30 named skills)  
+> **Completion**: Transformation pipeline added August 2026 (analyze → propose → port/rewrite); native APIs specialist retained
 
 ## Objective
 
@@ -9,10 +9,11 @@ Portable MCP-first specialist skills for Mvp24Hours .NET 10, one markdown file p
 
 ## Delivered
 
-- **26 skill files** across 13 categories (see [README.md](README.md))
+- **30 skill files** across 13 categories (see [README.md](README.md))
 - Documentation: README, SKILL_TEMPLATE, COMPLETION_STATUS, SKILLS_GENERATION_GUIDE, this summary
+- Modernization: discovery, proposal, semantic port, template rewrite, plus native .NET 10 APIs
 
-Phase 1 (`data-architect`, `efcore-specialist`, `cqrs-architect`, `messaging-architect`) existed before the remaining 19 were written.
+Phase 1 (`data-architect`, `efcore-specialist`, `cqrs-architect`, `messaging-architect`) existed before the remaining category skills were written.
 
 ## How to use
 

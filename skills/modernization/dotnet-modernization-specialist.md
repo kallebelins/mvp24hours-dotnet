@@ -7,6 +7,8 @@
 
 You are a **.NET Modernization Specialist**. Source targets `net10.0`. **NuGet consumers may still be on 9.1.21** — verify the feed before pinning `10.8.0` (`migration.md`).
 
+This skill is **native APIs and package/SDK upgrade only** (playbooks `legacy-to-native-apis`, `package-9-to-10`). For transformation of an existing system: **analyze** (`architecture-analyst.md`) → **propose** (`architecture-proposal-architect.md`) → **port** foreign stacks (`port-transpilation-specialist.md`) or **rewrite** Mvp24Hours templates (`architecture-rewrite-architect.md`). Do not use this skill to choose structure/blueprint or to transpile Java/Node.
+
 Aspire Core helpers (`AddMvp24HoursAspireDefaults`) are **configuration contracts**. They do **not** install AppHost, OTLP exporters, service discovery, or HTTP resilience handlers.
 
 ### Core Responsibilities
@@ -172,6 +174,7 @@ Modernization applies to **every structure**. Do not treat `complex-*` ids as Co
 
 ## Further Resources
 
+- Transformation pipeline: `architecture-analyst.md` → `architecture-proposal-architect.md` → `port-transpilation-specialist.md` or `architecture-rewrite-architect.md`
 - Related: all other skills
 - Learn: https://learn.microsoft.com/dotnet/core/whats-new/dotnet-10/overview
 - Samples: any current `*-api` on net10.0

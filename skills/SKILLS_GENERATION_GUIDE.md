@@ -1,12 +1,12 @@
 # Skills Generation Guide - Remaining Skills
 
 > **Purpose**: Historical outlines used to generate specialist skills  
-> **Status**: Catalog complete (26/26). Use this file only when revising a skill.  
+> **Status**: Catalog complete (30/30). Use this file only when revising a skill.  
 > **Approach**: Follow SKILL_TEMPLATE.md and verify APIs via MCP (`get_doc`, `find_source_symbol`, `get_sample_tree`)
 
 ## Quick Reference
 
-### Completed Skills (26)
+### Completed Skills (30)
 
 Architecture: `solution-architect`, `clean-architecture-specialist`, `ddd-specialist`, `hexagonal-specialist`, `event-driven-specialist`, `microservices-specialist`
 
@@ -18,7 +18,9 @@ CQRS: `cqrs-architect`, `event-sourcing-specialist`, `mediator-patterns-speciali
 
 Observability: `observability-architect`, `resilience-patterns-specialist`
 
-Other: `pipeline-architect`, `caching-architect`, `infrastructure-architect`, `webapi-architect`, `testing-architect`, `identity-architect`, `cronjob-architect`, `dotnet-modernization-specialist`
+Other: `pipeline-architect`, `caching-architect`, `infrastructure-architect`, `webapi-architect`, `testing-architect`, `identity-architect`, `cronjob-architect`
+
+Modernization: `architecture-analyst`, `architecture-proposal-architect`, `port-transpilation-specialist`, `architecture-rewrite-architect`, `dotnet-modernization-specialist`
 
 See [COMPLETION_STATUS.md](COMPLETION_STATUS.md) and [README.md](README.md).
 

@@ -1,7 +1,7 @@
 # Mvp24Hours Skills - Completion Status
 
 > **Last Updated**: August 2026  
-> **Status**: Catalog complete (26/26 named skills + documentation)
+> **Status**: Catalog complete (30/30 named skills + documentation)
 
 ## Overview
 
@@ -9,8 +9,8 @@ This document tracks the Mvp24Hours Specialized Architect Skills ecosystem.
 
 ### Summary Statistics
 
-- **Total skills in catalog**: 26 (see README category tables; earlier drafts said 28)
-- **Completed**: 26 (100%)
+- **Total skills in catalog**: 30 (see README category tables)
+- **Completed**: 30 (100%)
 - **Documentation**: README, Template, Generation Guide, this Status, Project Summary
 - **Categories**: 13
 - **MCP Integration**: Required for canonical APIs
@@ -62,7 +62,7 @@ This document tracks the Mvp24Hours Specialized Architect Skills ecosystem.
 | observability-architect | Architect | Complete | `observability/observability-architect.md` |
 | resilience-patterns-specialist | Specialist | Complete | `observability/resilience-patterns-specialist.md` |
 
-### Single-file categories (8/8)
+### Single-file categories (7/7)
 
 | Skill | Type | Status | File |
 |-------|------|--------|------|
@@ -73,6 +73,15 @@ This document tracks the Mvp24Hours Specialized Architect Skills ecosystem.
 | testing-architect | Architect | Complete | `testing/testing-architect.md` |
 | identity-architect | Architect | Complete | `identity/identity-architect.md` |
 | cronjob-architect | Architect | Complete | `cronjob/cronjob-architect.md` |
+
+### Modernization & Transformation (5/5)
+
+| Skill | Type | Status | File |
+|-------|------|--------|------|
+| architecture-analyst | Architect | Complete | `modernization/architecture-analyst.md` |
+| architecture-proposal-architect | Architect | Complete | `modernization/architecture-proposal-architect.md` |
+| port-transpilation-specialist | Specialist | Complete | `modernization/port-transpilation-specialist.md` |
+| architecture-rewrite-architect | Architect | Complete | `modernization/architecture-rewrite-architect.md` |
 | dotnet-modernization-specialist | Specialist | Complete | `modernization/dotnet-modernization-specialist.md` |
 
 ---
