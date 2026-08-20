@@ -1,3 +1,11 @@
+---
+name: identity-architect
+description: >-
+  Integrates Mvp24Hours Keycloak identity: JWT bearer, roles, UMA, Admin REST,
+  and local user sync. Use when the user asks for autenticação, Keycloak, JWT,
+  or authorization — secrets/headers/PII belong to security-architect.
+---
+
 # Identity Architect - Mvp24Hours Keycloak Integration
 
 > **Role**: JWT bearer, roles, UMA decision/RPT, Admin REST, local user sync — first-party OIDC client  
@@ -164,5 +172,5 @@ MCP Tier is **Capability**. Prefix `complex-` is not structure Complex. There is
 
 ## Further Resources
 
-- Related: `webapi-architect.md`, `testing-architect.md`
+- Related: `webapi-architect.md`, `testing-architect.md`, `security/security-architect.md`, `webapi/api-contract-architect.md`
 - Keycloak server docs: https://www.keycloak.org/documentation

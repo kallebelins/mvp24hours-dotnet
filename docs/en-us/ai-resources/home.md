@@ -10,13 +10,11 @@ Mvp24Hours separates documentation by audience:
 
 The [`mcp/`](../../mcp/) project ships a [Model Context Protocol](https://modelcontextprotocol.io/) server that indexes `docs/`, `samples/`, and `src/` without duplicating template content.
 
-### Cursor setup
+**Agent entry point:** [`skills/orchestration/skill-router.md`](../../skills/orchestration/skill-router.md) (`@skill-router`) or any domain skill (`@efcore-specialist`, `@demand-architect`, …). The [global installer](../../scripts/README-devkit.md) registers all 36 skills as `SKILL.md` folders and keeps a `catalog/` copy inside `skill-router` for handoff.
+
+### Cursor setup (this repo)
 
 Project configuration: [`.cursor/mcp.json`](../../.cursor/mcp.json)
-
-Agent skill: [`.cursor/skills/mvp24hours-router/`](../../.cursor/skills/mvp24hours-router/)
-
-Portable kit (copy to other projects): [`cursor-devkit/`](../../cursor-devkit/)
 
 ```json
 {
@@ -32,13 +30,11 @@ Portable kit (copy to other projects): [`cursor-devkit/`](../../cursor-devkit/)
 
 Restart Cursor after changing MCP configuration.
 
-### VS Code setup
+**External Cursor project:** set user env `MVP24HOURS_MCP_REPO_ROOT` to the clone, then use [`mcp/templates/cursor/mcp.external.json`](../../mcp/templates/cursor/mcp.external.json) (`mcpServers`). HTTP: [`mcp/templates/cursor/mcp.http.json`](../../mcp/templates/cursor/mcp.http.json).
+
+### VS Code setup (this repo)
 
 Project configuration: [`.vscode/mcp.json`](../../.vscode/mcp.json)
-
-Agent skill: [`.github/skills/mvp24hours-router/`](../../.github/skills/mvp24hours-router/)
-
-Portable kit (copy to other projects): [`vscode-devkit/`](../../vscode-devkit/)
 
 ```json
 {
@@ -53,7 +49,65 @@ Portable kit (copy to other projects): [`vscode-devkit/`](../../vscode-devkit/)
 }
 ```
 
-Use **Agent mode** in Copilot Chat for MCP tools. Run **MCP: List Servers** after changing configuration.
+Use **Agent mode** in Copilot Chat. Run **MCP: List Servers** after changing configuration.
+
+### VS Code — external consuming project
+
+Use when the workspace is **another** solution but you want Mvp24Hours MCP.
+
+#### Option 1 — stdio with input prompt (recommended)
+
+Replace `.vscode/mcp.json` with [`mcp/templates/vscode/mcp.external.json`](../../mcp/templates/vscode/mcp.external.json):
+
+```json
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "mvp24hours-repo-root",
+      "description": "Absolute path to your mvp24hours-dotnet clone"
+    }
+  ],
+  "servers": {
+    "mvp24hours": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${input:mvp24hours-repo-root}/mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"
+      ],
+      "env": {
+        "MVP24HOURS_REPO_ROOT": "${input:mvp24hours-repo-root}"
+      }
+    }
+  }
+}
+```
+
+VS Code prompts for the clone path on first server start and stores the value.
+
+#### Option 2 — HTTP (remote server)
+
+1. Start the MCP server in your `mvp24hours-dotnet` clone:
+
+   ```bash
+   set MVP24HOURS_REPO_ROOT=c:\path\to\mvp24hours-dotnet
+   dotnet run --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj -- --http --urls http://localhost:5199
+   ```
+
+2. Replace `.vscode/mcp.json` with [`mcp/templates/vscode/mcp.http.json`](../../mcp/templates/vscode/mcp.http.json):
+
+   ```json
+   {
+     "servers": {
+       "mvp24hours": {
+         "type": "http",
+         "url": "http://localhost:5199"
+       }
+     }
+   }
+   ```
 
 ### Run manually
 
@@ -67,7 +121,7 @@ dotnet run --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj
 **HTTP (stateless, for remote agents):**
 
 ```bash
-dotnet run --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj -- --http --urls http://localhost:5199/mcp
+dotnet run --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj -- --http --urls http://localhost:5199
 ```
 
 ### Machine-readable indexes

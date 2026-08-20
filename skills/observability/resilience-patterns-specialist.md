@@ -1,3 +1,11 @@
+---
+name: resilience-patterns-specialist
+description: >-
+  Selects one primary retry, timeout, and circuit-breaker layer per Mvp24Hours
+  outbound boundary. Use when the user asks for resilience, Polly, or circuit
+  breaker — not for OpenTelemetry exporters.
+---
+
 # Resilience Patterns Specialist - Mvp24Hours Fault Tolerance
 
 > **Role**: One primary retry/timeout/circuit-breaker owner per outbound boundary  

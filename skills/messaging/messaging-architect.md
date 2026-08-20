@@ -1,3 +1,11 @@
+---
+name: messaging-architect
+description: >-
+  Selects Mvp24Hours RabbitMQ messaging patterns: pub/sub, typed consumers,
+  request/response, outbox/inbox. Use when choosing a broker style — not for
+  sync vs async partner integration (integration-architect) or saga compensation.
+---
+
 # Messaging Architect - Mvp24Hours RabbitMQ Integration Expert
 
 > **Role**: RabbitMQ integration and messaging pattern selector for async workflows  
@@ -457,6 +465,7 @@ Never infer tier from the sample id prefix. Event-driven is **Blueprint**; saga 
 - `saga-orchestration-specialist.md` - Distributed transactions
 - `event-driven-specialist.md` - Event-driven architecture
 - `cqrs-architect.md` - CQRS with messaging integration
+- `integration-architect.md` - Sync vs async, webhooks, ACL (choose hop before broker topology)
 
 ### NuGet Packages
 - **Mvp24Hours.Infrastructure.RabbitMQ** - RabbitMQ integration

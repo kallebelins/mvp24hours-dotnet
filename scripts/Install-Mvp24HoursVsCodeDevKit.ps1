@@ -5,8 +5,9 @@
 Instala o Mvp24Hours DevKit globalmente no VS Code.
 
 .DESCRIPTION
-Configura o servidor MCP mvp24hours em %APPDATA%\Code\User\mcp.json e copia a skill
-mvp24hours-router para ~/.copilot/skills/.
+Configura o servidor MCP mvp24hours em %APPDATA%\Code\User\mcp.json e instala as
+36 skills globais em ~/.copilot/skills/ (skill-router com catalog/ + cada
+especialidade como pasta independente SKILL.md).
 
 .EXAMPLE
 .\Install-Mvp24HoursVsCodeDevKit.ps1
@@ -52,15 +53,13 @@ if (-not $SkipMcp) {
 }
 
 if (-not $SkipSkill) {
-    $skillSource = Get-Mvp24HoursDevKitVsCodeSkillSourcePath -RepoRoot $resolvedRepoRoot
-    $skillDestination = Get-Mvp24HoursDevKitVsCodeSkillPath
-
-    Copy-Mvp24HoursSkill `
-        -SourcePath $skillSource `
-        -DestinationPath $skillDestination `
+    $installResult = Install-Mvp24HoursCatalogSkills `
+        -RepoRoot $resolvedRepoRoot `
+        -ConfigKind VsCode `
         -Force:$Force
 
-    Write-Host "  Skill             : $skillDestination"
+    Write-Host "  Skills ($($installResult.Count)) : $($installResult.SkillsRoot)"
+    Write-Host "  Router            : $($installResult.RouterPath)"
 }
 
 Write-Host ''

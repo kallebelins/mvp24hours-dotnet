@@ -1,3 +1,11 @@
+---
+name: testing-architect
+description: >-
+  Designs Mvp24Hours test strategy: unit vs integration, in-package fakes,
+  WebApplicationFactory, Testcontainers, and get_test_scaffold. Use when
+  planning tests — not for implementing a single feature without a test plan.
+---
+
 # Testing Architect - Mvp24Hours Testing Strategies
 
 > **Role**: Unit vs integration boundaries using in-package test helpers — there is no `Mvp24Hours.*.Testing` NuGet  

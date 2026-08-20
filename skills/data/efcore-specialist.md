@@ -1,3 +1,11 @@
+---
+name: efcore-specialist
+description: >-
+  Implements Mvp24Hours EF Core: DbContext, Fluent API, repositories,
+  specifications, interceptors, and migrations. Use when EF Core is already
+  chosen — not to pick between SQL, Mongo, or Dapper.
+---
+
 # EF Core Specialist - Mvp24Hours Advanced Implementation Expert
 
 > **Role**: EF Core mapping, queries, interceptors, and resilience inside Mvp24Hours repositories  
@@ -43,7 +51,7 @@ find_source_symbol "symbol": "AddMvp24HoursDbContext"
 
 ### When not to
 
-- Microsecond reads / heavy reporting SQL → Dapper (`simple-crud-ef-dapper-customer-api`)
+- Microsecond reads / heavy reporting SQL → Dapper (`dapper-specialist.md`, sample `simple-crud-ef-dapper-customer-api`)
 - Document-shaped data → Mongo (`mongodb-specialist.md`)
 
 ### Query tactics

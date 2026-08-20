@@ -3,7 +3,8 @@
 Set-StrictMode -Version Latest
 
 $script:Mvp24HoursDevKitServerName = 'mvp24hours'
-$script:Mvp24HoursDevKitSkillName = 'mvp24hours-router'
+$script:Mvp24HoursDevKitSkillName = 'skill-router'
+$script:Mvp24HoursDevKitLegacySkillName = 'mvp24hours-router'
 $script:Mvp24HoursDevKitMcpProjectRelativePath = 'mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj'
 
 function Get-Mvp24HoursDevKitCursorMcpPath {
@@ -14,32 +15,53 @@ function Get-Mvp24HoursDevKitVsCodeMcpPath {
     return Join-Path -Path $env:APPDATA -ChildPath 'Code\User\mcp.json'
 }
 
+function Get-Mvp24HoursDevKitCursorSkillsRoot {
+    return Join-Path -Path $env:USERPROFILE -ChildPath '.cursor\skills'
+}
+
+function Get-Mvp24HoursDevKitVsCodeSkillsRoot {
+    return Join-Path -Path $env:USERPROFILE -ChildPath '.copilot\skills'
+}
+
 function Get-Mvp24HoursDevKitCursorSkillPath {
-    return Join-Path -Path $env:USERPROFILE -ChildPath ".cursor\skills\$($script:Mvp24HoursDevKitSkillName)"
+    return Join-Path -Path (Get-Mvp24HoursDevKitCursorSkillsRoot) -ChildPath $script:Mvp24HoursDevKitSkillName
 }
 
 function Get-Mvp24HoursDevKitVsCodeSkillPath {
-    return Join-Path -Path $env:USERPROFILE -ChildPath ".copilot\skills\$($script:Mvp24HoursDevKitSkillName)"
+    return Join-Path -Path (Get-Mvp24HoursDevKitVsCodeSkillsRoot) -ChildPath $script:Mvp24HoursDevKitSkillName
 }
 
-function Get-Mvp24HoursDevKitCursorSkillSourcePath {
+function Get-Mvp24HoursUserSkillsRoot {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateSet('Cursor', 'VsCode')]
+        [string] $ConfigKind
+    )
+
+    if ($ConfigKind -eq 'Cursor') {
+        return Get-Mvp24HoursDevKitCursorSkillsRoot
+    }
+
+    return Get-Mvp24HoursDevKitVsCodeSkillsRoot
+}
+
+function Get-Mvp24HoursDevKitCursorLegacySkillPath {
+    return Join-Path -Path $env:USERPROFILE -ChildPath ".cursor\skills\$($script:Mvp24HoursDevKitLegacySkillName)"
+}
+
+function Get-Mvp24HoursDevKitVsCodeLegacySkillPath {
+    return Join-Path -Path $env:USERPROFILE -ChildPath ".copilot\skills\$($script:Mvp24HoursDevKitLegacySkillName)"
+}
+
+function Get-Mvp24HoursSkillRouterSourceDir {
     param(
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         [string] $RepoRoot
     )
 
-    return Join-Path -Path $RepoRoot -ChildPath "devkit\cursor\.cursor\skills\$($script:Mvp24HoursDevKitSkillName)"
-}
-
-function Get-Mvp24HoursDevKitVsCodeSkillSourcePath {
-    param(
-        [Parameter(Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [string] $RepoRoot
-    )
-
-    return Join-Path -Path $RepoRoot -ChildPath "devkit\vscode\.github\skills\$($script:Mvp24HoursDevKitSkillName)"
+    return Join-Path -Path $RepoRoot -ChildPath 'skills\orchestration'
 }
 
 function ConvertTo-McpJsonPath {
@@ -323,12 +345,191 @@ function Remove-LegacyMvp24HoursMcpRepoRootEnvVar {
     return $true
 }
 
-function Copy-Mvp24HoursSkill {
+function Get-Mvp24HoursYamlSkillName {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $FilePath
+    )
+
+    $lines = Get-Content -LiteralPath $FilePath -TotalCount 20 -ErrorAction Stop
+    if ($lines.Count -eq 0 -or $lines[0] -ne '---') {
+        return $null
+    }
+
+    for ($index = 1; $index -lt $lines.Count; $index++) {
+        $line = $lines[$index]
+        if ($line -eq '---') {
+            break
+        }
+
+        if ($line -match '^name:\s*(.+)\s*$') {
+            return $Matches[1].Trim()
+        }
+    }
+
+    return $null
+}
+
+function Get-Mvp24HoursDomainSkillFiles {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $RepoRoot
+    )
+
+    $skillsRoot = Join-Path -Path $RepoRoot -ChildPath 'skills'
+    $skipFileNames = @(
+        'README.md',
+        'COMPLETION_STATUS.md',
+        'PROJECT_SUMMARY.md',
+        'SKILLS_GENERATION_GUIDE.md',
+        'SKILL_TEMPLATE.md',
+        'skill-catalog.md',
+        'mcp-scenarios.md'
+    )
+
+    $results = @()
+    $markdownFiles = Get-ChildItem -LiteralPath $skillsRoot -Recurse -Filter '*.md' -File
+    foreach ($markdownFile in $markdownFiles) {
+        if ($skipFileNames -contains $markdownFile.Name) {
+            continue
+        }
+
+        $skillName = Get-Mvp24HoursYamlSkillName -FilePath $markdownFile.FullName
+        if ([string]::IsNullOrWhiteSpace($skillName)) {
+            continue
+        }
+
+        if ($skillName -eq $script:Mvp24HoursDevKitSkillName) {
+            continue
+        }
+
+        $results += [pscustomobject]@{
+            Name = $skillName
+            Path = $markdownFile.FullName
+        }
+    }
+
+    return $results
+}
+
+function Copy-Mvp24HoursNamedSkill {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [string] $SourcePath,
+        [string] $SourceFile,
+
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $DestinationDirectory,
+
+        [switch] $Force
+    )
+
+    if (-not (Test-Path -LiteralPath $SourceFile -PathType Leaf)) {
+        throw "Skill source file not found at '$SourceFile'."
+    }
+
+    if ((Test-Path -LiteralPath $DestinationDirectory -PathType Container) -and -not $Force) {
+        throw "Skill already exists at '$DestinationDirectory'. Use -Force to overwrite."
+    }
+
+    $destinationParent = Split-Path -Path $DestinationDirectory -Parent
+    if (-not (Test-Path -LiteralPath $destinationParent -PathType Container)) {
+        if ($PSCmdlet.ShouldProcess($destinationParent, 'Create directory')) {
+            New-Item -Path $destinationParent -ItemType Directory -Force | Out-Null
+        }
+    }
+
+    if ($PSCmdlet.ShouldProcess($DestinationDirectory, 'Install named skill')) {
+        if (Test-Path -LiteralPath $DestinationDirectory -PathType Container) {
+            Remove-Item -LiteralPath $DestinationDirectory -Recurse -Force
+        }
+
+        New-Item -Path $DestinationDirectory -ItemType Directory -Force | Out-Null
+        Copy-Item -LiteralPath $SourceFile -Destination (Join-Path -Path $DestinationDirectory -ChildPath 'SKILL.md') -Force
+    }
+}
+
+function Install-Mvp24HoursCatalogSkills {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $RepoRoot,
+
+        [Parameter(Mandatory)]
+        [ValidateSet('Cursor', 'VsCode')]
+        [string] $ConfigKind,
+
+        [switch] $Force
+    )
+
+    $skillsRoot = Get-Mvp24HoursUserSkillsRoot -ConfigKind $ConfigKind
+    $routerDestination = Join-Path -Path $skillsRoot -ChildPath $script:Mvp24HoursDevKitSkillName
+
+    Copy-Mvp24HoursSkillRouter `
+        -RepoRoot $RepoRoot `
+        -DestinationPath $routerDestination `
+        -Force:$Force
+
+    $installed = 1
+    foreach ($skillFile in @(Get-Mvp24HoursDomainSkillFiles -RepoRoot $RepoRoot)) {
+        $destination = Join-Path -Path $skillsRoot -ChildPath $skillFile.Name
+        Copy-Mvp24HoursNamedSkill `
+            -SourceFile $skillFile.Path `
+            -DestinationDirectory $destination `
+            -Force:$Force
+        $installed++
+    }
+
+    return [pscustomobject]@{
+        SkillsRoot = $skillsRoot
+        Count = $installed
+        RouterPath = $routerDestination
+    }
+}
+
+function Uninstall-Mvp24HoursCatalogSkills {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $RepoRoot,
+
+        [Parameter(Mandatory)]
+        [ValidateSet('Cursor', 'VsCode')]
+        [string] $ConfigKind
+    )
+
+    $skillsRoot = Get-Mvp24HoursUserSkillsRoot -ConfigKind $ConfigKind
+    $removed = 0
+
+    $names = @($script:Mvp24HoursDevKitSkillName, $script:Mvp24HoursDevKitLegacySkillName)
+    foreach ($skillFile in @(Get-Mvp24HoursDomainSkillFiles -RepoRoot $RepoRoot)) {
+        $names += $skillFile.Name
+    }
+
+    foreach ($name in ($names | Select-Object -Unique)) {
+        $destination = Join-Path -Path $skillsRoot -ChildPath $name
+        if (Remove-Mvp24HoursSkill -DestinationPath $destination) {
+            $removed++
+        }
+    }
+
+    return $removed
+}
+
+function Copy-Mvp24HoursSkillRouter {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $RepoRoot,
 
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
@@ -337,8 +538,16 @@ function Copy-Mvp24HoursSkill {
         [switch] $Force
     )
 
-    if (-not (Test-Path -LiteralPath $SourcePath -PathType Container)) {
-        throw "Skill source not found at '$SourcePath'."
+    $skillsRoot = Join-Path -Path $RepoRoot -ChildPath 'skills'
+    $sourceDir = Get-Mvp24HoursSkillRouterSourceDir -RepoRoot $RepoRoot
+    $routerFile = Join-Path -Path $sourceDir -ChildPath 'skill-router.md'
+    $catalogFile = Join-Path -Path $sourceDir -ChildPath 'skill-catalog.md'
+    $scenariosFile = Join-Path -Path $sourceDir -ChildPath 'mcp-scenarios.md'
+
+    foreach ($requiredFile in @($routerFile, $catalogFile, $scenariosFile)) {
+        if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
+            throw "Skill source file not found at '$requiredFile'."
+        }
     }
 
     if ((Test-Path -LiteralPath $DestinationPath -PathType Container) -and -not $Force) {
@@ -352,12 +561,35 @@ function Copy-Mvp24HoursSkill {
         }
     }
 
-    if ($PSCmdlet.ShouldProcess($DestinationPath, 'Copy skill directory')) {
+    $domainDirectories = @(
+        Get-ChildItem -LiteralPath $skillsRoot -Directory |
+            Where-Object { $_.Name -ne 'orchestration' }
+    )
+
+    if ($domainDirectories.Count -eq 0) {
+        throw "No domain skill directories found under '$skillsRoot'."
+    }
+
+    if ($PSCmdlet.ShouldProcess($DestinationPath, 'Assemble skill-router and domain catalog')) {
         if (Test-Path -LiteralPath $DestinationPath -PathType Container) {
             Remove-Item -LiteralPath $DestinationPath -Recurse -Force
         }
 
-        Copy-Item -LiteralPath $SourcePath -Destination $DestinationPath -Recurse -Force
+        New-Item -Path $DestinationPath -ItemType Directory -Force | Out-Null
+        Copy-Item -LiteralPath $routerFile -Destination (Join-Path -Path $DestinationPath -ChildPath 'SKILL.md') -Force
+        Copy-Item -LiteralPath $catalogFile -Destination (Join-Path -Path $DestinationPath -ChildPath 'skill-catalog.md') -Force
+        Copy-Item -LiteralPath $scenariosFile -Destination (Join-Path -Path $DestinationPath -ChildPath 'mcp-scenarios.md') -Force
+
+        $catalogDestination = Join-Path -Path $DestinationPath -ChildPath 'catalog'
+        New-Item -Path $catalogDestination -ItemType Directory -Force | Out-Null
+
+        foreach ($domainDirectory in $domainDirectories) {
+            Copy-Item `
+                -LiteralPath $domainDirectory.FullName `
+                -Destination $catalogDestination `
+                -Recurse `
+                -Force
+        }
     }
 }
 

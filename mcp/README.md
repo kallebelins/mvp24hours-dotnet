@@ -7,17 +7,19 @@ Local [Model Context Protocol](https://modelcontextprotocol.io/) server for AI a
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - Clone of `mvp24hours-dotnet` with `docs/en-us/ai-resources/templates-manifest.json`
 
+**Agent entry point:** [`skills/orchestration/skill-router.md`](../skills/orchestration/skill-router.md) (`@skill-router`) — catalog handoff and MCP playbook triage — or any domain skill by name. The [global installer](../scripts/README-devkit.md) registers 36 `SKILL.md` folders and keeps domain copies under `skill-router/catalog/` for router handoff.
+
+MCP JSON templates: [`templates/vscode/`](templates/vscode/) and [`templates/cursor/`](templates/cursor/). Human-facing copy: [`docs/en-us/ai-resources/home.md`](../docs/en-us/ai-resources/home.md).
+
 ## Cursor setup
 
 Project-level configuration is in [`.cursor/mcp.json`](../.cursor/mcp.json). Restart Cursor after changes.
 
-**Agent entry point:** copy [`.cursor/skills/mvp24hours-router/`](../.cursor/skills/mvp24hours-router/) to any consuming project's `.cursor/skills/`, or copy the portable kit from [`cursor-devkit/`](../cursor-devkit/) (see its README for external-project scenarios). The skill triages user prompts via MCP only (`list_scenarios`, `get_scenario_playbook`, etc.) and presents the recommended path before executing workflows.
+**This repo:** `mcpServers` + `MVP24HOURS_REPO_ROOT` = `${workspaceFolder}`. **External project:** [`templates/cursor/mcp.external.json`](templates/cursor/mcp.external.json) (`MVP24HOURS_MCP_REPO_ROOT`) or HTTP [`templates/cursor/mcp.http.json`](templates/cursor/mcp.http.json).
 
 ## VS Code setup
 
-Project-level MCP configuration is in [`.vscode/mcp.json`](../.vscode/mcp.json). Use **Agent mode** in Copilot Chat for MCP tools.
-
-**Agent entry point:** copy [`.github/skills/mvp24hours-router/`](../.github/skills/mvp24hours-router/) to any consuming project's `.github/skills/`, or copy the portable kit from [`vscode-devkit/`](../vscode-devkit/) (see its README for external-project scenarios).
+Project-level MCP configuration is in [`.vscode/mcp.json`](../.vscode/mcp.json). Use **Agent mode** in Copilot Chat.
 
 ```json
 {
@@ -33,6 +35,47 @@ Project-level MCP configuration is in [`.vscode/mcp.json`](../.vscode/mcp.json).
 ```
 
 Restart or run **MCP: List Servers** after changing MCP configuration.
+
+**External project — stdio with input prompt:** [`templates/vscode/mcp.external.json`](templates/vscode/mcp.external.json)
+
+```json
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "mvp24hours-repo-root",
+      "description": "Absolute path to your mvp24hours-dotnet clone"
+    }
+  ],
+  "servers": {
+    "mvp24hours": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${input:mvp24hours-repo-root}/mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"
+      ],
+      "env": {
+        "MVP24HOURS_REPO_ROOT": "${input:mvp24hours-repo-root}"
+      }
+    }
+  }
+}
+```
+
+**External project — HTTP:** start the server with `-- --http --urls http://localhost:5199`, then [`templates/vscode/mcp.http.json`](templates/vscode/mcp.http.json):
+
+```json
+{
+  "servers": {
+    "mvp24hours": {
+      "type": "http",
+      "url": "http://localhost:5199"
+    }
+  }
+}
+```
 
 Environment variable:
 

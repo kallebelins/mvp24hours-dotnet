@@ -1,7 +1,7 @@
 # Mvp24Hours Skills Ecosystem - Project Summary
 
-> **Status**: Catalog complete (30/30 named skills)  
-> **Completion**: Transformation pipeline added August 2026 (analyze → propose → port/rewrite); native APIs specialist retained
+> **Status**: Catalog complete (36 named skills: 1 orchestrator + 35 domain)  
+> **Completion**: api-contract, security, and dapper specialists added August 2026; demand intake and integration retained
 
 ## Objective
 
@@ -9,7 +9,11 @@ Portable MCP-first specialist skills for Mvp24Hours .NET 10, one markdown file p
 
 ## Delivered
 
-- **30 skill files** across 13 categories (see [README.md](README.md))
+- **36 skill files** across 15 categories (see [README.md](README.md))
+- Orchestration: `skill-router` (handoff to one domain skill; ask when ambiguous)
+- Demand intake: `demand-architect` (US/RFC → structure + resource BOM)
+- System integration: `integration-architect` (sync vs async, webhooks, ACL, BFF)
+- HTTP contract: `api-contract-architect`; appsec: `security-architect`; SQL reads: `dapper-specialist`
 - Documentation: README, SKILL_TEMPLATE, COMPLETION_STATUS, SKILLS_GENERATION_GUIDE, this summary
 - Modernization: discovery, proposal, semantic port, template rewrite, plus native .NET 10 APIs
 

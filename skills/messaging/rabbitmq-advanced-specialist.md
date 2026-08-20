@@ -1,3 +1,11 @@
+---
+name: rabbitmq-advanced-specialist
+description: >-
+  Implements advanced Mvp24Hours RabbitMQ: scheduling, batching, request/response,
+  filters, priority, TTL, and multi-tenancy. Use when the broker pattern is
+  already chosen — not for saga orchestration or first-time broker selection.
+---
+
 # RabbitMQ Advanced Specialist - Mvp24Hours Advanced Messaging
 
 > **Role**: Advanced RabbitMQ features — scheduling, batching, request/response, filters, priority, TTL, multi-tenancy  

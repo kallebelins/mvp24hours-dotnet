@@ -1,3 +1,11 @@
+---
+name: mediator-patterns-specialist
+description: >-
+  Implements Mvp24Hours mediator: AddMvpMediator, IMediatorCommand/Query,
+  handlers, behaviors, and notifications — never MediatR. Use when CQRS is
+  already chosen and the user needs handler/pipeline code.
+---
+
 # Mediator Patterns Specialist - Mvp24Hours Deep Mediator Implementation
 
 > **Role**: Deep Mvp24Hours mediator implementation — handlers, behaviors, notifications, and pipeline composition  

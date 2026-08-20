@@ -1,3 +1,11 @@
+---
+name: clean-architecture-specialist
+description: >-
+  Enforces Clean Architecture on Mvp24Hours: inward dependencies, framework-free
+  core, and use-case isolation. Use when the user asks for Clean Architecture,
+  Dependency Rule, or framework independence — after structure is chosen.
+---
+
 # Clean Architecture Specialist - Mvp24Hours Expert
 
 > **Role**: Enforce strict inward dependency flow and framework independence using Mvp24Hours .NET 10  

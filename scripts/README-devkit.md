@@ -10,12 +10,19 @@ Scripts PowerShell para instalar o **Mvp24Hours MCP DevKit** como pacote global 
 
 ## O que é instalado
 
-| IDE | MCP (global) | Skill (global) |
+| IDE | MCP (global) | Skills (global) |
 | --- | --- | --- |
-| **Cursor** | `%USERPROFILE%\.cursor\mcp.json` | `%USERPROFILE%\.cursor\skills\mvp24hours-router\` |
-| **VS Code** | `%APPDATA%\Code\User\mcp.json` | `%USERPROFILE%\.copilot\skills\mvp24hours-router\` |
+| **Cursor** | `%USERPROFILE%\.cursor\mcp.json` | `%USERPROFILE%\.cursor\skills\<name>\` (36 pastas) |
+| **VS Code** | `%APPDATA%\Code\User\mcp.json` | `%USERPROFILE%\.copilot\skills\<name>\` (36 pastas) |
 
 Os scripts **mesclam** a configuração MCP existente. Outros servidores (por exemplo `azure-devops`) não são removidos.
+
+Cada skill do catálogo vira uma pasta com `SKILL.md` (o `name` do frontmatter). Assim você chama `@efcore-specialist` ou `@demand-architect` direto.
+
+A pasta `skill-router` também inclui:
+
+- `skill-catalog.md` e `mcp-scenarios.md` — índices de roteamento
+- `catalog/` — cópia das 35 skills de domínio para o handoff do roteador
 
 O caminho do repositório é gravado **resolvido** no `mcp.json`:
 
@@ -74,7 +81,7 @@ Exemplo com caminho explícito:
 1. Recarregue o VS Code após a instalação.
 2. Command Palette → **MCP: List Servers** → inicie `mvp24hours`.
 3. Abra o Copilot Chat em **Agent** mode.
-4. Use `/mvp24hours-router` ou pergunte: *"where do I start with Mvp24Hours?"*
+4. Use `@skill-router` ou pergunte: *"where do I start with Mvp24Hours?"*
 
 ## Desinstalação
 
@@ -111,13 +118,13 @@ O uninstall também remove a variável legada `MVP24HOURS_MCP_REPO_ROOT` do usu�
 | Servidor não aparece | Reinicie o IDE após a instalação |
 | Missing manifest | Confirme que `MVP24HOURS_REPO_ROOT` no `mcp.json` aponta para a raiz do clone (pasta com `docs/` e `samples/`) |
 | Servidor falha ao iniciar | Verifique .NET 10 SDK e o caminho para `Mvp24Hours.Mcp.csproj` |
-| Skill não aplicada (Cursor) | Confirme `%USERPROFILE%\.cursor\skills\mvp24hours-router\SKILL.md` |
-| Skill não listada (VS Code) | Confirme `%USERPROFILE%\.copilot\skills\mvp24hours-router\SKILL.md` e use Agent mode |
+| Skill não aplicada (Cursor) | Confirme `%USERPROFILE%\.cursor\skills\<name>\SKILL.md` (ex.: `skill-router`, `efcore-specialist`) |
+| Skill não listada (VS Code) | Confirme `%USERPROFILE%\.copilot\skills\<name>\SKILL.md` e use Agent mode |
 | Outro MCP sumiu | Os scripts não removem outros servidores; verifique se o merge foi feito corretamente |
 
 ## Instalação por projeto (alternativa)
 
-Para compartilhar o DevKit via repositório (time/equipe), use os kits portáteis em [`devkit/cursor/`](../devkit/cursor/) e [`devkit/vscode/`](../devkit/vscode/).
+Copie [`skills/`](../skills/) para `.cursor/skills/` (Cursor) ou `.github/skills/` (VS Code Copilot). Configure MCP com os exemplos em [`docs/en-us/ai-resources/home.md`](../docs/en-us/ai-resources/home.md) e os JSON em [`mcp/templates/`](../mcp/templates/).
 
 ## Notas
 

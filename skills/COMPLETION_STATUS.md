@@ -1,7 +1,7 @@
 # Mvp24Hours Skills - Completion Status
 
 > **Last Updated**: August 2026  
-> **Status**: Catalog complete (30/30 named skills + documentation)
+> **Status**: Catalog complete (36 named skills + documentation)
 
 ## Overview
 
@@ -9,20 +9,29 @@ This document tracks the Mvp24Hours Specialized Architect Skills ecosystem.
 
 ### Summary Statistics
 
-- **Total skills in catalog**: 30 (see README category tables)
-- **Completed**: 30 (100%)
+- **Total skills in catalog**: 36 (35 domain + skill-router; see README)
+- **Completed**: 36 (100%)
 - **Documentation**: README, Template, Generation Guide, this Status, Project Summary
-- **Categories**: 13
+- **Categories**: 15
 - **MCP Integration**: Required for canonical APIs
 
 ---
 
 ## Completion Status by Category
 
-### Architecture (6/6)
+### Orchestration (1/1)
 
 | Skill | Type | Status | File |
 |-------|------|--------|------|
+| skill-router | Orchestrator | Complete | `orchestration/skill-router.md` |
+
+Signals reference: `orchestration/skill-catalog.md` and `orchestration/mcp-scenarios.md` (not separate skills).
+
+### Architecture (7/7)
+
+| Skill | Type | Status | File |
+|-------|------|--------|------|
+| demand-architect | Architect | Complete | `architecture/demand-architect.md` |
 | solution-architect | Architect | Complete | `architecture/solution-architect.md` |
 | clean-architecture-specialist | Specialist | Complete | `architecture/clean-architecture-specialist.md` |
 | ddd-specialist | Specialist | Complete | `architecture/ddd-specialist.md` |
@@ -30,12 +39,13 @@ This document tracks the Mvp24Hours Specialized Architect Skills ecosystem.
 | event-driven-specialist | Specialist | Complete | `architecture/event-driven-specialist.md` |
 | microservices-specialist | Specialist | Complete | `architecture/microservices-specialist.md` |
 
-### Data & Persistence (4/4)
+### Data & Persistence (5/5)
 
 | Skill | Type | Status | File |
 |-------|------|--------|------|
 | data-architect | Architect | Complete | `data/data-architect.md` |
 | efcore-specialist | Specialist | Complete | `data/efcore-specialist.md` |
+| dapper-specialist | Specialist | Complete | `data/dapper-specialist.md` |
 | mongodb-specialist | Specialist | Complete | `data/mongodb-specialist.md` |
 | redis-specialist | Specialist | Complete | `data/redis-specialist.md` |
 
@@ -62,7 +72,7 @@ This document tracks the Mvp24Hours Specialized Architect Skills ecosystem.
 | observability-architect | Architect | Complete | `observability/observability-architect.md` |
 | resilience-patterns-specialist | Specialist | Complete | `observability/resilience-patterns-specialist.md` |
 
-### Single-file categories (7/7)
+### Single-file categories (10/10)
 
 | Skill | Type | Status | File |
 |-------|------|--------|------|
@@ -70,9 +80,12 @@ This document tracks the Mvp24Hours Specialized Architect Skills ecosystem.
 | caching-architect | Architect | Complete | `caching/caching-architect.md` |
 | infrastructure-architect | Architect | Complete | `infrastructure/infrastructure-architect.md` |
 | webapi-architect | Architect | Complete | `webapi/webapi-architect.md` |
+| api-contract-architect | Architect | Complete | `webapi/api-contract-architect.md` |
 | testing-architect | Architect | Complete | `testing/testing-architect.md` |
 | identity-architect | Architect | Complete | `identity/identity-architect.md` |
+| security-architect | Architect | Complete | `security/security-architect.md` |
 | cronjob-architect | Architect | Complete | `cronjob/cronjob-architect.md` |
+| integration-architect | Architect | Complete | `integration/integration-architect.md` |
 
 ### Modernization & Transformation (5/5)
 

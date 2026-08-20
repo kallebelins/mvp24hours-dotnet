@@ -1,3 +1,11 @@
+---
+name: cronjob-architect
+description: >-
+  Designs Mvp24Hours scheduled hosted services: CRON, TimeProvider, overlap
+  prevention, and in-process job resilience. Use when the user asks for cron,
+  jobs periódicos, or CronJob workers — not generic locks without a schedule.
+---
+
 # CronJob Architect - Mvp24Hours Scheduled Tasks
 
 > **Role**: Cron hosted services with TimeProvider, overlap prevention, and job-level resilience (not Polly HTTP)  

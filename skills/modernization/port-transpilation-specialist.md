@@ -1,3 +1,11 @@
+---
+name: port-transpilation-specialist
+description: >-
+  Semantically ports foreign-stack code (any language) to Mvp24Hours .NET 10
+  after an approved proposal. Use for Java/Python/other → Mvp24Hours —
+  not template-to-template rewrite or native API-only bumps.
+---
+
 # Port Transpilation Specialist - External Code to Mvp24Hours
 
 > **Role**: Semantically port an existing codebase (any language) to C# Mvp24Hours .NET 10 after an approved proposal — not a compiler  

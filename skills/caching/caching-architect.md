@@ -1,3 +1,11 @@
+---
+name: caching-architect
+description: >-
+  Designs Mvp24Hours caching strategy: HybridCache, L1/L2, stampede protection,
+  tags, and invalidation. Use when choosing a cache approach — Redis-as-store
+  APIs belong to redis-specialist.
+---
+
 # Caching Architect - Mvp24Hours HybridCache Strategy
 
 > **Role**: L1/L2 caching strategy with HybridCache, ICacheProvider, stampede protection, and tags  

@@ -1,3 +1,11 @@
+---
+name: architecture-rewrite-architect
+description: >-
+  Rewrites an existing Mvp24Hours solution between architecture templates while
+  preserving behavior. Use for architecture-migration already on Mvp24Hours —
+  not foreign-stack port or net10 package bump on the same template.
+---
+
 # Architecture Rewrite Architect - Mvp24Hours Template Migration
 
 > **Role**: Incrementally rewrite an existing Mvp24Hours solution from one architecture template to another while preserving behavior  

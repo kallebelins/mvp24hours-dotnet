@@ -1,3 +1,11 @@
+---
+name: event-driven-specialist
+description: >-
+  Designs event-driven Mvp24Hours systems: domain vs integration events, outbox,
+  and idempotent consumers. Use when architecture is events, not just a queue
+  after save — saga compensation belongs to saga-orchestration-specialist.
+---
+
 # Event-Driven Specialist - Mvp24Hours Event Architecture
 
 > **Role**: Domain vs integration events, durable outbox, idempotent inbox consumers  

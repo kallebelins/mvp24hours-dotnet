@@ -1,3 +1,11 @@
+---
+name: event-sourcing-specialist
+description: >-
+  Implements Mvp24Hours event sourcing: event store, projections, snapshots,
+  and event-sourced aggregates. Use when event store is required — not default
+  CRUD CQRS or integration events only.
+---
+
 # Event Sourcing Specialist - Mvp24Hours Event Store Patterns
 
 > **Role**: Event store, event-sourced aggregates, projections, and snapshots  

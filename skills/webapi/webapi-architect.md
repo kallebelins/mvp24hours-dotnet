@@ -1,3 +1,11 @@
+---
+name: webapi-architect
+description: >-
+  Designs the Mvp24Hours HTTP host for Minimal, Simple, and Complex structures:
+  WebEssential, Map*/controllers, Problem Details pipeline. Use for host
+  composition — consumer OpenAPI/versioning belongs to api-contract-architect.
+---
+
 # WebAPI Architect - Mvp24Hours HTTP composition root
 
 > **Role**: HTTP host for **every structure** (Minimal / Simple / Complex) and for blueprint/capability APIs  
@@ -343,6 +351,6 @@ Never infer tier from the sample id prefix. HTTP hosts exist on every structure;
 
 ## Further Resources
 
-- Related: `solution-architect.md`, `cqrs-architect.md`, `identity-architect.md`, `testing-architect.md`
+- Related: `solution-architect.md`, `cqrs-architect.md`, `identity-architect.md`, `testing-architect.md`, `integration/integration-architect.md`, `webapi/api-contract-architect.md`, `security/security-architect.md`
 - Package: `Mvp24Hours.WebAPI`
 - Layer template: `docs/en-us/ai-resources/layers/layer-webapi.md`

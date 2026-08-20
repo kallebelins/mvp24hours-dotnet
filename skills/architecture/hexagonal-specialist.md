@@ -1,3 +1,11 @@
+---
+name: hexagonal-specialist
+description: >-
+  Implements hexagonal (ports and adapters) isolation in Mvp24Hours: core ports,
+  Infrastructure/WebAPI adapters. Use when the user mentions hexagonal, ports
+  and adapters, or replaceable adapters — not for sync vs async integration choice.
+---
+
 # Hexagonal Architecture Specialist - Ports and Adapters
 
 > **Role**: Isolate application core behind inbound/outbound ports; adapters at Infrastructure and WebAPI  

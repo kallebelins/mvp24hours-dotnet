@@ -1,3 +1,11 @@
+---
+name: infrastructure-architect
+description: >-
+  Selects Mvp24Hours cross-cutting infrastructure: email, SMS, file storage,
+  secrets, distributed locks, HTTP clients, and health. Use when wiring those
+  modules — not for cron schedule hosts or Keycloak IdP setup.
+---
+
 # Infrastructure Architect - Mvp24Hours Cross-Cutting Services
 
 > **Role**: Select and register email, SMS, files, secrets, locks, background jobs, HTTP clients, health  
