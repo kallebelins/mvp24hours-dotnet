@@ -12,6 +12,8 @@ The [`mcp/`](../../mcp/) project ships a [Model Context Protocol](https://modelc
 
 **Agent entry point:** [`skills/orchestration/skill-router.md`](../../skills/orchestration/skill-router.md) (`@skill-router`) or any domain skill (`@efcore-specialist`, `@demand-architect`, …). The [global installer](../../scripts/README-devkit.md) registers all 36 skills as `SKILL.md` folders and keeps a `catalog/` copy inside `skill-router` for handoff.
 
+**Build once before using stdio:** every configuration below launches the server with `dotnet run --no-build --configuration Release`, so run `dotnet build mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj --configuration Release` first (the global installer does it for you). Building on each start makes Cursor and VS Code fight over the same `bin/` and `obj/` files, and the second editor fails with "the process cannot access the file because it is being used by another process". Rebuild after pulling changes, otherwise the editors keep running the previous binaries.
+
 ### Cursor setup (this repo)
 
 Project configuration: [`.cursor/mcp.json`](../../.cursor/mcp.json)
@@ -21,7 +23,14 @@ Project configuration: [`.cursor/mcp.json`](../../.cursor/mcp.json)
   "mcpServers": {
     "mvp24hours": {
       "command": "dotnet",
-      "args": ["run", "--project", "mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"],
+      "args": [
+        "run",
+        "--no-build",
+        "--configuration",
+        "Release",
+        "--project",
+        "mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"
+      ],
       "env": { "MVP24HOURS_REPO_ROOT": "${workspaceFolder}" }
     }
   }
@@ -42,7 +51,14 @@ Project configuration: [`.vscode/mcp.json`](../../.vscode/mcp.json)
     "mvp24hours": {
       "type": "stdio",
       "command": "dotnet",
-      "args": ["run", "--project", "mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"],
+      "args": [
+        "run",
+        "--no-build",
+        "--configuration",
+        "Release",
+        "--project",
+        "mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"
+      ],
       "env": { "MVP24HOURS_REPO_ROOT": "${workspaceFolder}" }
     }
   }
@@ -74,6 +90,9 @@ Replace `.vscode/mcp.json` with [`mcp/templates/vscode/mcp.external.json`](../..
       "command": "dotnet",
       "args": [
         "run",
+        "--no-build",
+        "--configuration",
+        "Release",
         "--project",
         "${input:mvp24hours-repo-root}/mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"
       ],
@@ -93,7 +112,8 @@ VS Code prompts for the clone path on first server start and stores the value.
 
    ```bash
    set MVP24HOURS_REPO_ROOT=c:\path\to\mvp24hours-dotnet
-   dotnet run --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj -- --http --urls http://localhost:5199
+   dotnet build mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj --configuration Release
+   dotnet run --no-build --configuration Release --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj -- --http --urls http://localhost:5199
    ```
 
 2. Replace `.vscode/mcp.json` with [`mcp/templates/vscode/mcp.http.json`](../../mcp/templates/vscode/mcp.http.json):
@@ -111,17 +131,23 @@ VS Code prompts for the clone path on first server start and stores the value.
 
 ### Run manually
 
+Build once (required by `--no-build`), with every editor-managed server stopped:
+
+```bash
+dotnet build mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj --configuration Release
+```
+
 **Stdio (Cursor default):**
 
 ```bash
 export MVP24HOURS_REPO_ROOT=/path/to/mvp24hours-dotnet   # Windows: set MVP24HOURS_REPO_ROOT=...
-dotnet run --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj
+dotnet run --no-build --configuration Release --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj
 ```
 
 **HTTP (stateless, for remote agents):**
 
 ```bash
-dotnet run --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj -- --http --urls http://localhost:5199
+dotnet run --no-build --configuration Release --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj -- --http --urls http://localhost:5199
 ```
 
 ### Machine-readable indexes

@@ -6,6 +6,8 @@ $script:Mvp24HoursDevKitServerName = 'mvp24hours'
 $script:Mvp24HoursDevKitSkillName = 'skill-router'
 $script:Mvp24HoursDevKitLegacySkillName = 'mvp24hours-router'
 $script:Mvp24HoursDevKitMcpProjectRelativePath = 'mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj'
+$script:Mvp24HoursDevKitMcpConfiguration = 'Release'
+$script:Mvp24HoursDevKitMcpProcessName = 'Mvp24Hours.Mcp'
 
 function Get-Mvp24HoursDevKitCursorMcpPath {
     return Join-Path -Path $env:USERPROFILE -ChildPath '.cursor\mcp.json'
@@ -129,6 +131,73 @@ function Test-DotNetSdk {
     return $versionLine
 }
 
+function Get-Mvp24HoursMcpConfiguration {
+    return $script:Mvp24HoursDevKitMcpConfiguration
+}
+
+function Get-Mvp24HoursRunningMcpProcess {
+    [CmdletBinding()]
+    param(
+        [Parameter()]
+        [string] $Configuration
+    )
+
+    $processes = @(Get-Process -Name $script:Mvp24HoursDevKitMcpProcessName -ErrorAction SilentlyContinue)
+
+    if ([string]::IsNullOrWhiteSpace($Configuration)) {
+        return $processes
+    }
+
+    # Only servers running from the target configuration hold the output files this build writes to.
+    $outputFragment = [System.IO.Path]::Combine('bin', $Configuration)
+
+    return @(
+        $processes | Where-Object {
+            $processPath = $null
+            try {
+                $processPath = $_.Path
+            }
+            catch {
+                $processPath = $null
+            }
+
+            $processPath -and $processPath -like "*$outputFragment*"
+        }
+    )
+}
+
+function Invoke-Mvp24HoursMcpBuild {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $RepoRoot,
+
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [string] $Configuration = $script:Mvp24HoursDevKitMcpConfiguration
+    )
+
+    $projectPath = Join-Path -Path $RepoRoot -ChildPath $script:Mvp24HoursDevKitMcpProjectRelativePath
+
+    if (-not $PSCmdlet.ShouldProcess($projectPath, "Build MCP server ($Configuration)")) {
+        return $Configuration
+    }
+
+    $runningProcesses = @(Get-Mvp24HoursRunningMcpProcess -Configuration $Configuration)
+    if ($runningProcesses.Count -gt 0) {
+        $processIds = ($runningProcesses | ForEach-Object { $_.Id }) -join ', '
+        throw "MCP server already running in $Configuration (PID: $processIds). Close Cursor and VS Code (or stop those processes) so MSBuild can overwrite the locked output files, or re-run with -SkipBuild."
+    }
+
+    & dotnet build $projectPath --configuration $Configuration --nologo --verbosity quiet
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to build the MCP server at '$projectPath' (exit code $LASTEXITCODE)."
+    }
+
+    return $Configuration
+}
+
 function Get-Mvp24HoursCursorMcpServerEntry {
     [CmdletBinding()]
     param(
@@ -144,6 +213,9 @@ function Get-Mvp24HoursCursorMcpServerEntry {
         command = 'dotnet'
         args = @(
             'run',
+            '--no-build',
+            '--configuration',
+            $script:Mvp24HoursDevKitMcpConfiguration,
             '--project',
             $projectPath
         )
@@ -169,6 +241,9 @@ function Get-Mvp24HoursVsCodeMcpServerEntry {
         command = 'dotnet'
         args = @(
             'run',
+            '--no-build',
+            '--configuration',
+            $script:Mvp24HoursDevKitMcpConfiguration,
             '--project',
             $projectPath
         )

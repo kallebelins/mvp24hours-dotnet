@@ -4,6 +4,9 @@
       "command": "dotnet",
       "args": [
         "run",
+        "--no-build",
+        "--configuration",
+        "Release",
         "--project",
         "${env:MVP24HOURS_MCP_REPO_ROOT}/mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"
       ],

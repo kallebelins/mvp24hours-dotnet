@@ -12,6 +12,9 @@
       "command": "dotnet",
       "args": [
         "run",
+        "--no-build",
+        "--configuration",
+        "Release",
         "--project",
         "${input:mvp24hours-repo-root}/mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"
       ],

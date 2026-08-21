@@ -27,9 +27,20 @@ A pasta `skill-router` também inclui:
 O caminho do repositório é gravado **resolvido** no `mcp.json`:
 
 - `--project` — indica ao `dotnet run` qual `.csproj` executar
+- `--no-build --configuration Release` — executa o binário já compilado, sem build no startup
 - `env.MVP24HOURS_REPO_ROOT` — lido pelo servidor MCP em runtime (`Program.cs`) para indexar `docs/`, `samples/` e `src/`
 
 Se você mover o clone, execute o install novamente com `-Force` para atualizar os paths.
+
+## Build do servidor MCP
+
+O install compila o projeto MCP uma vez em `Release` antes de gravar o `mcp.json`. A entrada gravada usa `dotnet run --no-build`, então **Cursor e VS Code podem rodar o servidor ao mesmo tempo**: sem build no startup, nenhum dos dois tenta sobrescrever os arquivos de `bin/` e `obj/` que o outro processo mantém abertos (o erro "o processo não pode acessar o arquivo porque está sendo usado por outro processo", MSB3021/MSB3027).
+
+Consequências práticas:
+
+- **Depois de um `git pull` no clone**, reexecute o install (ou rode `dotnet build mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj --configuration Release`). Sem isso os IDEs continuam executando o binário anterior.
+- **Antes de compilar o repositório**, feche o Cursor e o VS Code. Um servidor em execução ainda bloqueia os arquivos de saída daquela configuração. O install detecta processos `Mvp24Hours.Mcp` rodando a partir de `bin/Release` e aborta com a lista de PIDs, em vez de falhar no meio do build.
+- Use `-SkipBuild` se você já compilou em `Release` e quer apenas regravar o `mcp.json` e as skills.
 
 ## Instalação
 
@@ -57,6 +68,7 @@ cd C:\Dev\Github\mvp24hours\mvp24hours-dotnet\scripts
 | `-Force` | Sobrescreve a skill se já existir |
 | `-SkipSkill` | Instala somente MCP |
 | `-SkipMcp` | Instala somente a skill |
+| `-SkipBuild` | Não compila o projeto MCP (exige binários `Release` já existentes) |
 | `-WhatIf` | Simula as alterações sem gravar arquivos |
 
 Exemplo com caminho explícito:
@@ -118,6 +130,9 @@ O uninstall também remove a variável legada `MVP24HOURS_MCP_REPO_ROOT` do usu�
 | Servidor não aparece | Reinicie o IDE após a instalação |
 | Missing manifest | Confirme que `MVP24HOURS_REPO_ROOT` no `mcp.json` aponta para a raiz do clone (pasta com `docs/` e `samples/`) |
 | Servidor falha ao iniciar | Verifique .NET 10 SDK e o caminho para `Mvp24Hours.Mcp.csproj` |
+| Servidor não sobe após `-SkipBuild` | Faltam os binários `Release`: rode `dotnet build mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj --configuration Release` |
+| Erro de arquivo bloqueado no build (MSB3021/MSB3027) | Um servidor MCP está em execução; feche Cursor e VS Code ou encerre os processos `Mvp24Hours.Mcp` |
+| Servidor rodando código antigo | Reexecute o install (ou o `dotnet build` em Release) após atualizar o clone |
 | Skill não aplicada (Cursor) | Confirme `%USERPROFILE%\.cursor\skills\<name>\SKILL.md` (ex.: `skill-router`, `efcore-specialist`) |
 | Skill não listada (VS Code) | Confirme `%USERPROFILE%\.copilot\skills\<name>\SKILL.md` e use Agent mode |
 | Outro MCP sumiu | Os scripts não removem outros servidores; verifique se o merge foi feito corretamente |

@@ -39,12 +39,21 @@ These are **portable AI agent skill files** designed to be copied into any proje
        "mvp24hours": {
          "type": "stdio",
          "command": "dotnet",
-         "args": ["run", "--project", "path/to/mvp24hours-dotnet/mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"],
+         "args": [
+           "run",
+           "--no-build",
+           "--configuration",
+           "Release",
+           "--project",
+           "path/to/mvp24hours-dotnet/mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"
+         ],
          "env": { "MVP24HOURS_REPO_ROOT": "path/to/mvp24hours-dotnet" }
        }
      }
    }
    ```
+
+   Build the server once with `dotnet build path/to/mvp24hours-dotnet/mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj --configuration Release`. `--no-build` keeps the startup free of MSBuild, so Cursor and VS Code can run the server at the same time without locking each other's output files.
 
 3. **Use skills in chat**:
    ```
@@ -479,7 +488,14 @@ All skills require the **Mvp24Hours MCP DevKit** to be configured. The MCP serve
     "mvp24hours": {
       "type": "stdio",
       "command": "dotnet",
-      "args": ["run", "--project", "<path-to-mcp>/Mvp24Hours.Mcp.csproj"],
+      "args": [
+        "run",
+        "--no-build",
+        "--configuration",
+        "Release",
+        "--project",
+        "<path-to-mcp>/Mvp24Hours.Mcp.csproj"
+      ],
       "env": { "MVP24HOURS_REPO_ROOT": "<path-to-mvp24hours-dotnet-repo>" }
     }
   }
@@ -489,6 +505,11 @@ All skills require the **Mvp24Hours MCP DevKit** to be configured. The MCP serve
 **VS Code**:
 ```json
 // .vscode/mcp.json  (same format as above)
+```
+
+**Build once** (`--no-build` requires it, and it lets both editors run the server side by side):
+```bash
+dotnet build <path-to-mcp>/Mvp24Hours.Mcp.csproj --configuration Release
 ```
 
 **Environment Variable**:

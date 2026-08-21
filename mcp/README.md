@@ -6,6 +6,9 @@ Local [Model Context Protocol](https://modelcontextprotocol.io/) server for AI a
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - Clone of `mvp24hours-dotnet` with `docs/en-us/ai-resources/templates-manifest.json`
+- The server project built once in `Release`: `dotnet build mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj --configuration Release`
+
+MCP entries launch the server with `dotnet run --no-build --configuration Release`. Building on every start would make Cursor and VS Code overwrite the same `bin/` and `obj/` files, and the second editor fails with "the process cannot access the file because it is being used by another process". With `--no-build` both editors only read the compiled output, so they can run side by side. Rebuild (or re-run the installer) after pulling changes into the clone, otherwise the editors keep running the previous binaries.
 
 **Agent entry point:** [`skills/orchestration/skill-router.md`](../skills/orchestration/skill-router.md) (`@skill-router`) — catalog handoff and MCP playbook triage — or any domain skill by name. The [global installer](../scripts/README-devkit.md) registers 36 `SKILL.md` folders and keeps domain copies under `skill-router/catalog/` for router handoff.
 
@@ -27,7 +30,14 @@ Project-level MCP configuration is in [`.vscode/mcp.json`](../.vscode/mcp.json).
     "mvp24hours": {
       "type": "stdio",
       "command": "dotnet",
-      "args": ["run", "--project", "mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"],
+      "args": [
+        "run",
+        "--no-build",
+        "--configuration",
+        "Release",
+        "--project",
+        "mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"
+      ],
       "env": { "MVP24HOURS_REPO_ROOT": "${workspaceFolder}" }
     }
   }
@@ -53,6 +63,9 @@ Restart or run **MCP: List Servers** after changing MCP configuration.
       "command": "dotnet",
       "args": [
         "run",
+        "--no-build",
+        "--configuration",
+        "Release",
         "--project",
         "${input:mvp24hours-repo-root}/mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"
       ],
@@ -64,7 +77,7 @@ Restart or run **MCP: List Servers** after changing MCP configuration.
 }
 ```
 
-**External project — HTTP:** start the server with `-- --http --urls http://localhost:5199`, then [`templates/vscode/mcp.http.json`](templates/vscode/mcp.http.json):
+**External project — HTTP:** start the server with `--no-build --configuration Release ... -- --http --urls http://localhost:5199`, then [`templates/vscode/mcp.http.json`](templates/vscode/mcp.http.json):
 
 ```json
 {
@@ -85,18 +98,24 @@ Environment variable:
 
 ## Run locally
 
+Build once (required by `--no-build`):
+
+```bash
+dotnet build mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj --configuration Release
+```
+
 **Stdio (Cursor default):**
 
 ```bash
 set MVP24HOURS_REPO_ROOT=c:\Dev\Github\mvp24hours\mvp24hours-dotnet
-dotnet run --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj
+dotnet run --no-build --configuration Release --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj
 ```
 
 **HTTP (stateless, for remote agents):**
 
 ```bash
 set MVP24HOURS_REPO_ROOT=c:\Dev\Github\mvp24hours\mvp24hours-dotnet
-dotnet run --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj -- --http --urls http://localhost:5199
+dotnet run --no-build --configuration Release --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj -- --http --urls http://localhost:5199
 ```
 
 ## MCP Resources
@@ -141,6 +160,8 @@ dotnet build mcp/Mvp24Hours.Mcp.slnx --configuration Release
 dotnet test mcp/Mvp24Hours.Mcp.slnx --configuration Release
 ```
 
+Stop every running `Mvp24Hours.Mcp` process (close Cursor and VS Code) before building: MSBuild cannot overwrite output files that a running server holds open.
+
 ## Troubleshooting (Windows)
 
 If tools report missing manifest:
@@ -148,6 +169,10 @@ If tools report missing manifest:
 1. Set `MVP24HOURS_REPO_ROOT` to the repo root (folder containing `docs/` and `samples/`).
 2. Verify `docs/en-us/ai-resources/templates-manifest.json` exists.
 3. Run from any directory once the env var is set — the server does not depend on cwd.
+
+If the server fails to start with "couldn't find a project to run" or a missing assembly, the `Release` build is missing: run `dotnet build mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj --configuration Release`.
+
+If a build fails with "the process cannot access the file because it is being used by another process" (MSB3021/MSB3027), a server instance is still running. Close the editors or stop the `Mvp24Hours.Mcp` processes, then build again.
 
 ## Canonical sources
 

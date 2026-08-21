@@ -9,6 +9,10 @@ Configura o servidor MCP mvp24hours em ~/.cursor/mcp.json e instala as 36 skills
 globais em ~/.cursor/skills/ (skill-router com catalog/ + cada especialidade
 como pasta independente SKILL.md).
 
+O projeto MCP e compilado uma vez em Release e a entrada do mcp.json usa
+'dotnet run --no-build', para que Cursor e VS Code possam iniciar o servidor ao
+mesmo tempo sem disputar os arquivos de bin/ e obj/.
+
 .EXAMPLE
 .\Install-Mvp24HoursCursorDevKit.ps1
 
@@ -25,7 +29,9 @@ param(
 
     [switch] $SkipSkill,
 
-    [switch] $SkipMcp
+    [switch] $SkipMcp,
+
+    [switch] $SkipBuild
 )
 
 Set-StrictMode -Version Latest
@@ -42,6 +48,16 @@ Write-Host "  .NET SDK          : $dotnetVersion"
 
 if (-not $SkipMcp) {
     $mcpPath = Get-Mvp24HoursDevKitCursorMcpPath
+    $mcpConfiguration = Get-Mvp24HoursMcpConfiguration
+
+    if ($SkipBuild) {
+        Write-Host "  MCP build         : skipped ($mcpConfiguration binaries must already exist)"
+    }
+    else {
+        Invoke-Mvp24HoursMcpBuild -RepoRoot $resolvedRepoRoot | Out-Null
+        Write-Host "  MCP build         : $mcpConfiguration"
+    }
+
     $serverEntry = Get-Mvp24HoursCursorMcpServerEntry -RepoRoot $resolvedRepoRoot
 
     Merge-McpJsonServer `
