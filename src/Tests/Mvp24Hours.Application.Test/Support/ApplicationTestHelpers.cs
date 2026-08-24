@@ -292,16 +292,22 @@ public sealed class TestEventAwareCommandService(
     }
 }
 
-public sealed class TestBulkDtoService(BulkTestDbContext dbContext, IMapper mapper, IValidator<AppTestEntityDto>? dtoValidator = null) : BulkCommandServiceWithDtoBaseAsync<TestEntity, AppTestEntityDto, BulkTestDbContext>(dbContext, mapper, dtoValidator)
+public sealed class TestBulkDtoService(
+    BulkTestDbContext dbContext,
+    IBulkOperationsAsync<TestEntity> bulkOperations,
+    IMapper mapper,
+    IValidator<AppTestEntityDto>? dtoValidator = null)
+    : BulkCommandServiceWithDtoBaseAsync<TestEntity, AppTestEntityDto, BulkTestDbContext>(dbContext, bulkOperations, mapper, dtoValidator)
 {
 }
 
 public sealed class TestBulkSeparateDtosService(
     BulkTestDbContext dbContext,
+    IBulkOperationsAsync<TestEntity> bulkOperations,
     IMapper mapper,
     IValidator<AppTestCreateDto>? createValidator = null,
     IValidator<AppTestUpdateDto>? updateValidator = null)
-        : BulkCommandServiceWithSeparateDtosBaseAsync<TestEntity, AppTestCreateDto, AppTestUpdateDto, BulkTestDbContext>(dbContext, mapper, createValidator, updateValidator)
+        : BulkCommandServiceWithSeparateDtosBaseAsync<TestEntity, AppTestCreateDto, AppTestUpdateDto, BulkTestDbContext>(dbContext, bulkOperations, mapper, createValidator, updateValidator)
 {
 }
 

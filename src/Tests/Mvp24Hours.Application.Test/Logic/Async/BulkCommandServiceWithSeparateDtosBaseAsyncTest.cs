@@ -1,5 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Mvp24Hours.Application.Test.Support;
+using Mvp24Hours.Infrastructure.Data.EFCore;
+using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
 
 namespace Mvp24Hours.Application.Test.Logic.Async;
@@ -17,8 +21,13 @@ public class BulkCommandServiceWithSeparateDtosBaseAsyncTest : IDisposable
             .Options;
         _context = new BulkTestDbContext(options);
         _context.Database.EnsureCreated();
+        IBulkOperationsAsync<TestEntity> bulkOperations = new BulkOperationsRepositoryAsync<TestEntity>(
+            _context,
+            Options.Create(new EFCoreRepositoryOptions { MaxQtyByQueryPage = 100 }),
+            NullLogger<BulkOperationsRepositoryAsync<TestEntity>>.Instance);
         _service = new TestBulkSeparateDtosService(
             _context,
+            bulkOperations,
             ApplicationTestHelpers.CreateTestMapper(),
             new AppTestCreateDtoValidator(),
             new AppTestUpdateDtoValidator());

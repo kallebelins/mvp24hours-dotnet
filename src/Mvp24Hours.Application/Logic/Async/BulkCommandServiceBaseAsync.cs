@@ -5,7 +5,6 @@
 //=====================================================================================
 using System.Diagnostics;
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
@@ -13,7 +12,6 @@ using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Infrastructure.Data.EFCore.Extensions;
 
 namespace Mvp24Hours.Application.Logic;
 
@@ -22,10 +20,10 @@ namespace Mvp24Hours.Application.Logic;
 /// Extends <see cref="CommandServiceBaseAsync{TEntity, TUoW}"/> with optimized batch processing.
 /// </summary>
 /// <typeparam name="TEntity">The entity type to be managed by this service.</typeparam>
-/// <typeparam name="TUoW">The unit of work/DbContext type.</typeparam>
+/// <typeparam name="TUoW">The unit of work type.</typeparam>
 /// <remarks>
 /// <para>
-/// This class provides bulk operations that bypass EF Core change tracking for significantly
+/// This class provides bulk operations that bypass change tracking for significantly
 /// better performance when processing large datasets (1000+ entities).
 /// </para>
 /// <para>
@@ -40,7 +38,7 @@ namespace Mvp24Hours.Application.Logic;
 /// <para>
 /// <strong>Performance Considerations:</strong>
 /// <list type="bullet">
-/// <item>Bulk operations bypass EF Core change tracking for better performance</item>
+/// <item>Bulk operations bypass change tracking for better performance</item>
 /// <item>Use <see cref="BulkOperationOptions.BatchSize"/> to control memory usage</item>
 /// <item>Progress callback available for monitoring long-running operations</item>
 /// <item>Validation is performed before the bulk operation</item>
@@ -49,10 +47,13 @@ namespace Mvp24Hours.Application.Logic;
 /// </remarks>
 /// <example>
 /// <code>
-/// public class CustomerBulkService : BulkCommandServiceBaseAsync&lt;Customer, MyDbContext&gt;
+/// public class CustomerBulkService : BulkCommandServiceBaseAsync&lt;Customer, IUnitOfWorkAsync&gt;
 /// {
-///     public CustomerBulkService(MyDbContext dbContext, IValidator&lt;Customer&gt; validator) 
-///         : base(dbContext, validator) { }
+///     public CustomerBulkService(
+///         IUnitOfWorkAsync unitOfWork,
+///         IBulkOperationsAsync&lt;Customer&gt; bulkOperations,
+///         IValidator&lt;Customer&gt; validator) 
+///         : base(unitOfWork, bulkOperations, validator) { }
 ///     
 ///     public async Task&lt;IBusinessResult&lt;BulkOperationResult&gt;&gt; ImportCustomersAsync(
 ///         IList&lt;Customer&gt; customers, 
@@ -76,13 +77,14 @@ namespace Mvp24Hours.Application.Logic;
 /// <remarks>
 /// Initializes a new instance of the <see cref="BulkCommandServiceBaseAsync{TEntity, TUoW}"/> class.
 /// </remarks>
-/// <param name="dbContext">The DbContext for database operations.</param>
+/// <param name="unitOfWork">The unit of work for transaction management.</param>
+/// <param name="bulkOperations">The bulk operations provider for high-performance batch processing.</param>
 /// <param name="validator">The validator for entity validation.</param>
-/// <exception cref="ArgumentNullException">Thrown when dbContext is null.</exception>
-public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW dbContext, IValidator<TEntity>? validator)
-    : CommandServiceBaseAsync<TEntity, TUoW>(dbContext, validator), IBulkCommandServiceAsync<TEntity>
+/// <exception cref="ArgumentNullException">Thrown when unitOfWork or bulkOperations is null.</exception>
+public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork, IBulkOperationsAsync<TEntity> bulkOperations, IValidator<TEntity>? validator)
+    : CommandServiceBaseAsync<TEntity, TUoW>(unitOfWork, validator), IBulkCommandServiceAsync<TEntity>
     where TEntity : class, IEntityBase
-    where TUoW : DbContext, IUnitOfWorkAsync
+    where TUoW : class, IUnitOfWorkAsync
 {
     #region [ Properties / Fields ]
 
@@ -90,9 +92,9 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW dbContext,
     private readonly ILogger _logger = NullLogger.Instance;
 
     /// <summary>
-    /// Gets the DbContext for bulk operations.
+    /// Gets the bulk operations provider for high-performance batch processing.
     /// </summary>
-    protected TUoW DbContext { get; } = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    protected IBulkOperationsAsync<TEntity> BulkOperations { get; } = bulkOperations ?? throw new ArgumentNullException(nameof(bulkOperations));
 
     #endregion
 
@@ -101,10 +103,11 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW dbContext,
     /// <summary>
     /// Initializes a new instance of the <see cref="BulkCommandServiceBaseAsync{TEntity, TUoW}"/> class.
     /// </summary>
-    /// <param name="dbContext">The DbContext for database operations.</param>
-    /// <exception cref="ArgumentNullException">Thrown when dbContext is null.</exception>
-    protected BulkCommandServiceBaseAsync(TUoW dbContext)
-        : this(dbContext, null)
+    /// <param name="unitOfWork">The unit of work for transaction management.</param>
+    /// <param name="bulkOperations">The bulk operations provider for high-performance batch processing.</param>
+    /// <exception cref="ArgumentNullException">Thrown when unitOfWork or bulkOperations is null.</exception>
+    protected BulkCommandServiceBaseAsync(TUoW unitOfWork, IBulkOperationsAsync<TEntity> bulkOperations)
+        : this(unitOfWork, bulkOperations, null)
     {
     }
 
@@ -146,7 +149,7 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW dbContext,
             }
 
             // Execute bulk insert
-            BulkOperationResult result = await DbContext.BulkInsertAsync(entities, options, cancellationToken);
+            BulkOperationResult result = await BulkOperations.BulkInsertAsync(entities, options, cancellationToken);
 
             stopwatch.Stop();
 
@@ -204,7 +207,7 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW dbContext,
             }
 
             // Execute bulk update
-            BulkOperationResult result = await DbContext.BulkUpdateAsync(entities, options, cancellationToken);
+            BulkOperationResult result = await BulkOperations.BulkUpdateAsync(entities, options, cancellationToken);
 
             stopwatch.Stop();
 
@@ -252,7 +255,7 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW dbContext,
         try
         {
             // Execute bulk delete (no validation needed for delete)
-            BulkOperationResult result = await DbContext.BulkDeleteAsync(entities, options, cancellationToken);
+            BulkOperationResult result = await BulkOperations.BulkDeleteAsync(entities, options, cancellationToken);
 
             stopwatch.Stop();
 
@@ -304,4 +307,3 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW dbContext,
 
     #endregion
 }
-

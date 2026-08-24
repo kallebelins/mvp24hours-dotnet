@@ -6,7 +6,6 @@
 using System.Diagnostics;
 using AutoMapper;
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
@@ -24,7 +23,7 @@ namespace Mvp24Hours.Application.Logic;
 /// <typeparam name="TEntity">The entity type for persistence.</typeparam>
 /// <typeparam name="TCreateDto">The DTO type for create operations.</typeparam>
 /// <typeparam name="TUpdateDto">The DTO type for update operations.</typeparam>
-/// <typeparam name="TUoW">The unit of work/DbContext type.</typeparam>
+/// <typeparam name="TUoW">The unit of work type.</typeparam>
 /// <remarks>
 /// <para>
 /// This class supports the common RESTful API pattern where POST (create) and PUT/PATCH (update)
@@ -43,14 +42,15 @@ namespace Mvp24Hours.Application.Logic;
 /// <example>
 /// <code>
 /// public class CustomerBulkService : BulkCommandServiceWithSeparateDtosBaseAsync&lt;
-///     Customer, CreateCustomerDto, UpdateCustomerDto, MyDbContext&gt;
+///     Customer, CreateCustomerDto, UpdateCustomerDto, IUnitOfWorkAsync&gt;
 /// {
 ///     public CustomerBulkService(
-///         MyDbContext dbContext, 
+///         IUnitOfWorkAsync unitOfWork,
+///         IBulkOperationsAsync&lt;Customer&gt; bulkOperations,
 ///         IMapper mapper,
 ///         IValidator&lt;CreateCustomerDto&gt; createValidator,
 ///         IValidator&lt;UpdateCustomerDto&gt; updateValidator) 
-///         : base(dbContext, mapper, createValidator, updateValidator) { }
+///         : base(unitOfWork, bulkOperations, mapper, createValidator, updateValidator) { }
 ///     
 ///     public async Task ImportNewCustomersAsync(IList&lt;CreateCustomerDto&gt; dtos, CancellationToken ct)
 ///     {
@@ -69,25 +69,27 @@ namespace Mvp24Hours.Application.Logic;
 /// <seealso cref="IBulkCommandServiceWithSeparateDtosAsync{TCreateDto, TUpdateDto}"/>
 /// <seealso cref="BulkCommandServiceBaseAsync{TEntity, TUoW}"/>
 /// <remarks>
-/// Initializes a new instance with DbContext, mapper, and all validators.
+/// Initializes a new instance with unit of work, bulk operations, mapper, and all validators.
 /// </remarks>
-/// <param name="dbContext">The DbContext for database operations.</param>
+/// <param name="unitOfWork">The unit of work for transaction management.</param>
+/// <param name="bulkOperations">The bulk operations provider for high-performance batch processing.</param>
 /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
 /// <param name="createDtoValidator">The validator for create DTO validation.</param>
 /// <param name="updateDtoValidator">The validator for update DTO validation.</param>
 /// <param name="entityValidator">The validator for entity validation.</param>
-/// <exception cref="ArgumentNullException">Thrown when dbContext or mapper is null.</exception>
+/// <exception cref="ArgumentNullException">Thrown when unitOfWork, bulkOperations, or mapper is null.</exception>
 public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCreateDto, TUpdateDto, TUoW>(
-    TUoW dbContext,
+    TUoW unitOfWork,
+    IBulkOperationsAsync<TEntity> bulkOperations,
     IMapper mapper,
     IValidator<TCreateDto>? createDtoValidator,
     IValidator<TUpdateDto>? updateDtoValidator,
     IValidator<TEntity>? entityValidator)
-    : BulkCommandServiceBaseAsync<TEntity, TUoW>(dbContext, entityValidator), IBulkCommandServiceWithSeparateDtosAsync<TCreateDto, TUpdateDto>
+    : BulkCommandServiceBaseAsync<TEntity, TUoW>(unitOfWork, bulkOperations, entityValidator), IBulkCommandServiceWithSeparateDtosAsync<TCreateDto, TUpdateDto>
     where TEntity : class, IEntityBase
     where TCreateDto : class
     where TUpdateDto : class
-    where TUoW : DbContext, IUnitOfWorkAsync
+    where TUoW : class, IUnitOfWorkAsync
 {
     #region [ Properties / Fields ]
 
@@ -114,30 +116,33 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
     #region [ Constructors ]
 
     /// <summary>
-    /// Initializes a new instance with DbContext and mapper.
+    /// Initializes a new instance with unit of work, bulk operations, and mapper.
     /// </summary>
-    /// <param name="dbContext">The DbContext for database operations.</param>
+    /// <param name="unitOfWork">The unit of work for transaction management.</param>
+    /// <param name="bulkOperations">The bulk operations provider for high-performance batch processing.</param>
     /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
-    /// <exception cref="ArgumentNullException">Thrown when dbContext or mapper is null.</exception>
-    protected BulkCommandServiceWithSeparateDtosBaseAsync(TUoW dbContext, IMapper mapper)
-        : this(dbContext, mapper, null, null, null)
+    /// <exception cref="ArgumentNullException">Thrown when unitOfWork, bulkOperations, or mapper is null.</exception>
+    protected BulkCommandServiceWithSeparateDtosBaseAsync(TUoW unitOfWork, IBulkOperationsAsync<TEntity> bulkOperations, IMapper mapper)
+        : this(unitOfWork, bulkOperations, mapper, null, null, null)
     {
     }
 
     /// <summary>
-    /// Initializes a new instance with DbContext, mapper, and validators.
+    /// Initializes a new instance with unit of work, bulk operations, mapper, and validators.
     /// </summary>
-    /// <param name="dbContext">The DbContext for database operations.</param>
+    /// <param name="unitOfWork">The unit of work for transaction management.</param>
+    /// <param name="bulkOperations">The bulk operations provider for high-performance batch processing.</param>
     /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
     /// <param name="createDtoValidator">The validator for create DTO validation.</param>
     /// <param name="updateDtoValidator">The validator for update DTO validation.</param>
-    /// <exception cref="ArgumentNullException">Thrown when dbContext or mapper is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when unitOfWork, bulkOperations, or mapper is null.</exception>
     protected BulkCommandServiceWithSeparateDtosBaseAsync(
-        TUoW dbContext,
+        TUoW unitOfWork,
+        IBulkOperationsAsync<TEntity> bulkOperations,
         IMapper mapper,
         IValidator<TCreateDto>? createDtoValidator,
         IValidator<TUpdateDto>? updateDtoValidator)
-        : this(dbContext, mapper, createDtoValidator, updateDtoValidator, null)
+        : this(unitOfWork, bulkOperations, mapper, createDtoValidator, updateDtoValidator, null)
     {
     }
 
@@ -393,4 +398,3 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
 
     #endregion
 }
-
