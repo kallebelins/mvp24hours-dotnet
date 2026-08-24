@@ -73,39 +73,21 @@ public static class OpenTelemetryExporterExtensions
     ///     opts.Prometheus.Enabled = true;
     /// });
     /// 
-    /// // Then configure OpenTelemetry SDK
-    /// var exporterOptions = services.BuildServiceProvider()
-    ///     .GetRequiredService&lt;OpenTelemetryExporterOptions&gt;();
-    /// 
+    /// // Then configure OpenTelemetry SDK using the options instance directly
+    /// // (avoid BuildServiceProvider — use the same options instance or IOptions&lt;T&gt;)
     /// services.AddOpenTelemetry()
     ///     .ConfigureResource(r => r.AddService(
-    ///         exporterOptions.ServiceName,
-    ///         serviceVersion: exporterOptions.ServiceVersion))
+    ///         "OrderService",
+    ///         serviceVersion: "1.0.0"))
     ///     .WithTracing(builder =>
     ///     {
     ///         builder.AddSource(Mvp24HoursActivitySources.AllSourceNames);
-    ///         
-    ///         if (exporterOptions.Otlp.Enabled)
-    ///             builder.AddOtlpExporter(o =>
-    ///             {
-    ///                 o.Endpoint = new Uri(exporterOptions.Otlp.Endpoint);
-    ///                 o.Protocol = exporterOptions.Otlp.Protocol == OtlpExportProtocol.Grpc
-    ///                     ? OtlpExportProtocol.Grpc
-    ///                     : OtlpExportProtocol.HttpProtobuf;
-    ///             });
-    ///         
-    ///         if (exporterOptions.Console.Enabled)
-    ///             builder.AddConsoleExporter();
+    ///         builder.AddOtlpExporter();
     ///     })
     ///     .WithMetrics(builder =>
     ///     {
     ///         builder.AddMeter(Mvp24HoursMeters.AllMeterNames);
-    ///         
-    ///         if (exporterOptions.Prometheus.Enabled)
-    ///             builder.AddPrometheusExporter();
-    ///         
-    ///         if (exporterOptions.Otlp.Enabled)
-    ///             builder.AddOtlpExporter();
+    ///         builder.AddPrometheusExporter();
     ///     });
     /// </code>
     /// </remarks>

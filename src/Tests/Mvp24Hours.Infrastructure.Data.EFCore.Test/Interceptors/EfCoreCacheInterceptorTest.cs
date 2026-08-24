@@ -1,13 +1,33 @@
 using System.Data.Common;
 using System.Reflection;
-using Mvp24Hours.Infrastructure.Caching.EFCore;
-using Mvp24Hours.Infrastructure.Caching.Test.Support;
+using Moq;
+using Mvp24Hours.Core.Contract.Infrastructure.Caching;
+using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
+using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
 
-namespace Mvp24Hours.Infrastructure.Caching.Test.EFCore;
+namespace Mvp24Hours.Infrastructure.Data.EFCore.Test.Interceptors;
 
 [Trait("Category", "Unit")]
 public class EfCoreCacheInterceptorTest
 {
+    private static ICacheProvider CreateMockCacheProvider()
+    {
+        var mock = new Mock<ICacheProvider>();
+        mock.Setup(x => x.GetStringAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string?)null);
+        return mock.Object;
+    }
+
+    private static ICacheKeyGenerator CreateMockKeyGenerator()
+    {
+        var mock = new Mock<ICacheKeyGenerator>();
+        mock.Setup(x => x.Generate(It.IsAny<string[]>()))
+            .Returns((string[] parts) => string.Join(":", parts));
+        mock.Setup(x => x.GenerateHash(It.IsAny<string>()))
+            .Returns((string key) => $"hash:{key.GetHashCode()}");
+        return mock.Object;
+    }
+
     [Fact]
     public void EfCoreCacheOptions_DefaultValues_ShouldBeExpected()
     {
@@ -21,7 +41,15 @@ public class EfCoreCacheInterceptorTest
     [Fact]
     public void Constructor_NullCacheProvider_ShouldThrow()
     {
-        Action act = () => new EfCoreCacheInterceptor(null!);
+        Action act = () => new EfCoreCacheInterceptor(null!, CreateMockKeyGenerator());
+
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void Constructor_NullKeyGenerator_ShouldThrow()
+    {
+        Action act = () => new EfCoreCacheInterceptor(CreateMockCacheProvider(), null!);
 
         act.Should().Throw<ArgumentNullException>();
     }
@@ -29,7 +57,7 @@ public class EfCoreCacheInterceptorTest
     [Fact]
     public void IsSelectQuery_ShouldDetectSelectStatements()
     {
-        var interceptor = new EfCoreCacheInterceptor(CacheTestHelpers.CreateMemoryProvider());
+        var interceptor = new EfCoreCacheInterceptor(CreateMockCacheProvider(), CreateMockKeyGenerator());
 
         bool isSelect = InvokePrivate<bool>(interceptor, "IsSelectQuery", "SELECT * FROM Customers");
         bool isUpdate = InvokePrivate<bool>(interceptor, "IsSelectQuery", "UPDATE Customers SET Name = 'A'");
@@ -41,7 +69,7 @@ public class EfCoreCacheInterceptorTest
     [Fact]
     public void IsModificationQuery_ShouldDetectWriteStatements()
     {
-        var interceptor = new EfCoreCacheInterceptor(CacheTestHelpers.CreateMemoryProvider());
+        var interceptor = new EfCoreCacheInterceptor(CreateMockCacheProvider(), CreateMockKeyGenerator());
 
         bool isDelete = InvokePrivate<bool>(interceptor, "IsModificationQuery", "DELETE FROM Orders WHERE Id = 1");
         bool isSelect = InvokePrivate<bool>(interceptor, "IsModificationQuery", "SELECT 1");
@@ -53,7 +81,7 @@ public class EfCoreCacheInterceptorTest
     [Fact]
     public void GenerateCacheKey_ShouldIncludeTableAndParameters()
     {
-        var interceptor = new EfCoreCacheInterceptor(CacheTestHelpers.CreateMemoryProvider());
+        var interceptor = new EfCoreCacheInterceptor(CreateMockCacheProvider(), CreateMockKeyGenerator());
         var command = new TestDbCommand
         {
             CommandText = "SELECT * FROM Products WHERE Id = @id"
@@ -72,7 +100,7 @@ public class EfCoreCacheInterceptorTest
     [Fact]
     public void ExtractTableName_ShouldParseFromClause()
     {
-        var interceptor = new EfCoreCacheInterceptor(CacheTestHelpers.CreateMemoryProvider());
+        var interceptor = new EfCoreCacheInterceptor(CreateMockCacheProvider(), CreateMockKeyGenerator());
 
         string? table = InvokePrivate<string?>(interceptor, "ExtractTableName", "SELECT * FROM Orders WHERE Id = 1");
 

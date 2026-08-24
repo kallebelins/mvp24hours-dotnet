@@ -8,9 +8,8 @@ using System.Text;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
-using Mvp24Hours.Infrastructure.Caching.KeyGenerators;
 
-namespace Mvp24Hours.Infrastructure.Caching.EFCore;
+namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
 
 /// <summary>
 /// EF Core interceptor that provides second-level caching for query results.
@@ -43,25 +42,28 @@ namespace Mvp24Hours.Infrastructure.Caching.EFCore;
 /// services.AddDbContext&lt;MyDbContext&gt;(options =>
 /// {
 ///     options.UseSqlServer(connectionString);
-///     options.AddInterceptors(new EfCoreCacheInterceptor(cacheProvider, logger));
+///     options.AddInterceptors(serviceProvider.GetRequiredService&lt;EfCoreCacheInterceptor&gt;());
 /// });
+/// 
+/// // Register interceptor with DI
+/// services.AddSingleton&lt;EfCoreCacheInterceptor&gt;();
 /// </code>
 /// </example>
 /// <remarks>
 /// Creates a new instance of EfCoreCacheInterceptor.
 /// </remarks>
 /// <param name="cacheProvider">The cache provider for storing/retrieving cached data.</param>
+/// <param name="keyGenerator">The cache key generator for creating cache keys.</param>
 /// <param name="logger">Optional logger for diagnostics.</param>
 /// <param name="options">Optional configuration options.</param>
-/// <param name="keyGenerator">Optional cache key generator. If null, DefaultCacheKeyGenerator is used.</param>
 public class EfCoreCacheInterceptor(
     ICacheProvider cacheProvider,
+    ICacheKeyGenerator keyGenerator,
     ILogger<EfCoreCacheInterceptor>? logger = null,
-    EfCoreCacheOptions? options = null,
-    ICacheKeyGenerator? keyGenerator = null) : DbCommandInterceptor
+    EfCoreCacheOptions? options = null) : DbCommandInterceptor
 {
     private readonly ICacheProvider _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
-    private readonly ICacheKeyGenerator _keyGenerator = keyGenerator ?? new DefaultCacheKeyGenerator("efcore");
+    private readonly ICacheKeyGenerator _keyGenerator = keyGenerator ?? throw new ArgumentNullException(nameof(keyGenerator));
     private readonly ILogger<EfCoreCacheInterceptor>? _logger = logger;
     private readonly EfCoreCacheOptions _options = options ?? new EfCoreCacheOptions();
 
@@ -230,4 +232,3 @@ public class EfCoreCacheOptions
     /// </summary>
     public bool InvalidateOnModify { get; set; } = true;
 }
-

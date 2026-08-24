@@ -258,13 +258,6 @@ public static class HttpClientExtensions
         }
     }
 
-    public static HttpClient PropagateHeaderKey(this HttpClient c, IServiceCollection services, params string[] keys)
-    {
-        ServiceProvider serviceProvider = services.BuildServiceProvider();
-        c.PropagateHeaderKey(serviceProvider, keys);
-        return c;
-    }
-
     public static HttpClient PropagateHeaderKey(this HttpClient c, IServiceProvider serviceProvider, params string[] keys)
     {
         IHttpContextAccessor? httpAccessor = serviceProvider.GetService<IHttpContextAccessor>();
@@ -283,13 +276,6 @@ public static class HttpClientExtensions
             }
         }
         return c;
-    }
-
-    public static HttpRequestMessage PropagateHeaderKey(this HttpRequestMessage request, IServiceCollection services, params string[] keys)
-    {
-        ServiceProvider serviceProvider = services.BuildServiceProvider();
-        request.PropagateHeaderKey(serviceProvider, keys);
-        return request;
     }
 
     public static HttpRequestMessage PropagateHeaderKey(this HttpRequestMessage request, IServiceProvider serviceProvider, params string[] keys)
