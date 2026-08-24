@@ -17,12 +17,20 @@ function Get-Mvp24HoursDevKitVsCodeMcpPath {
     return Join-Path -Path $env:APPDATA -ChildPath 'Code\User\mcp.json'
 }
 
+function Get-Mvp24HoursDevKitKiroMcpPath {
+    return Join-Path -Path $env:USERPROFILE -ChildPath '.kiro\settings\mcp.json'
+}
+
 function Get-Mvp24HoursDevKitCursorSkillsRoot {
     return Join-Path -Path $env:USERPROFILE -ChildPath '.cursor\skills'
 }
 
 function Get-Mvp24HoursDevKitVsCodeSkillsRoot {
     return Join-Path -Path $env:USERPROFILE -ChildPath '.copilot\skills'
+}
+
+function Get-Mvp24HoursDevKitKiroSkillsRoot {
+    return Join-Path -Path $env:USERPROFILE -ChildPath '.kiro\skills'
 }
 
 function Get-Mvp24HoursDevKitCursorSkillPath {
@@ -33,16 +41,24 @@ function Get-Mvp24HoursDevKitVsCodeSkillPath {
     return Join-Path -Path (Get-Mvp24HoursDevKitVsCodeSkillsRoot) -ChildPath $script:Mvp24HoursDevKitSkillName
 }
 
+function Get-Mvp24HoursDevKitKiroSkillPath {
+    return Join-Path -Path (Get-Mvp24HoursDevKitKiroSkillsRoot) -ChildPath $script:Mvp24HoursDevKitSkillName
+}
+
 function Get-Mvp24HoursUserSkillsRoot {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('Cursor', 'VsCode')]
+        [ValidateSet('Cursor', 'VsCode', 'Kiro')]
         [string] $ConfigKind
     )
 
     if ($ConfigKind -eq 'Cursor') {
         return Get-Mvp24HoursDevKitCursorSkillsRoot
+    }
+
+    if ($ConfigKind -eq 'Kiro') {
+        return Get-Mvp24HoursDevKitKiroSkillsRoot
     }
 
     return Get-Mvp24HoursDevKitVsCodeSkillsRoot
@@ -54,6 +70,10 @@ function Get-Mvp24HoursDevKitCursorLegacySkillPath {
 
 function Get-Mvp24HoursDevKitVsCodeLegacySkillPath {
     return Join-Path -Path $env:USERPROFILE -ChildPath ".copilot\skills\$($script:Mvp24HoursDevKitLegacySkillName)"
+}
+
+function Get-Mvp24HoursDevKitKiroLegacySkillPath {
+    return Join-Path -Path $env:USERPROFILE -ChildPath ".kiro\skills\$($script:Mvp24HoursDevKitLegacySkillName)"
 }
 
 function Get-Mvp24HoursSkillRouterSourceDir {
@@ -253,6 +273,33 @@ function Get-Mvp24HoursVsCodeMcpServerEntry {
     }
 }
 
+function Get-Mvp24HoursKiroMcpServerEntry {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $RepoRoot
+    )
+
+    $normalizedRoot = ConvertTo-McpJsonPath -Path $RepoRoot
+    $projectPath = "$normalizedRoot/mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"
+
+    return [ordered]@{
+        command = 'dotnet'
+        args = @(
+            'run',
+            '--no-build',
+            '--configuration',
+            $script:Mvp24HoursDevKitMcpConfiguration,
+            '--project',
+            $projectPath
+        )
+        env = [ordered]@{
+            MVP24HOURS_REPO_ROOT = $normalizedRoot
+        }
+    }
+}
+
 function ConvertTo-OrderedHashtable {
     [CmdletBinding()]
     param(
@@ -331,7 +378,7 @@ function Merge-McpJsonServer {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('Cursor', 'VsCode')]
+        [ValidateSet('Cursor', 'VsCode', 'Kiro')]
         [string] $ConfigKind,
 
         [Parameter(Mandatory)]
@@ -342,7 +389,7 @@ function Merge-McpJsonServer {
         [hashtable] $ServerEntry
     )
 
-    $serversPropertyName = if ($ConfigKind -eq 'Cursor') { 'mcpServers' } else { 'servers' }
+    $serversPropertyName = if ($ConfigKind -eq 'VsCode') { 'servers' } else { 'mcpServers' }
     $config = Read-McpJsonConfig -ConfigPath $ConfigPath
     $servers = ConvertTo-OrderedHashtable -InputObject $config[$serversPropertyName]
 
@@ -356,7 +403,7 @@ function Remove-McpJsonServer {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('Cursor', 'VsCode')]
+        [ValidateSet('Cursor', 'VsCode', 'Kiro')]
         [string] $ConfigKind,
 
         [Parameter(Mandatory)]
@@ -369,7 +416,7 @@ function Remove-McpJsonServer {
         return $false
     }
 
-    $serversPropertyName = if ($ConfigKind -eq 'Cursor') { 'mcpServers' } else { 'servers' }
+    $serversPropertyName = if ($ConfigKind -eq 'VsCode') { 'servers' } else { 'mcpServers' }
     $config = Read-McpJsonConfig -ConfigPath $ConfigPath
     $servers = ConvertTo-OrderedHashtable -InputObject $config[$serversPropertyName]
 
@@ -538,7 +585,7 @@ function Install-Mvp24HoursCatalogSkills {
         [string] $RepoRoot,
 
         [Parameter(Mandatory)]
-        [ValidateSet('Cursor', 'VsCode')]
+        [ValidateSet('Cursor', 'VsCode', 'Kiro')]
         [string] $ConfigKind,
 
         [switch] $Force
@@ -577,7 +624,7 @@ function Uninstall-Mvp24HoursCatalogSkills {
         [string] $RepoRoot,
 
         [Parameter(Mandatory)]
-        [ValidateSet('Cursor', 'VsCode')]
+        [ValidateSet('Cursor', 'VsCode', 'Kiro')]
         [string] $ConfigKind
     )
 
