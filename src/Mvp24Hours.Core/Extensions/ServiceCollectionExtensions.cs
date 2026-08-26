@@ -11,7 +11,7 @@ namespace Mvp24Hours.Extensions;
 /// <summary>
 /// 
 /// </summary>
-public static class ServiceCollectionExtentions
+public static class ServiceCollectionExtensions
 {
     /// <summary>
     /// Checks if the type has already been added to the service collection

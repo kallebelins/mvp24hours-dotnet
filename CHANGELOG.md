@@ -80,6 +80,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - **`LockHandleBase.Dispose` / `DisposeAsync`**: lock release now occurs before marking
   `_disposed` (previously `ReleaseAsync` returned early and the resource remained held until expiration).
+- **Renamed `ServiceCollectionExtentions` → `ServiceCollectionExtensions`** (typo fix) in
+  `Mvp24Hours.Core` and `Mvp24Hours.WebAPI`. No shim was introduced (the API is only consumed via
+  extension-method syntax, so `services.AddX(...)` call sites are unaffected); only code that
+  referenced the type statically by its old name would need updating, and no such usage was found
+  in `samples/`, `templates/`, or `src/Tests/`.
 - **Build warnings zeroed in Release:** **~4235 → 0** (−100%). The first modernization pass
   reduced to ~969 and accepted the residual (~948) for a hygiene round; that debt
   was eliminated (nullable CS86xx in production and tests, LOGGEN002, CS0618/`MvpExecutionStrategy`,

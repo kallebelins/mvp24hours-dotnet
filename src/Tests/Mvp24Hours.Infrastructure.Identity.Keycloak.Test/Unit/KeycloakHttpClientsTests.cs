@@ -33,7 +33,7 @@ public sealed class KeycloakHttpClientsTests
                     """));
         KeycloakDiscoveryService service = CreateDiscoveryService(
             $"{server.Url}/realms/test",
-            new HttpClient());
+            CreateHttpClient());
 
         string first = await service.GetTokenEndpointAsync();
         string second = await service.GetTokenEndpointAsync();
@@ -52,7 +52,7 @@ public sealed class KeycloakHttpClientsTests
     {
         KeycloakDiscoveryService service = CreateDiscoveryService(
             "http://identity.example/realms/test",
-            new HttpClient(),
+            CreateHttpClient(),
             requireHttps: true);
 
         Func<Task> act = () => service.GetConfigurationAsync();
@@ -78,7 +78,7 @@ public sealed class KeycloakHttpClientsTests
         discovery.Setup(service => service.GetTokenEndpointAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync($"{server.Url}/token");
         KeycloakTokenClient client = new(
-            CreateHttpClientFactory(new HttpClient()),
+            CreateHttpClientFactory(CreateHttpClient()),
             discovery.Object);
 
         using HttpResponseMessage response = await client.RequestTokenAsync(
@@ -119,4 +119,7 @@ public sealed class KeycloakHttpClientsTests
             .Returns(client);
         return factory.Object;
     }
+
+    private static HttpClient CreateHttpClient(HttpMessageHandler? handler = null)
+        => new(handler ?? new SocketsHttpHandler());
 }

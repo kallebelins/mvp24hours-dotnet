@@ -44,7 +44,7 @@ namespace Mvp24Hours.WebAPI.Extensions;
 /// <summary>
 /// 
 /// </summary>
-public static class ServiceCollectionExtentions
+public static class ServiceCollectionExtensions
 {
     /// <summary>
     /// Adds IHttpContextAccessor and a request-scoped IUrlHelper

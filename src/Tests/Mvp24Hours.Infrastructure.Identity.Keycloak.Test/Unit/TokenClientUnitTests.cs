@@ -103,6 +103,9 @@ public sealed class TokenClientUnitTests
 
     private static TokenClient CreateClient(ClientCredentialsTokenRequest request)
     {
-        return new TokenClient(new HttpClient(), request);
+        return new TokenClient(CreateHttpClient(), request);
     }
+
+    private static HttpClient CreateHttpClient(HttpMessageHandler? handler = null)
+        => new(handler ?? new SocketsHttpHandler());
 }

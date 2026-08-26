@@ -303,7 +303,7 @@ public static class ApplicationBuilderExtensions
     /// </list>
     /// </para>
     /// <para>
-    /// Requires prior registration via <see cref="M:Mvp24Hours.WebAPI.Extensions.ServiceCollectionExtentions.AddMvp24HoursProblemDetails(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Mvp24Hours.WebAPI.Configuration.MvpProblemDetailsOptions})"/>.
+    /// Requires prior registration via <see cref="M:Mvp24Hours.WebAPI.Extensions.ServiceCollectionExtensions.AddMvp24HoursProblemDetails(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Mvp24Hours.WebAPI.Configuration.MvpProblemDetailsOptions})"/>.
     /// </para>
     /// </remarks>
     /// <example>
@@ -332,7 +332,7 @@ public static class ApplicationBuilderExtensions
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Requires prior configuration via <see cref="ServiceCollectionExtentions.AddMvp24HoursWebCors"/>.
+    /// Requires prior configuration via <see cref="ServiceCollectionExtensions.AddMvp24HoursWebCors"/>.
     /// </para>
     /// </remarks>
     /// <param name="builder">The application builder.</param>
@@ -795,7 +795,7 @@ public static class ApplicationBuilderExtensions
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Requires prior configuration via <see cref="ServiceCollectionExtentions.AddMvp24HoursWebSwagger"/>.
+    /// Requires prior configuration via <see cref="ServiceCollectionExtensions.AddMvp24HoursWebSwagger"/>.
     /// </para>
     /// </remarks>
     /// <param name="builder">The application builder.</param>
@@ -819,7 +819,7 @@ public static class ApplicationBuilderExtensions
     /// <remarks>
     /// <para>
     /// This method configures Swagger UI to display all API versions discovered via API versioning.
-    /// Requires prior configuration via <see cref="ServiceCollectionExtentions.AddMvp24HoursSwaggerWithVersioning"/>.
+    /// Requires prior configuration via <see cref="ServiceCollectionExtensions.AddMvp24HoursSwaggerWithVersioning"/>.
     /// </para>
     /// </remarks>
     /// <example>
@@ -877,7 +877,7 @@ public static class ApplicationBuilderExtensions
     /// <remarks>
     /// <para>
     /// ReDoc provides an alternative, more readable documentation interface.
-    /// Requires prior configuration via <see cref="ServiceCollectionExtentions.AddMvp24HoursSwaggerWithVersioning"/>.
+    /// Requires prior configuration via <see cref="ServiceCollectionExtensions.AddMvp24HoursSwaggerWithVersioning"/>.
     /// </para>
     /// <para>
     /// This implementation serves ReDoc via static HTML that loads the OpenAPI specification.
