@@ -31,6 +31,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Centralized package management (CPM)**: package versions now live in
   `src/Directory.Packages.props`; common build properties (`TargetFramework`, `LangVersion`,
   `Nullable`, `ImplicitUsings`) were centralized in `src/Directory.Build.props`.
+- **`Pipeline`/`PipelineAsync` — event handlers no longer fire-and-forget**: `RunEvents`/`RunEventsAsync`
+  previously dispatched each event handler via `Task.Factory.StartNew` without awaiting it and without a
+  `catch` block, so handlers could run after the pipeline had already continued (or completed) and any
+  exception they threw was silently swallowed. Event handlers now execute synchronously with the pipeline
+  flow, in registration order, before the pipeline proceeds. Exceptions raised by a handler are logged
+  (`Pipeline`/`PipelineAsync: Event handler {HandlerName} failure`) and, when `AllowPropagateException` is
+  `true`, rethrown — matching the behavior already used for pipeline operations and rollback. Consumers
+  relying on the previous "detached" timing (e.g. tests using `Task.Delay`/`Thread.Sleep` to wait for an
+  event handler) should no longer need that workaround.
 
 ### Security
 

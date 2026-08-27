@@ -658,6 +658,59 @@ public class PipelineTest
         Assert.NotNull(getExceptionOutOfRange);
     }
 
+    [Fact, Priority(19)]
+    public void RunEvents_HandlerExecutes_BeforePipelineContinues()
+    {
+        // arrange
+        Pipeline pipeline = new();
+        var executionOrder = new List<string>();
+
+        pipeline.AddInterceptors((input, e) => executionOrder.Add("event"), PipelineInterceptorType.PostOperation);
+        pipeline.Add(_ => executionOrder.Add("operation"));
+
+        // act
+        pipeline.Execute();
+
+        // assert
+        Assert.Equal(["operation", "event"], executionOrder);
+    }
+
+    [Fact, Priority(20)]
+    public void RunEvents_HandlerThrows_LogsErrorAndContinues()
+    {
+        // arrange
+        Pipeline pipeline = new(); // AllowPropagateException = false (default)
+        var afterHandlerRan = false;
+
+        pipeline.AddInterceptors((input, e) => throw new InvalidOperationException("Handler failure"), PipelineInterceptorType.PostOperation);
+        pipeline.Add(_ => { });
+
+        // act
+        var exception = Record.Exception(() => pipeline.Execute());
+        afterHandlerRan = true;
+
+        // assert
+        Assert.Null(exception);
+        Assert.True(afterHandlerRan);
+    }
+
+    [Fact, Priority(21)]
+    public void RunEvents_HandlerThrows_PropagatesWhenAllowPropagateExceptionTrue()
+    {
+        // arrange
+        Pipeline pipeline = new() { AllowPropagateException = true };
+
+        pipeline.AddInterceptors((input, e) => throw new InvalidOperationException("Handler failure"), PipelineInterceptorType.PostOperation);
+        pipeline.Add(_ => { });
+
+        // act
+        var exception = Record.Exception(() => pipeline.Execute());
+
+        // assert
+        Assert.NotNull(exception);
+        Assert.Equal("Handler failure", exception.Message);
+    }
+
     private class Person
     {
         public string Name { get; set; } = string.Empty;

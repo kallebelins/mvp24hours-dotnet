@@ -566,4 +566,54 @@ public class PipelineAsyncTest
         // assert
         Assert.Null(exception);
     }
+
+    [Fact, Priority(16)]
+    public async Task RunEventsAsync_HandlerExecutes_BeforePipelineContinues()
+    {
+        // arrange
+        PipelineAsync pipeline = new();
+        var executionOrder = new List<string>();
+
+        pipeline.AddInterceptors((input, e) => executionOrder.Add("event"), PipelineInterceptorType.PostOperation);
+        pipeline.Add(_ => executionOrder.Add("operation"));
+
+        // act
+        await pipeline.ExecuteAsync();
+
+        // assert
+        Assert.Equal(["operation", "event"], executionOrder);
+    }
+
+    [Fact, Priority(17)]
+    public async Task RunEventsAsync_HandlerThrows_LogsErrorAndContinues()
+    {
+        // arrange
+        PipelineAsync pipeline = new(); // AllowPropagateException = false (default)
+
+        pipeline.AddInterceptors((input, e) => throw new InvalidOperationException("Handler failure"), PipelineInterceptorType.PostOperation);
+        pipeline.Add(_ => { });
+
+        // act
+        var exception = await Record.ExceptionAsync(() => pipeline.ExecuteAsync());
+
+        // assert
+        Assert.Null(exception);
+    }
+
+    [Fact, Priority(18)]
+    public async Task RunEventsAsync_HandlerThrows_PropagatesWhenAllowPropagateExceptionTrue()
+    {
+        // arrange
+        PipelineAsync pipeline = new() { AllowPropagateException = true };
+
+        pipeline.AddInterceptors((input, e) => throw new InvalidOperationException("Handler failure"), PipelineInterceptorType.PostOperation);
+        pipeline.Add(_ => { });
+
+        // act
+        var exception = await Record.ExceptionAsync(() => pipeline.ExecuteAsync());
+
+        // assert
+        Assert.NotNull(exception);
+        Assert.Equal("Handler failure", exception.Message);
+    }
 }
