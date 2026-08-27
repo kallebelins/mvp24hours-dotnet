@@ -4,11 +4,11 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System.Linq.Expressions;
-using System.Reflection;
 using AutoMapper;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Mvp24Hours.Application.Logic.Internal;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
@@ -458,42 +458,46 @@ public abstract class ApplicationServiceBaseWithSeparateDtosAsync<TEntity, TDto,
     /// </summary>
     /// <param name="dto">The update DTO containing partial data.</param>
     /// <param name="entity">The existing entity to update.</param>
+    /// <remarks>
+    /// <para>
+    /// Property pairs are resolved by reflection once per <c>(TUpdateDto, TEntity)</c>
+    /// combination and cached for subsequent calls. A DTO property is only applied when the
+    /// entity exposes a public instance property with the same name, that property is
+    /// writable, and its type is assignable from the DTO property type.
+    /// </para>
+    /// <para>
+    /// <strong>Known limitations of this reflection-based PATCH:</strong>
+    /// <list type="number">
+    /// <item>
+    /// <description>
+    /// <strong>Null cannot be assigned.</strong> <c>null</c> is the "not informed" marker,
+    /// so there is no way to clear a value through PATCH. Use
+    /// <c>ModifyAsync</c> (full update) or override this method when clearing is required.
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <description>
+    /// <strong>Non-nullable value types are always applied.</strong> A default value such as
+    /// <c>int 0</c>, <c>bool false</c> or <c>DateTime.MinValue</c> is indistinguishable from
+    /// "informed as default", because the boxed value is never <c>null</c>. Declaring the DTO
+    /// property as nullable only helps when the entity property is nullable as well: the
+    /// entity property type must be assignable from the DTO property type, and
+    /// <c>int</c> is not assignable from <c>int?</c>.
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <description>
+    /// <strong>Unmatched, read-only and type-incompatible properties are ignored
+    /// silently.</strong> No exception is raised; a debug log entry is written once, when the
+    /// map is built for the type pair.
+    /// </description>
+    /// </item>
+    /// </list>
+    /// </para>
+    /// </remarks>
     protected virtual void ApplyPatchToEntity(TUpdateDto dto, TEntity entity)
     {
-        Type dtoType = typeof(TUpdateDto);
-        Type entityType = typeof(TEntity);
-
-        foreach (PropertyInfo dtoProperty in dtoType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-        {
-            if (!dtoProperty.CanRead)
-            {
-                continue;
-            }
-
-            object? dtoValue = dtoProperty.GetValue(dto);
-
-            // Skip null values for PATCH
-            if (dtoValue == null)
-            {
-                continue;
-            }
-
-            // Find matching property in entity
-            PropertyInfo? entityProperty = entityType.GetProperty(dtoProperty.Name, BindingFlags.Public | BindingFlags.Instance);
-            if (entityProperty == null || !entityProperty.CanWrite)
-            {
-                continue;
-            }
-
-            // Check if types are compatible
-            if (!entityProperty.PropertyType.IsAssignableFrom(dtoProperty.PropertyType))
-            {
-                continue;
-            }
-
-            // Apply the value
-            entityProperty.SetValue(entity, dtoValue);
-        }
+        PatchPropertyMap.Apply(typeof(TUpdateDto), typeof(TEntity), dto, entity, _logger);
     }
 
     #endregion

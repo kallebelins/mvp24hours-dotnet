@@ -87,6 +87,28 @@ public sealed class CustomerService(
         unitOfWork, mapper, entityValidator, createValidator, updateValidator);
 ```
 
+### PATCH semantics
+
+`Patch`/`PatchAsync` call the `protected virtual ApplyPatchToEntity(TUpdateDto, TEntity)`
+extension point. It copies each non-null DTO property to the entity property with the same
+name. The DTO-to-entity property pairs are resolved by reflection once per
+`(TUpdateDto, TEntity)` combination and cached, so repeated PATCH requests do not re-scan
+the types.
+
+A pair is only produced when the entity exposes a public instance property with the same
+name, that property is writable, and its type is assignable from the DTO property type.
+
+Known limitations of this default implementation:
+
+| Limitation | Effect | Workaround |
+|---|---|---|
+| `null` is the "not informed" marker | A field cannot be cleared through PATCH. | Use `Modify`/`ModifyAsync` (full update), or override `ApplyPatchToEntity`. |
+| Non-nullable value types are always applied | `int 0`, `bool false` and `DateTime.MinValue` are indistinguishable from "informed as default". | Declare **both** sides as nullable (`int?` on the DTO **and** on the entity): `int` is not assignable from `int?`, so a nullable DTO property over a non-nullable entity property is skipped instead. |
+| Unmatched, read-only and type-incompatible properties are skipped silently | No exception is raised. | A debug log entry is written once, when the map is built for the type pair. Enable `Debug` logging on the service to inspect it. |
+
+Override `ApplyPatchToEntity` when the domain needs different semantics (explicit null
+handling, per-field opt-in, JSON Patch, and so on).
+
 Register mapping and services separately when the unified module is unnecessary:
 
 ```csharp
