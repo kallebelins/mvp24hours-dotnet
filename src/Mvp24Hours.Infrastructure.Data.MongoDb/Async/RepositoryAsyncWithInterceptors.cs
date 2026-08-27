@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System.Linq.Expressions;
-using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -16,6 +15,7 @@ using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Base;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors;
+using Mvp24Hours.Infrastructure.Data.MongoDb.Internal;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb;
 
@@ -374,7 +374,7 @@ public class RepositoryAsyncWithInterceptors<T>(
     /// </summary>
     private static void PreserveCreationAuditFields(T entity, T entityDb)
     {
-        // Handle legacy IEntityLog<T>
+        // Handle legacy IEntityDateLog / IEntityLog<T>
         if (entity is IEntityDateLog entityDateLog && entityDb is IEntityDateLog entityDbDateLog)
         {
             entityDateLog.Created = entityDbDateLog.Created;
@@ -387,26 +387,10 @@ public class RepositoryAsyncWithInterceptors<T>(
             auditable.CreatedBy = auditableDb.CreatedBy;
         }
 
-        // Try to preserve for generic IEntityLog<T>
-        Type entityType = entity.GetType();
-        foreach (Type iface in entityType.GetInterfaces())
+        // Preserve CreatedBy for generic IEntityLog<T>
+        if (EntityLogAccessor.HasEntityLog(entity))
         {
-            if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IEntityLog<>))
-            {
-                CopyPropertyValue(entityDb, entity, "Created");
-                CopyPropertyValue(entityDb, entity, "CreatedBy");
-                break;
-            }
-        }
-    }
-
-    private static void CopyPropertyValue(object source, object target, string propertyName)
-    {
-        PropertyInfo? property = source.GetType().GetProperty(propertyName);
-        if (property != null && property.CanRead && property.CanWrite)
-        {
-            object? value = property.GetValue(source);
-            property.SetValue(target, value);
+            EntityLogAccessor.CopyPropertyValue(entityDb, entity, "CreatedBy");
         }
     }
 

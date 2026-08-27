@@ -78,6 +78,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **MongoDB `Repository`/`RepositoryAsync` `Remove` — broken soft delete**: the type check
+  `entity.GetType() == typeof(IEntityLog<>)` compared a closed runtime type against an open
+  generic definition, which is never true. As a result, `Remove` always hard-deleted the
+  document, even for entities implementing `IEntityLog<TForeignKey>`/`IEntityDateLog`.
+  **Behavior change**: `Remove`/`RemoveAsync` now perform a soft delete (sets `Removed`, and
+  `RemovedBy` when available) for any entity implementing `IEntityDateLog`, matching the
+  EF Core provider and the `SoftDeleteInterceptor`. Entities without `IEntityDateLog` continue
+  to be hard-deleted. `Modify`/`ModifyAsync` also had the equivalent invalid-cast fixed
+  (`(IEntityLog<object>)entity` failed for any `TForeignKey` other than `object`) and now
+  preserve `Created`/`CreatedBy`/`ModifiedBy` via reflection instead of `dynamic`.
+  `Repository.EntityLogBy`/`RepositoryAsync.EntityLogBy` no longer throw `NotSupportedException`;
+  they return `null` (no `RemovedBy` is set when unavailable, instead of blowing up the delete).
 - **`LockHandleBase.Dispose` / `DisposeAsync`**: lock release now occurs before marking
   `_disposed` (previously `ReleaseAsync` returned early and the resource remained held until expiration).
 - **Renamed `ServiceCollectionExtentions` → `ServiceCollectionExtensions`** (typo fix) in

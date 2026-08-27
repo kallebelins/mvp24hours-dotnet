@@ -277,4 +277,113 @@ public class RepositoryAsyncIntegrationTest(MongoDbIntegrationFixture fixture)
 
         await act.Should().ThrowAsync<NotSupportedException>();
     }
+
+    private RepositoryAsync<TestEntityLogOfString> CreateEntityLogRepository()
+    {
+        Mvp24HoursContext context = MongoDbIntegrationTestHelper.CreateContext(fixture);
+        return new RepositoryAsync<TestEntityLogOfString>(context, MongoDbIntegrationTestHelper.CreateRepositoryOptions());
+    }
+
+    private RepositoryAsync<TestDateLogOnlyEntity> CreateDateLogOnlyRepository()
+    {
+        Mvp24HoursContext context = MongoDbIntegrationTestHelper.CreateContext(fixture);
+        return new RepositoryAsync<TestDateLogOnlyEntity>(context, MongoDbIntegrationTestHelper.CreateRepositoryOptions());
+    }
+
+    private async Task CleanupEntityLogAsync()
+    {
+        IMongoCollection<TestEntityLogOfString> collection = fixture.GetCollection<TestEntityLogOfString>();
+        await collection.DeleteManyAsync(FilterDefinition<TestEntityLogOfString>.Empty);
+    }
+
+    private async Task CleanupDateLogOnlyAsync()
+    {
+        IMongoCollection<TestDateLogOnlyEntity> collection = fixture.GetCollection<TestDateLogOnlyEntity>();
+        await collection.DeleteManyAsync(FilterDefinition<TestDateLogOnlyEntity>.Empty);
+    }
+
+    [DockerFact]
+    public async Task RemoveAsync_EntityWithEntityLogOfString_SetsRemovedAndDoesNotDeleteDocument()
+    {
+        await CleanupEntityLogAsync();
+        RepositoryAsync<TestEntityLogOfString> repository = CreateEntityLogRepository();
+        var entity = new TestEntityLogOfString { Name = "Keep-Soft-Deleted", CreatedBy = "seed-user" };
+        await repository.AddAsync(entity);
+
+        await repository.RemoveAsync(entity);
+
+        (await repository.ListCountAsync()).Should().Be(1);
+        TestEntityLogOfString? stored = await repository.GetByIdAsync(entity.Id);
+        stored.Should().NotBeNull();
+        stored!.Removed.Should().NotBeNull();
+    }
+
+    [DockerFact]
+    public async Task RemoveAsync_EntityWithOnlyDateLog_SetsRemovedWithoutRemovedBy()
+    {
+        await CleanupDateLogOnlyAsync();
+        RepositoryAsync<TestDateLogOnlyEntity> repository = CreateDateLogOnlyRepository();
+        var entity = new TestDateLogOnlyEntity { Name = "DateLogOnly" };
+        await repository.AddAsync(entity);
+
+        await repository.RemoveAsync(entity);
+
+        TestDateLogOnlyEntity? stored = await repository.GetByIdAsync(entity.Id);
+        stored.Should().NotBeNull();
+        stored!.Removed.Should().NotBeNull();
+    }
+
+    [DockerFact]
+    public async Task RemoveAsync_EntityWithoutLog_DeletesDocument()
+    {
+        await CleanupAsync();
+        RepositoryAsync<TestEntity> repository = CreateRepository();
+        var entity = new TestEntity { Name = "HardDeleteMe" };
+        await repository.AddAsync(entity);
+
+        await repository.RemoveAsync(entity);
+
+        (await repository.ListCountAsync()).Should().Be(0);
+        (await repository.GetByIdAsync(entity.Id)).Should().BeNull();
+    }
+
+    [DockerFact]
+    public async Task RemoveAsync_EntityWithEntityLog_WhenEntityLogByUnavailable_DoesNotThrow()
+    {
+        await CleanupEntityLogAsync();
+        RepositoryAsync<TestEntityLogOfString> repository = CreateEntityLogRepository();
+        var entity = new TestEntityLogOfString { Name = "NoUserContext" };
+        await repository.AddAsync(entity);
+
+        Func<Task> act = () => repository.RemoveAsync(entity);
+
+        await act.Should().NotThrowAsync();
+        TestEntityLogOfString? stored = await repository.GetByIdAsync(entity.Id);
+        stored!.RemovedBy.Should().BeNull();
+    }
+
+    [DockerFact]
+    public async Task ModifyAsync_EntityWithEntityLogOfString_PreservesCreatedBy()
+    {
+        await CleanupEntityLogAsync();
+        RepositoryAsync<TestEntityLogOfString> repository = CreateEntityLogRepository();
+        DateTime originalCreated = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var entity = new TestEntityLogOfString { Name = "Original", CreatedBy = "original-user", Created = originalCreated };
+        await repository.AddAsync(entity);
+
+        var updated = new TestEntityLogOfString
+        {
+            Id = entity.Id,
+            Name = "Updated",
+            CreatedBy = "someone-else",
+            Created = default
+        };
+        await repository.ModifyAsync(updated);
+
+        TestEntityLogOfString? stored = await repository.GetByIdAsync(entity.Id);
+        stored.Should().NotBeNull();
+        stored!.Name.Should().Be("Updated");
+        stored.CreatedBy.Should().Be("original-user");
+        stored.Created.Should().Be(originalCreated);
+    }
 }

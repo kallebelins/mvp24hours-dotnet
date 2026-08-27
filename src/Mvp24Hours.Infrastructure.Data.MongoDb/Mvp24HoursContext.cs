@@ -30,7 +30,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb;
 /// </list>
 /// </para>
 /// </remarks>
-public class Mvp24HoursContext : IDisposable
+public class Mvp24HoursContext : IDisposable, IAsyncDisposable
 {
     #region [ Properties / Fields ]
     /// <summary>
@@ -89,7 +89,6 @@ public class Mvp24HoursContext : IDisposable
     protected MongoDbOptions Options { get; private set; }
 
     private readonly ILogger<Mvp24HoursContext>? _logger;
-    private bool _isTransactionAsync;
     #endregion
 
     #region [ Ctors ]
@@ -371,7 +370,6 @@ public class Mvp24HoursContext : IDisposable
         if (EnableTransaction)
         {
             Session.StartTransaction();
-            _isTransactionAsync = true;
         }
     }
 
@@ -403,26 +401,65 @@ public class Mvp24HoursContext : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        while (Session != null && Session.IsInTransaction)
+        if (!disposing || Session == null)
         {
-            Thread.Sleep(TimeSpan.FromMilliseconds(100));
+            return;
         }
 
+        if (Session.IsInTransaction)
+        {
+            try
+            {
+                Session.CommitTransaction();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "MongoDB context: failed to commit transaction during Dispose");
+                try
+                {
+                    Session.AbortTransaction();
+                }
+                catch (Exception abortEx)
+                {
+                    _logger?.LogError(abortEx, "MongoDB context: failed to abort transaction during Dispose");
+                }
+            }
+        }
+
+        Session.Dispose();
+    }
+
+    /// <summary>
+    /// Asynchronously commits any open transaction (or aborts it on failure) and disposes the session.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
         if (Session != null)
         {
             if (Session.IsInTransaction)
             {
-                if (_isTransactionAsync)
+                try
                 {
-                    Session.CommitTransactionAsync();
+                    await Session.CommitTransactionAsync().ConfigureAwait(false);
                 }
-                else
+                catch (Exception ex)
                 {
-                    Session.CommitTransaction();
+                    _logger?.LogError(ex, "MongoDB context: failed to commit transaction during DisposeAsync");
+                    try
+                    {
+                        await Session.AbortTransactionAsync().ConfigureAwait(false);
+                    }
+                    catch (Exception abortEx)
+                    {
+                        _logger?.LogError(abortEx, "MongoDB context: failed to abort transaction during DisposeAsync");
+                    }
                 }
             }
+
             Session.Dispose();
         }
+
+        GC.SuppressFinalize(this);
     }
 
     #endregion

@@ -15,6 +15,7 @@ using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Base;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
+using Mvp24Hours.Infrastructure.Data.MongoDb.Internal;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb;
 
@@ -257,13 +258,17 @@ public class RepositoryAsync<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRep
 
             // properties that can not be changed
 
-            if (entity is IEntityLog<object> entityLog && entityDb is IEntityLog<object> entityDbLog)
+            if (entity is IEntityDateLog dateLog && entityDb is IEntityDateLog dateLogDb)
             {
                 _logger?.LogDebug("Preserving audit fields for entity in collection {CollectionName}", typeof(T).Name);
-                entityLog.Created = entityDbLog.Created;
-                entityLog.CreatedBy = entityDbLog.CreatedBy;
-                entityLog.Modified = entityDbLog.Modified;
-                entityLog.ModifiedBy = entityDbLog.ModifiedBy;
+                dateLog.Created = dateLogDb.Created;
+                dateLog.Modified = dateLogDb.Modified;
+            }
+
+            if (EntityLogAccessor.HasEntityLog(entity))
+            {
+                EntityLogAccessor.CopyPropertyValue(entityDb, entity, "CreatedBy");
+                EntityLogAccessor.CopyPropertyValue(entityDb, entity, "ModifiedBy");
             }
 
             await dbEntities.ReplaceOneAsync(GetKeyFilter(entity), entity, cancellationToken: cancellationToken);
@@ -308,11 +313,14 @@ public class RepositoryAsync<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRep
                 return;
             }
 
-            if (entity is IEntityLog<object> entityLog)
+            if (entity is IEntityDateLog dateLog)
             {
                 _logger?.LogDebug("Performing soft delete for entity in collection {CollectionName}", typeof(T).Name);
-                entityLog.Removed = TimeZoneHelper.GetTimeZoneNow();
-                entityLog.RemovedBy = EntityLogBy;
+                dateLog.Removed = TimeZoneHelper.GetTimeZoneNow();
+                if (EntityLogBy != null && EntityLogAccessor.HasEntityLog(entity))
+                {
+                    EntityLogAccessor.TrySetPropertyValue(entity, "RemovedBy", EntityLogBy);
+                }
                 await ModifyAsync(entity, cancellationToken: cancellationToken);
             }
             else
@@ -415,7 +423,15 @@ public class RepositoryAsync<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRep
 
     #region [ Properties ]
 
-    protected override object? EntityLogBy => throw new NotSupportedException();
+    /// <summary>
+    /// Returns <c>null</c> because this repository does not track a current user by itself.
+    /// When <c>RemovedBy</c> (from <c>IEntityLog{TForeignKey}</c>) needs to be populated
+    /// on soft delete, use <c>ICurrentUserProvider</c> with
+    /// <see cref="Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors.AuditInterceptor"/> /
+    /// <see cref="Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors.SoftDeleteInterceptor"/>
+    /// via <see cref="RepositoryAsyncWithInterceptors{T}"/> instead.
+    /// </summary>
+    protected override object? EntityLogBy => null;
 
     #endregion
 }
