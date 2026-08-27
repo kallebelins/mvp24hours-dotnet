@@ -167,9 +167,10 @@ public class Repository<T>(Mvp24HoursContext dbContext, IOptions<MongoDbReposito
         {
             if (entities?.AnySafe() == true)
             {
-                foreach (T entity in entities)
+                var nonNullEntities = entities.Where(e => e != null).ToList();
+                if (nonNullEntities.Count > 0)
                 {
-                    Add(entity);
+                    dbEntities.InsertMany(nonNullEntities);
                 }
             }
         }

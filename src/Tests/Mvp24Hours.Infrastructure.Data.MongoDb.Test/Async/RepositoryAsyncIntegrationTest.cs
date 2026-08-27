@@ -239,6 +239,35 @@ public class RepositoryAsyncIntegrationTest(MongoDbIntegrationFixture fixture)
     }
 
     [DockerFact]
+    public async Task AddAsync_ListContainingNull_ShouldSkipNullAndInsertRest()
+    {
+        await CleanupAsync();
+        RepositoryAsync<TestEntity> repository = CreateRepository();
+        var entities = new List<TestEntity>
+        {
+            new() { Name = "Kept-1" },
+            null!,
+            new() { Name = "Kept-2" }
+        };
+
+        await repository.AddAsync(entities);
+
+        (await repository.ListCountAsync()).Should().Be(2);
+    }
+
+    [DockerFact]
+    public async Task AddAsync_EmptyList_ShouldNotThrow()
+    {
+        await CleanupAsync();
+        RepositoryAsync<TestEntity> repository = CreateRepository();
+
+        Func<Task> act = () => repository.AddAsync([]);
+
+        await act.Should().NotThrowAsync();
+        (await repository.ListCountAsync()).Should().Be(0);
+    }
+
+    [DockerFact]
     public async Task LoadRelationAsync_ShouldThrowNotSupportedException()
     {
         RepositoryAsync<TestEntity> repository = CreateRepository();

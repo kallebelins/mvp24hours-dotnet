@@ -226,9 +226,10 @@ public class RepositoryAsync<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRep
         {
             if (entities.AnySafe())
             {
-                foreach (T entity in entities)
+                var nonNullEntities = entities.Where(e => e != null).ToList();
+                if (nonNullEntities.Count > 0)
                 {
-                    await AddAsync(entity, cancellationToken: cancellationToken);
+                    await dbEntities.InsertManyAsync(nonNullEntities, cancellationToken: cancellationToken);
                 }
                 _logger?.LogDebug("Successfully added {Count} entities to collection {CollectionName}", entities.Count, typeof(T).Name);
             }
