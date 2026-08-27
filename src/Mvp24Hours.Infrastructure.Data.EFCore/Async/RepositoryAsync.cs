@@ -11,10 +11,10 @@ using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Entities;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
+using Mvp24Hours.Infrastructure.Data.EFCore.Internal;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore;
 
@@ -246,14 +246,16 @@ public class RepositoryAsync<T>(DbContext _dbContext, IOptions<EFCoreRepositoryO
 
         // properties that can not be changed
 
-        if (entity.GetType().InheritsOrImplements(typeof(IEntityLog<>)) || entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>)))
+        if (entity is IEntityDateLog dateLog && entityDb is IEntityDateLog dateLogDb)
         {
-            var entityLog = (dynamic)entity;
-            var entityDbLog = (dynamic)entityDb;
-            entityLog.Created = entityDbLog.Created;
-            entityLog.CreatedBy = entityDbLog.CreatedBy;
-            entityLog.Modified = entityDbLog.Modified;
-            entityLog.ModifiedBy = entityDbLog.ModifiedBy;
+            dateLog.Created = dateLogDb.Created;
+            dateLog.Modified = dateLogDb.Modified;
+        }
+
+        if (EntityLogAccessor.HasEntityLog(entity))
+        {
+            EntityLogAccessor.CopyPropertyValue(entityDb, entity, "CreatedBy");
+            EntityLogAccessor.CopyPropertyValue(entityDb, entity, "ModifiedBy");
         }
 
         dbContext.Entry(entityDb).CurrentValues.SetValues(entity);
@@ -276,18 +278,15 @@ public class RepositoryAsync<T>(DbContext _dbContext, IOptions<EFCoreRepositoryO
             return;
         }
 
-        bool hasUserLog = entity.GetType().InheritsOrImplements(typeof(IEntityLog<>))
-            || entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>));
+        bool hasUserLog = EntityLogAccessor.HasEntityLog(entity);
 
-        bool hasUserLogDate = hasUserLog || entity.GetType().InheritsOrImplements(typeof(IEntityDateLog));
-
-        if (hasUserLog || hasUserLogDate)
+        if (entity is IEntityDateLog dateLog)
         {
-            var entityLog = (dynamic)entity;
-            entityLog.Removed = TimeZoneHelper.GetTimeZoneNow();
+            dateLog.Removed = TimeZoneHelper.GetTimeZoneNow();
             if (hasUserLog)
             {
-                entityLog.RemovedBy = (dynamic)(EntityLogBy ?? throw new InvalidOperationException("EntityLogBy is not available."));
+                object removedBy = EntityLogBy ?? throw new InvalidOperationException("EntityLogBy is not available.");
+                EntityLogAccessor.TrySetPropertyValue(entity, "RemovedBy", removedBy);
             }
             await ModifyAsync(entity, cancellationToken);
         }

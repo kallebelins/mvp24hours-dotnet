@@ -6,9 +6,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Entities;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
+using Mvp24Hours.Infrastructure.Data.EFCore.Internal;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore;
 
@@ -84,37 +84,38 @@ public abstract class Mvp24HoursContext : DbContext
         foreach (EntityEntry? entry in ChangeTracker
             .Entries()
             .Where(e =>
-                (e.Entity.GetType().InheritsOrImplements(typeof(IEntityLog<>))
-                    || e.Entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>))
-                    || e.Entity.GetType().InheritsOrImplements(typeof(IEntityDateLog)))
+                e.Entity is IEntityDateLog
                 && (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted)))
         {
-            bool hasUserBy = (entry.Entity.GetType().InheritsOrImplements(typeof(IEntityLog<>))
-                    || entry.Entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>)));
+            if (entry.Entity is not IEntityDateLog dateLog)
+            {
+                continue;
+            }
 
-            var e = (dynamic)entry.Entity;
+            bool hasUserBy = EntityLogAccessor.HasEntityLog(entry.Entity);
+
             if (entry.State == EntityState.Added)
             {
-                e.Created = TimeZoneHelper.GetTimeZoneNow();
-                e.Modified = null;
-                e.Removed = null;
+                dateLog.Created = TimeZoneHelper.GetTimeZoneNow();
+                dateLog.Modified = null;
+                dateLog.Removed = null;
 
                 if (hasUserBy)
                 {
-                    e.CreatedBy = (dynamic?)EntityLogBy;
-                    e.ModifiedBy = null;
-                    e.RemovedBy = null;
+                    EntityLogAccessor.TrySetPropertyValue(entry.Entity, "CreatedBy", EntityLogBy);
+                    EntityLogAccessor.TrySetPropertyValue(entry.Entity, "ModifiedBy", null);
+                    EntityLogAccessor.TrySetPropertyValue(entry.Entity, "RemovedBy", null);
                 }
             }
             else if (entry.State == EntityState.Modified)
             {
-                if (e.Removed == null)
+                if (dateLog.Removed == null)
                 {
-                    e.Modified = TimeZoneHelper.GetTimeZoneNow();
+                    dateLog.Modified = TimeZoneHelper.GetTimeZoneNow();
 
                     if (hasUserBy)
                     {
-                        e.ModifiedBy = (dynamic?)EntityLogBy;
+                        EntityLogAccessor.TrySetPropertyValue(entry.Entity, "ModifiedBy", EntityLogBy);
                     }
                 }
             }

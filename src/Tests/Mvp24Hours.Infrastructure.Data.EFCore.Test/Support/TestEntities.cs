@@ -101,6 +101,11 @@ public class TestEntityLog : EntityBaseLog<int, string>
     public string Name { get; set; } = string.Empty;
 }
 
+public class TestEntityLogGuid : EntityBaseLog<int, Guid>
+{
+    public string Name { get; set; } = string.Empty;
+}
+
 public class TestDbContextNoLog(DbContextOptions options) : Mvp24HoursContext(options)
 {
     public override bool CanApplyEntityLog => false;
@@ -116,6 +121,7 @@ public class TestDbContextWithUser(DbContextOptions options, object? entityLogBy
     public override object? EntityLogBy { get; } = entityLogBy;
 
     public DbSet<TestEntityLog> EntityLogs => Set<TestEntityLog>();
+    public DbSet<TestEntityLogGuid> EntityLogsGuid => Set<TestEntityLogGuid>();
     public DbSet<TestLogEntity> LogEntities => Set<TestLogEntity>();
 }
 

@@ -2,7 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.ValueObjects.Logic;
+using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
+using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Test;
 
@@ -171,6 +173,127 @@ public class RepositoryAsyncTest : IDisposable
         await unitOfWork.SaveChangesAsync();
 
         (await repository.ListAnyAsync()).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ModifyAsync_TestEntityLog_ShouldPreserveCreatedAuditFields()
+    {
+        using ServiceProvider provider = CreateUserLogProvider();
+        using IServiceScope seedScope = provider.CreateScope();
+        IRepositoryAsync<TestEntityLog> seedRepository = seedScope.ServiceProvider.GetRequiredService<IRepositoryAsync<TestEntityLog>>();
+        IUnitOfWorkAsync seedUnitOfWork = seedScope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+        var entity = new TestEntityLog { Name = "Original", CreatedBy = "seed-user" };
+        await seedRepository.AddAsync(entity);
+        await seedUnitOfWork.SaveChangesAsync();
+        DateTime createdBeforeModify = entity.Created;
+
+        using IServiceScope scope = provider.CreateScope();
+        IRepositoryAsync<TestEntityLog> repository = scope.ServiceProvider.GetRequiredService<IRepositoryAsync<TestEntityLog>>();
+        IUnitOfWorkAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+        TestEntityLog persisted = (await repository.GetByIdAsync(entity.Id))!;
+        persisted.Name = "Changed";
+
+        await repository.ModifyAsync(persisted);
+        await unitOfWork.SaveChangesAsync();
+
+        TestEntityLog updated = (await repository.GetByIdAsync(entity.Id))!;
+        updated.Name.Should().Be("Changed");
+        updated.Created.Should().Be(createdBeforeModify);
+    }
+
+    [Fact]
+    public async Task ModifyAsync_TestEntityLogGuid_PreservesCreatedBy()
+    {
+        // Covers the case where IEntityLog<TForeignKey> is closed over a value type
+        // other than `object` (here Guid). A cast such as `(IEntityLog<object>)entity`
+        // would throw InvalidCastException for this entity; reflection-based access must not.
+        using ServiceProvider provider = CreateUserLogProvider();
+        using IServiceScope seedScope = provider.CreateScope();
+        IRepositoryAsync<TestEntityLogGuid> seedRepository = seedScope.ServiceProvider.GetRequiredService<IRepositoryAsync<TestEntityLogGuid>>();
+        IUnitOfWorkAsync seedUnitOfWork = seedScope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+        Guid createdBy = Guid.NewGuid();
+        var entity = new TestEntityLogGuid { Name = "Original", CreatedBy = createdBy };
+        await seedRepository.AddAsync(entity);
+        await seedUnitOfWork.SaveChangesAsync();
+
+        using IServiceScope scope = provider.CreateScope();
+        IRepositoryAsync<TestEntityLogGuid> repository = scope.ServiceProvider.GetRequiredService<IRepositoryAsync<TestEntityLogGuid>>();
+        IUnitOfWorkAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+        TestEntityLogGuid persisted = (await repository.GetByIdAsync(entity.Id))!;
+        persisted.Name = "Changed";
+
+        await repository.ModifyAsync(persisted);
+        await unitOfWork.SaveChangesAsync();
+
+        TestEntityLogGuid updated = (await repository.GetByIdAsync(entity.Id))!;
+        updated.Name.Should().Be("Changed");
+        updated.CreatedBy.Should().Be(createdBy);
+    }
+
+    [Fact]
+    public async Task RemoveAsync_TestEntityLog_ShouldSoftDeleteWithUser()
+    {
+        using ServiceProvider provider = CreateUserLogProvider();
+        using IServiceScope seedScope = provider.CreateScope();
+        IRepositoryAsync<TestEntityLog> seedRepository = seedScope.ServiceProvider.GetRequiredService<IRepositoryAsync<TestEntityLog>>();
+        IUnitOfWorkAsync seedUnitOfWork = seedScope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+        var entity = new TestEntityLog { Name = "ToRemove", CreatedBy = "seed-user" };
+        await seedRepository.AddAsync(entity);
+        await seedUnitOfWork.SaveChangesAsync();
+
+        using IServiceScope scope = provider.CreateScope();
+        IRepositoryAsync<TestEntityLog> repository = scope.ServiceProvider.GetRequiredService<IRepositoryAsync<TestEntityLog>>();
+        IUnitOfWorkAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+        TestDbContextWithFixedUser context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFixedUser>();
+
+        await repository.RemoveAsync((await repository.GetByIdAsync(entity.Id))!);
+        await unitOfWork.SaveChangesAsync();
+
+        (await repository.ListCountAsync()).Should().Be(0);
+        TestEntityLog? deleted = await context.EntityLogs.IgnoreQueryFilters().SingleOrDefaultAsync(e => e.Id == entity.Id);
+        deleted.Should().NotBeNull();
+        deleted!.Removed.Should().NotBeNull();
+        deleted.RemovedBy.Should().Be("operator");
+    }
+
+    [Fact]
+    public async Task RemoveAsync_TestEntityLog_WhenEntityLogByUnavailable_ThrowsInvalidOperationException()
+    {
+        // Seed with a context that has a valid EntityLogBy (Add/ApplyLogRules stamps CreatedBy
+        // from EntityLogBy), then exercise Remove from a second context pointed at the same
+        // in-memory database but without an EntityLogBy configured.
+        string databaseName = $"UserLogNullAsync_{Guid.NewGuid():N}";
+
+        using ServiceProvider seedProvider = CreateUserLogProvider(databaseName);
+        using IServiceScope seedScope = seedProvider.CreateScope();
+        IRepositoryAsync<TestEntityLog> seedRepository = seedScope.ServiceProvider.GetRequiredService<IRepositoryAsync<TestEntityLog>>();
+        IUnitOfWorkAsync seedUnitOfWork = seedScope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+        var entity = new TestEntityLog { Name = "ToRemove", CreatedBy = "seed-user" };
+        await seedRepository.AddAsync(entity);
+        await seedUnitOfWork.SaveChangesAsync();
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvp24HoursInMemoryDbContext<TestDbContextWithUser>(databaseName);
+        services.AddMvp24HoursRepositoryAsync(o => o.MaxQtyByQueryPage = 100);
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        using IServiceScope scope = provider.CreateScope();
+        IRepositoryAsync<TestEntityLog> repository = scope.ServiceProvider.GetRequiredService<IRepositoryAsync<TestEntityLog>>();
+
+        Func<Task> act = async () => await repository.RemoveAsync((await repository.GetByIdAsync(entity.Id))!);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("EntityLogBy is not available.");
+    }
+
+    private static ServiceProvider CreateUserLogProvider(string? databaseName = null)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvp24HoursInMemoryDbContext<TestDbContextWithFixedUser>(databaseName ?? $"UserLogAsync_{Guid.NewGuid():N}");
+        services.AddMvp24HoursRepositoryAsync(o => o.MaxQtyByQueryPage = 100);
+        return services.BuildServiceProvider();
     }
 
     private async Task<List<TestEntity>> SeedTestEntitiesAsync(int count)
