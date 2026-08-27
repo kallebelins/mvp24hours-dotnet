@@ -9,7 +9,7 @@ using Mvp24Hours.Core.Enums.Infrastructure;
 namespace Mvp24Hours.Core.Test.Helpers;
 
 /// <summary>
-/// Unit tests for ContantsHelper and TelemetryHelper.
+/// Unit tests for ConstantsHelper and TelemetryHelper.
 /// ReflectionHelper/ExpressionHelper/CryptoHelper do not exist — these are the remaining Core helpers.
 /// </summary>
 [Trait("Category", "Unit")]
@@ -35,12 +35,21 @@ public class HelpersAdvancedTest
 #pragma warning restore CS0618
     }
 
-    #region ContantsHelper
+    #region ConstantsHelper
 
     [Fact]
-    public void ContantsHelper_Data_MaxQtyByQueryPage_Is300()
+    public void ConstantsHelper_MaxQtyByQueryPage_Is300()
     {
-        ContantsHelper.Data.MaxQtyByQueryPage.Should().Be(300);
+        ConstantsHelper.Data.MaxQtyByQueryPage.Should().Be(300);
+    }
+
+    [Fact]
+    public void ContantsHelper_ObsoleteShim_MatchesConstantsHelper()
+    {
+        // intentional: covers the obsolete ContantsHelper shim until removal in v12
+#pragma warning disable CS0618
+        ContantsHelper.Data.MaxQtyByQueryPage.Should().Be(ConstantsHelper.Data.MaxQtyByQueryPage);
+#pragma warning restore CS0618
     }
 
     #endregion

@@ -29,7 +29,7 @@ public class RepositoryBaseTest
 
         var repository = new TestableRepositoryBase(context, null!);
 
-        repository.ExposedOptions.MaxQtyByQueryPage.Should().Be(ContantsHelper.Data.MaxQtyByQueryPage);
+        repository.ExposedOptions.MaxQtyByQueryPage.Should().Be(ConstantsHelper.Data.MaxQtyByQueryPage);
         repository.ExposedOptions.TransactionIsolationLevel.Should().BeNull();
     }
 

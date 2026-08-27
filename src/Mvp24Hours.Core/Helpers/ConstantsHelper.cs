@@ -7,21 +7,20 @@
 namespace Mvp24Hours.Core.Helpers;
 
 /// <summary>
-/// Obsolete shim kept for backward compatibility. Use <see cref="ConstantsHelper"/>.
+/// Framework-wide default constants.
 /// </summary>
-[Obsolete("Renamed to ConstantsHelper (typo fix). Will be removed in v12.")]
-public static class ContantsHelper
+public static class ConstantsHelper
 {
     /// <summary>
-    /// Obsolete shim kept for backward compatibility. Use <see cref="ConstantsHelper.Data"/>.
+    /// Data access defaults.
     /// </summary>
-    [Obsolete("Renamed to ConstantsHelper.Data. Will be removed in v12.")]
     public static class Data
     {
         /// <summary>
-        /// Obsolete shim kept for backward compatibility.
-        /// Use <see cref="ConstantsHelper.Data.MaxQtyByQueryPage"/>.
+        /// Default page size applied when the paging criteria does not set a limit.
+        /// This is a default, not a cap: <c>EFCoreRepositoryOptions.MaxQtyByQueryPage</c> /
+        /// <c>MongoDbRepositoryOptions.MaxQtyByQueryPage</c> override it per provider.
         /// </summary>
-        public const int MaxQtyByQueryPage = ConstantsHelper.Data.MaxQtyByQueryPage;
+        public const int MaxQtyByQueryPage = 300;
     }
 }

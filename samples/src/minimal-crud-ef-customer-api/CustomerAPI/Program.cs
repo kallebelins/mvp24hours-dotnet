@@ -72,7 +72,7 @@ app.MapGet("/customer", async Task<IResult> (
     // apply filter with pagination
     var repository = uoW.GetRepository<Customer>();
     var criteria = pagingCriteria.ToPagingCriteria();
-    int limit = criteria.Limit > 0 ? criteria.Limit : ContantsHelper.Data.MaxQtyByQueryPage;
+    int limit = criteria.Limit > 0 ? criteria.Limit : ConstantsHelper.Data.MaxQtyByQueryPage;
     int offset = criteria.Offset;
     int totalCount = await repository.GetByCountAsync(clause, cancellationToken);
     int totalPages = (int)Math.Ceiling((double)totalCount / limit);

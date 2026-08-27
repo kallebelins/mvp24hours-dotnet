@@ -38,9 +38,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 public sealed class EFCoreRepositoryOptions
 {
     /// <summary>
-    /// Maximum number of records per query page. Default is defined in ContantsHelper.Data.MaxQtyByQueryPage.
+    /// Maximum number of records per query page. Default is defined in ConstantsHelper.Data.MaxQtyByQueryPage.
     /// </summary>
-    public int MaxQtyByQueryPage { get; set; } = ContantsHelper.Data.MaxQtyByQueryPage;
+    public int MaxQtyByQueryPage { get; set; } = ConstantsHelper.Data.MaxQtyByQueryPage;
 
     /// <summary>
     /// Transaction isolation level for repository operations. Default is null (uses database default).

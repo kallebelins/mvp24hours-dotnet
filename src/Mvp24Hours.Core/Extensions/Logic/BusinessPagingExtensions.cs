@@ -135,7 +135,7 @@ public static class BusinessPagingExtensions
     public static IPagingResult<IList<TEntity>> ToBusinessPaging<TEntity>(this IRepository<TEntity> repository, Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria = null, int? maxQtyByQueryDefault = null)
         where TEntity : class, IEntityBase
     {
-        int limit = maxQtyByQueryDefault ?? ContantsHelper.Data.MaxQtyByQueryPage;
+        int limit = maxQtyByQueryDefault ?? ConstantsHelper.Data.MaxQtyByQueryPage;
         int offset = 0;
 
         if (criteria != null)
@@ -164,7 +164,7 @@ public static class BusinessPagingExtensions
     public static IPagingResult<IList<TEntity>> ToBusinessPaging<TEntity>(this IRepository<TEntity> repository, IPagingCriteria? criteria = null, int? maxQtyByQueryDefault = null)
         where TEntity : class, IEntityBase
     {
-        int limit = maxQtyByQueryDefault ?? ContantsHelper.Data.MaxQtyByQueryPage;
+        int limit = maxQtyByQueryDefault ?? ConstantsHelper.Data.MaxQtyByQueryPage;
         int offset = 0;
 
         if (criteria != null)

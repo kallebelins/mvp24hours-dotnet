@@ -85,6 +85,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **`AwsSecretsManagerProvider`**: `FallbackCredentialsFactory` → `DefaultAWSCredentialsIdentityResolver`
   (AWSSDK.Core v4).
 
+### Deprecated
+
+- **`ContantsHelper` → `ConstantsHelper`** (typo fix, `Mvp24Hours.Core.Helpers`). The correctly
+  spelled `ConstantsHelper` is now the canonical type and is used across production code, tests,
+  samples, and docs. `ContantsHelper` (with `ContantsHelper.Data`) remains as an `[Obsolete]` shim
+  whose `MaxQtyByQueryPage` forwards to `ConstantsHelper.Data.MaxQtyByQueryPage`, so existing
+  consumers keep compiling with a warning. The shim will be removed in v12 — replace
+  `ContantsHelper.Data.MaxQtyByQueryPage` with `ConstantsHelper.Data.MaxQtyByQueryPage`.
+  The constant value (300) and its visibility are unchanged, and it remains a default (not a cap),
+  overridable per provider via `EFCoreRepositoryOptions.MaxQtyByQueryPage` /
+  `MongoDbRepositoryOptions.MaxQtyByQueryPage`.
+
 ### Fixed
 
 - **MongoDB `Repository`/`RepositoryAsync` `Remove` — broken soft delete**: the type check

@@ -13,7 +13,7 @@ public class EFCoreRepositoryOptionsTest
     {
         var options = new EFCoreRepositoryOptions();
 
-        options.MaxQtyByQueryPage.Should().Be(ContantsHelper.Data.MaxQtyByQueryPage);
+        options.MaxQtyByQueryPage.Should().Be(ConstantsHelper.Data.MaxQtyByQueryPage);
         options.TransactionIsolationLevel.Should().BeNull();
         options.DefaultTrackingBehavior.Should().Be(QueryTrackingBehavior.TrackAll);
         options.UseSplitQueries.Should().BeFalse();

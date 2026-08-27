@@ -169,7 +169,7 @@ public static class BusinessPagingAsyncExtensions
     public static async Task<IPagingResult<IList<TEntity>>> ToBusinessPagingAsync<TEntity>(this IRepositoryAsync<TEntity> repository, Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria = null, int? maxQtyByQueryDefault = null)
         where TEntity : class, IEntityBase
     {
-        int limit = maxQtyByQueryDefault ?? ContantsHelper.Data.MaxQtyByQueryPage;
+        int limit = maxQtyByQueryDefault ?? ConstantsHelper.Data.MaxQtyByQueryPage;
         int offset = 0;
 
         if (criteria != null)
@@ -198,7 +198,7 @@ public static class BusinessPagingAsyncExtensions
     public static async Task<IPagingResult<IList<TEntity>>> ToBusinessPagingAsync<TEntity>(this IRepositoryAsync<TEntity> repository, IPagingCriteria? criteria = null, int? maxQtyByQueryDefault = null)
         where TEntity : class, IEntityBase
     {
-        int limit = maxQtyByQueryDefault ?? ContantsHelper.Data.MaxQtyByQueryPage;
+        int limit = maxQtyByQueryDefault ?? ConstantsHelper.Data.MaxQtyByQueryPage;
         int offset = 0;
 
         if (criteria != null)

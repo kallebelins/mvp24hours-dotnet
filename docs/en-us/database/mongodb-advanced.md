@@ -46,11 +46,11 @@ builder.Services.AddMvp24HoursRepositoryAsync(options =>
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| MaxQtyByQueryPage | int | `ContantsHelper.Data.MaxQtyByQueryPage` (300) | Page size applied when the paging criteria does not set a limit. |
+| MaxQtyByQueryPage | int | `ConstantsHelper.Data.MaxQtyByQueryPage` (300) | Page size applied when the paging criteria does not set a limit. |
 
 ### Changing the default page size
 
-`ContantsHelper.Data.MaxQtyByQueryPage` (300) is only the framework default. Configure `MongoDbRepositoryOptions.MaxQtyByQueryPage` at registration time instead of patching the framework.
+`ConstantsHelper.Data.MaxQtyByQueryPage` (300) is only the framework default. Configure `MongoDbRepositoryOptions.MaxQtyByQueryPage` at registration time instead of patching the framework.
 
 ```csharp
 // Before: default page size (300) applied by RepositoryBase.GetQuery

@@ -23,7 +23,7 @@ builder.Services.AddMvp24HoursRepositoryAsync(options =>
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| MaxQtyByQueryPage | int | `ContantsHelper.Data.MaxQtyByQueryPage` (300) | Page size applied when the paging criteria does not set a limit. |
+| MaxQtyByQueryPage | int | `ConstantsHelper.Data.MaxQtyByQueryPage` (300) | Page size applied when the paging criteria does not set a limit. |
 | TransactionIsolationLevel | IsolationLevel? | `null` | Transaction isolation, or provider default. |
 | DefaultTrackingBehavior | QueryTrackingBehavior | `TrackAll` | Default EF query tracking. |
 | UseSplitQueries | bool | `false` | Uses split queries for includes. |
@@ -36,7 +36,7 @@ builder.Services.AddMvp24HoursRepositoryAsync(options =>
 
 ### Changing the default page size
 
-`ContantsHelper.Data.MaxQtyByQueryPage` (300) is only the framework default. You do not need to fork or patch the framework to change it — configure `EFCoreRepositoryOptions.MaxQtyByQueryPage` at registration time.
+`ConstantsHelper.Data.MaxQtyByQueryPage` (300) is only the framework default. You do not need to fork or patch the framework to change it — configure `EFCoreRepositoryOptions.MaxQtyByQueryPage` at registration time.
 
 ```csharp
 // Before: default page size (300) applied by RepositoryBase.GetQuery
