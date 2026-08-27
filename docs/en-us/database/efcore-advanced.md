@@ -23,7 +23,7 @@ builder.Services.AddMvp24HoursRepositoryAsync(options =>
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| MaxQtyByQueryPage | int | `ContantsHelper.Data.MaxQtyByQueryPage` | Maximum page size. |
+| MaxQtyByQueryPage | int | `ContantsHelper.Data.MaxQtyByQueryPage` (300) | Page size applied when the paging criteria does not set a limit. |
 | TransactionIsolationLevel | IsolationLevel? | `null` | Transaction isolation, or provider default. |
 | DefaultTrackingBehavior | QueryTrackingBehavior | `TrackAll` | Default EF query tracking. |
 | UseSplitQueries | bool | `false` | Uses split queries for includes. |
@@ -33,6 +33,43 @@ builder.Services.AddMvp24HoursRepositoryAsync(options =>
 | SlowQueryThresholdMs | int | `1000` | Slow-query threshold; `0` disables it. |
 | StreamingBufferSize | int | `100` | Default streaming buffer size. |
 | UseAutoMapperProjection | bool | `false` | Enables AutoMapper `ProjectTo` projections. |
+
+### Changing the default page size
+
+`ContantsHelper.Data.MaxQtyByQueryPage` (300) is only the framework default. You do not need to fork or patch the framework to change it — configure `EFCoreRepositoryOptions.MaxQtyByQueryPage` at registration time.
+
+```csharp
+// Before: default page size (300) applied by RepositoryBase.GetQuery
+builder.Services.AddMvp24HoursRepositoryAsync();
+
+// After: 100 records per page for every repository resolved from this container
+builder.Services.AddMvp24HoursRepositoryAsync(options => options.MaxQtyByQueryPage = 100);
+```
+
+The same `Action<EFCoreRepositoryOptions>` parameter is available on `AddMvp24HoursRepository`, `AddMvp24HoursRepositoryWithEvents`, `AddMvp24HoursStreamingRepositoryAsync`, `AddMvp24HoursBulkOperationsRepositoryAsync`, `AddMvp24HoursReadOnlyRepository`, `AddMvp24HoursReadOnlyRepositoryAsync`, `AddMvp24HoursCqrsRepositories`, `AddMvp24HoursReadOptimizedRepository`, `AddMvp24HoursWriteOptimizedRepository`, and `AddMvp24HoursDevRepository`.
+
+To bind the value from `appsettings.json`, read it in the registration delegate:
+
+```csharp
+builder.Services.AddMvp24HoursRepositoryAsync(options =>
+    options.MaxQtyByQueryPage = builder.Configuration.GetValue("Mvp24Hours:Paging:MaxPageSize", 100));
+```
+
+How the effective page size is resolved in `RepositoryBase.GetQuery`:
+
+| Situation | Effective limit |
+|---|---|
+| `criteria` is `null` | `Options.MaxQtyByQueryPage` |
+| `criteria.Limit > 0` | `criteria.Limit` |
+| `criteria.Limit <= 0` | `Options.MaxQtyByQueryPage` |
+
+So the option is a default, not a hard cap: a caller passing `PagingCriteria(limit: 5000, offset: 0)` gets 5000 records. Enforce an upper bound at the API boundary when it matters.
+
+The `ToBusinessPaging`/`ToBusinessPagingAsync` extensions in `Mvp24Hours.Core` do not read `EFCoreRepositoryOptions`. They fall back to the constant and accept a per-call override:
+
+```csharp
+IPagingResult<IList<Customer>> result = repository.ToBusinessPaging(criteria, maxQtyByQueryDefault: 100);
+```
 
 ## Resilience
 

@@ -46,7 +46,44 @@ builder.Services.AddMvp24HoursRepositoryAsync(options =>
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| MaxQtyByQueryPage | int | `ContantsHelper.Data.MaxQtyByQueryPage` | Maximum page size. |
+| MaxQtyByQueryPage | int | `ContantsHelper.Data.MaxQtyByQueryPage` (300) | Page size applied when the paging criteria does not set a limit. |
+
+### Changing the default page size
+
+`ContantsHelper.Data.MaxQtyByQueryPage` (300) is only the framework default. Configure `MongoDbRepositoryOptions.MaxQtyByQueryPage` at registration time instead of patching the framework.
+
+```csharp
+// Before: default page size (300) applied by RepositoryBase.GetQuery
+builder.Services.AddMvp24HoursRepositoryAsync();
+
+// After: 100 documents per page for every repository resolved from this container
+builder.Services.AddMvp24HoursRepositoryAsync(repositoryOptions => repositoryOptions.MaxQtyByQueryPage = 100);
+```
+
+The same `Action<MongoDbRepositoryOptions>` parameter is available on `AddMvp24HoursRepository`, `AddMvp24HoursRepositoryAsyncWithInterceptors`, `AddMvp24HoursBulkOperationsRepositoryAsync`, `AddMvp24HoursBulkOperationsRepositoryAsyncWithInterceptors`, `AddMvp24HoursReadOnlyRepository`, `AddMvp24HoursReadOnlyRepositoryAsync`, and `AddMvp24HoursReadOnlyRepositories`.
+
+To bind the value from `appsettings.json`, read it in the registration delegate:
+
+```csharp
+builder.Services.AddMvp24HoursRepositoryAsync(repositoryOptions =>
+    repositoryOptions.MaxQtyByQueryPage = builder.Configuration.GetValue("Mvp24Hours:Paging:MaxPageSize", 100));
+```
+
+How the effective page size is resolved in `RepositoryBase.GetQuery`:
+
+| Situation | Effective limit |
+|---|---|
+| `criteria` is `null` | `Options.MaxQtyByQueryPage` |
+| `criteria.Limit > 0` | `criteria.Limit` |
+| `criteria.Limit <= 0` | `Options.MaxQtyByQueryPage` |
+
+So the option is a default, not a hard cap: a caller passing `PagingCriteria(limit: 5000, offset: 0)` gets 5000 documents. Enforce an upper bound at the API boundary when it matters.
+
+The `ToBusinessPaging`/`ToBusinessPagingAsync` extensions in `Mvp24Hours.Core` do not read `MongoDbRepositoryOptions`. They fall back to the constant and accept a per-call override:
+
+```csharp
+IPagingResult<IList<Customer>> result = await repository.ToBusinessPagingAsync(criteria, maxQtyByQueryDefault: 100);
+```
 
 ## Interceptors and multi-tenancy
 
