@@ -197,5 +197,25 @@ public class MediatorTest
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
     }
+
+    [Fact, Priority(13)]
+    public async Task SendAsync_CalledTwiceForSameRequestType_ReusesWrapper()
+    {
+        // Arrange - the underlying request handler wrapper is cached per request type
+        // (see Mediator._requestWrappers). Sending two different instances of the same
+        // request type must produce correct, independent results both times.
+        var firstCommand = new TestCommand { Name = "First", Value = 1 };
+        var secondCommand = new TestCommand { Name = "Second", Value = 2 };
+
+        // Act
+        string firstResult = await _mediator.SendAsync(firstCommand);
+        string secondResult = await _mediator.SendAsync(secondCommand);
+
+        // Assert
+        Assert.Contains("First", firstResult);
+        Assert.Contains("1", firstResult);
+        Assert.Contains("Second", secondResult);
+        Assert.Contains("2", secondResult);
+    }
 }
 

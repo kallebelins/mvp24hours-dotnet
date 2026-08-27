@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
@@ -32,6 +33,23 @@ public sealed class Mediator(IServiceProvider serviceProvider) : IMediator
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
+    /// <summary>
+    /// Cache of <see cref="RequestHandlerWrapperBase{TResponse}"/> instances keyed by request type.
+    /// Wrapper instances are stateless (see remarks on the wrapper classes), so they can be
+    /// safely created once per request type and reused across requests and threads.
+    /// </summary>
+    private static readonly ConcurrentDictionary<Type, object> _requestWrappers = new();
+
+    /// <summary>
+    /// Cache of <see cref="NotificationHandlerWrapperBase"/> instances keyed by notification type.
+    /// </summary>
+    private static readonly ConcurrentDictionary<Type, NotificationHandlerWrapperBase> _notificationWrappers = new();
+
+    /// <summary>
+    /// Cache of <see cref="StreamRequestHandlerWrapperBase{TResponse}"/> instances keyed by request type.
+    /// </summary>
+    private static readonly ConcurrentDictionary<Type, object> _streamWrappers = new();
+
     /// <inheritdoc />
     public async Task<TResponse> SendAsync<TResponse>(IMediatorRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
@@ -40,9 +58,12 @@ public sealed class Mediator(IServiceProvider serviceProvider) : IMediator
         Type requestType = request.GetType();
         Type responseType = typeof(TResponse);
 
-        // Create the wrapper for the specific request type
-        Type wrapperType = typeof(RequestHandlerWrapper<,>).MakeGenericType(requestType, responseType);
-        var wrapper = (RequestHandlerWrapperBase<TResponse>)Activator.CreateInstance(wrapperType)!;
+        // Reuse the wrapper for the specific request type instead of creating a new instance per call.
+        var wrapper = (RequestHandlerWrapperBase<TResponse>)_requestWrappers.GetOrAdd(
+            requestType,
+            static (_, state) => Activator.CreateInstance(
+                typeof(RequestHandlerWrapper<,>).MakeGenericType(state.requestType, state.responseType))!,
+            (requestType, responseType));
 
         return await wrapper.Handle(request, _serviceProvider, cancellationToken);
     }
@@ -55,9 +76,11 @@ public sealed class Mediator(IServiceProvider serviceProvider) : IMediator
 
         Type notificationType = notification.GetType();
 
-        // Create the wrapper for the specific notification type
-        Type wrapperType = typeof(NotificationHandlerWrapper<>).MakeGenericType(notificationType);
-        var wrapper = (NotificationHandlerWrapperBase)Activator.CreateInstance(wrapperType)!;
+        // Reuse the wrapper for the specific notification type instead of creating a new instance per call.
+        NotificationHandlerWrapperBase wrapper = _notificationWrappers.GetOrAdd(
+            notificationType,
+            static notificationType => (NotificationHandlerWrapperBase)Activator.CreateInstance(
+                typeof(NotificationHandlerWrapper<>).MakeGenericType(notificationType))!);
 
         await wrapper.Handle(notification, _serviceProvider, cancellationToken);
     }
@@ -72,9 +95,12 @@ public sealed class Mediator(IServiceProvider serviceProvider) : IMediator
         Type requestType = request.GetType();
         Type responseType = typeof(TResponse);
 
-        // Create the wrapper for the specific stream request type
-        Type wrapperType = typeof(StreamRequestHandlerWrapper<,>).MakeGenericType(requestType, responseType);
-        var wrapper = (StreamRequestHandlerWrapperBase<TResponse>)Activator.CreateInstance(wrapperType)!;
+        // Reuse the wrapper for the specific stream request type instead of creating a new instance per call.
+        var wrapper = (StreamRequestHandlerWrapperBase<TResponse>)_streamWrappers.GetOrAdd(
+            requestType,
+            static (_, state) => Activator.CreateInstance(
+                typeof(StreamRequestHandlerWrapper<,>).MakeGenericType(state.requestType, state.responseType))!,
+            (requestType, responseType));
 
         await foreach (TResponse? item in wrapper.Handle(request, _serviceProvider, cancellationToken).WithCancellation(cancellationToken))
         {
