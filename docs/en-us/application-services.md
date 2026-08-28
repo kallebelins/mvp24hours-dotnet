@@ -83,9 +83,13 @@ public sealed class CustomerService(
     IValidator<CreateCustomerDto>? createValidator = null,
     IValidator<UpdateCustomerDto>? updateValidator = null)
     : ApplicationServiceBaseWithSeparateDtosAsync<
-        Customer, CustomerDto, CreateCustomerDto, UpdateCustomerDto, IUnitOfWorkAsync>(
+        Customer, CustomerDto, CreateCustomerDto, UpdateCustomerDto>(
         unitOfWork, mapper, entityValidator, createValidator, updateValidator);
 ```
+
+> The `SeparateDtos` bases take **four** type parameters. The unit of work is not a type parameter:
+> the constructor accepts `IUnitOfWorkAsync` (or `IUnitOfWork` in the sync base) directly, and the
+> `protected virtual UnitOfWork` property is typed by that interface.
 
 ### Logging
 

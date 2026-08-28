@@ -60,6 +60,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
     the other bases (`"[{ServiceName}] Executing ListAny for {EntityType}"`). Consumers matching on the
     old literal message text must update their filters. The `application-*` message style remains in the
     DTO/Bulk bases and in the cache/event/validation support types — unchanged in this release.
+- **`ApplicationServiceBaseWithSeparateDtos` / `ApplicationServiceBaseWithSeparateDtosAsync` — one less
+  type parameter (breaking in generic arity)**: the `TUoW` type parameter was removed, so the bases now
+  take **four** type parameters (`TEntity, TDto, TCreateDto, TUpdateDto`) instead of five. The constructors
+  accept `IUnitOfWork` (sync) and `IUnitOfWorkAsync` (async) directly, in the same parameter order, and the
+  `protected virtual UnitOfWork` property is now typed as `IUnitOfWork`/`IUnitOfWorkAsync` instead of `TUoW`.
+  Derived classes only need to drop the last type argument:
+  `ApplicationServiceBaseWithSeparateDtosAsync<Customer, CustomerDto, CreateCustomerDto, UpdateCustomerDto, IUnitOfWorkAsync>`
+  becomes `ApplicationServiceBaseWithSeparateDtosAsync<Customer, CustomerDto, CreateCustomerDto, UpdateCustomerDto>`.
+  Code that overrode `UnitOfWork` to return a concrete unit-of-work type must widen the return type to the
+  interface. No method signature, log message, or runtime behavior changed. The other bases
+  (`ApplicationServiceBase`, `ApplicationServiceBaseWithDto`, `QueryServiceBase`, `CommandServiceBase`,
+  `RepositoryService`, `Bulk*`) keep their `TUoW` parameter.
 
 ### Security
 

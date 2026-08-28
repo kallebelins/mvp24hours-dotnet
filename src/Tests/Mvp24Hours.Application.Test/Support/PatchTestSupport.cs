@@ -59,7 +59,7 @@ public class PatchTestUpdateDto
 /// Sync service that exposes the protected PATCH extension point for direct assertions.
 /// </summary>
 public sealed class PatchProbeService(IUnitOfWork unitOfWork, IMapper mapper)
-    : ApplicationServiceBaseWithSeparateDtos<PatchTestEntity, PatchTestDto, PatchTestCreateDto, PatchTestUpdateDto, IUnitOfWork>(
+    : ApplicationServiceBaseWithSeparateDtos<PatchTestEntity, PatchTestDto, PatchTestCreateDto, PatchTestUpdateDto>(
         unitOfWork, mapper, null, null, null)
 {
     public void ApplyPatch(PatchTestUpdateDto dto, PatchTestEntity entity)
@@ -72,7 +72,7 @@ public sealed class PatchProbeService(IUnitOfWork unitOfWork, IMapper mapper)
 /// Async service that exposes the protected PATCH extension point for direct assertions.
 /// </summary>
 public sealed class PatchProbeServiceAsync(IUnitOfWorkAsync unitOfWork, IMapper mapper)
-    : ApplicationServiceBaseWithSeparateDtosAsync<PatchTestEntity, PatchTestDto, PatchTestCreateDto, PatchTestUpdateDto, IUnitOfWorkAsync>(
+    : ApplicationServiceBaseWithSeparateDtosAsync<PatchTestEntity, PatchTestDto, PatchTestCreateDto, PatchTestUpdateDto>(
         unitOfWork, mapper, null, null, null)
 {
     public void ApplyPatch(PatchTestUpdateDto dto, PatchTestEntity entity)

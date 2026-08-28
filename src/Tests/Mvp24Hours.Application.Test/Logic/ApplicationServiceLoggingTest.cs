@@ -276,7 +276,7 @@ internal sealed class LoggingProbeServiceWithDto(IUnitOfWork unitOfWork, IMapper
 }
 
 internal sealed class LoggingProbeServiceWithSeparateDtos(IUnitOfWork unitOfWork, IMapper mapper, ILogger? logger)
-    : ApplicationServiceBaseWithSeparateDtos<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto, IUnitOfWork>(
+    : ApplicationServiceBaseWithSeparateDtos<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto>(
         unitOfWork, mapper, null, null, null, logger)
 {
     public ILogger LoggerForTest => Logger;
@@ -319,7 +319,7 @@ internal sealed class LoggingProbeServiceWithDtoAsync(IUnitOfWorkAsync unitOfWor
 }
 
 internal sealed class LoggingProbeServiceWithSeparateDtosAsync(IUnitOfWorkAsync unitOfWork, IMapper mapper, ILogger? logger)
-    : ApplicationServiceBaseWithSeparateDtosAsync<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto, IUnitOfWorkAsync>(
+    : ApplicationServiceBaseWithSeparateDtosAsync<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto>(
         unitOfWork, mapper, null, null, null, logger)
 {
     public ILogger LoggerForTest => Logger;

@@ -26,7 +26,6 @@ namespace Mvp24Hours.Application.Logic;
 /// <typeparam name="TDto">The DTO type used for read operations (queries).</typeparam>
 /// <typeparam name="TCreateDto">The DTO type used for create operations.</typeparam>
 /// <typeparam name="TUpdateDto">The DTO type used for update operations.</typeparam>
-/// <typeparam name="TUoW">The unit of work type.</typeparam>
 /// <remarks>
 /// <para>
 /// This class provides a complete implementation with separate DTO types for different operations,
@@ -55,10 +54,9 @@ namespace Mvp24Hours.Application.Logic;
 ///     Customer, 
 ///     CustomerDto,           // For reads - includes all fields
 ///     CreateCustomerDto,     // For creates - excludes Id, CreatedAt
-///     UpdateCustomerDto,     // For updates - only editable fields
-///     MyDbContext&gt;
+///     UpdateCustomerDto&gt;     // For updates - only editable fields
 /// {
-///     public CustomerService(MyDbContext unitOfWork, IMapper mapper) 
+///     public CustomerService(IUnitOfWork unitOfWork, IMapper mapper) 
 ///         : base(unitOfWork, mapper) { }
 /// }
 /// </code>
@@ -76,8 +74,8 @@ namespace Mvp24Hours.Application.Logic;
 /// <param name="updateDtoValidator">The validator for update DTO validation.</param>
 /// <param name="logger">The logger for logging operations. When omitted, logging is disabled via <see cref="NullLogger.Instance"/>.</param>
 /// <exception cref="ArgumentNullException">Thrown when unitOfWork or mapper is null.</exception>
-public abstract class ApplicationServiceBaseWithSeparateDtos<TEntity, TDto, TCreateDto, TUpdateDto, TUoW>(
-    TUoW unitOfWork,
+public abstract class ApplicationServiceBaseWithSeparateDtos<TEntity, TDto, TCreateDto, TUpdateDto>(
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     IValidator<TEntity>? entityValidator,
     IValidator<TCreateDto>? createDtoValidator,
@@ -89,12 +87,11 @@ public abstract class ApplicationServiceBaseWithSeparateDtos<TEntity, TDto, TCre
     where TDto : class
     where TCreateDto : class
     where TUpdateDto : class
-    where TUoW : class, IUnitOfWork
 {
     #region [ Properties / Fields ]
 
     private readonly IRepository<TEntity> _repository = unitOfWork.GetRepository<TEntity>();
-    private readonly TUoW _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+    private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     private readonly IMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     private readonly IValidator<TEntity>? _entityValidator = entityValidator;
     private readonly IValidator<TCreateDto>? _createDtoValidator = createDtoValidator;
@@ -104,7 +101,7 @@ public abstract class ApplicationServiceBaseWithSeparateDtos<TEntity, TDto, TCre
     /// <summary>
     /// Gets the unit of work instance for managing transactions.
     /// </summary>
-    protected virtual TUoW UnitOfWork => _unitOfWork;
+    protected virtual IUnitOfWork UnitOfWork => _unitOfWork;
 
     /// <summary>
     /// Gets the repository instance for data access operations.
@@ -147,7 +144,7 @@ public abstract class ApplicationServiceBaseWithSeparateDtos<TEntity, TDto, TCre
     /// <param name="unitOfWork">The unit of work for transaction management.</param>
     /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
     /// <exception cref="ArgumentNullException">Thrown when unitOfWork or mapper is null.</exception>
-    protected ApplicationServiceBaseWithSeparateDtos(TUoW unitOfWork, IMapper mapper)
+    protected ApplicationServiceBaseWithSeparateDtos(IUnitOfWork unitOfWork, IMapper mapper)
         : this(unitOfWork, mapper, null, null, null)
     {
     }
@@ -159,7 +156,7 @@ public abstract class ApplicationServiceBaseWithSeparateDtos<TEntity, TDto, TCre
     /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
     /// <param name="entityValidator">The validator for entity validation.</param>
     /// <exception cref="ArgumentNullException">Thrown when unitOfWork or mapper is null.</exception>
-    protected ApplicationServiceBaseWithSeparateDtos(TUoW unitOfWork, IMapper mapper, IValidator<TEntity>? entityValidator)
+    protected ApplicationServiceBaseWithSeparateDtos(IUnitOfWork unitOfWork, IMapper mapper, IValidator<TEntity>? entityValidator)
         : this(unitOfWork, mapper, entityValidator, null, null)
     {
     }

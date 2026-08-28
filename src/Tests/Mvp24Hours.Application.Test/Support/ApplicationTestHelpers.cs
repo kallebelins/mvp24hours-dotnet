@@ -155,7 +155,7 @@ public sealed class TestApplicationServiceWithSeparateDtosAsync(
     IValidator<AppTestEntity>? entityValidator = null,
     IValidator<AppTestCreateDto>? createValidator = null,
     IValidator<AppTestUpdateDto>? updateValidator = null)
-        : ApplicationServiceBaseWithSeparateDtosAsync<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto, IUnitOfWorkAsync>(unitOfWork, mapper, entityValidator, createValidator, updateValidator)
+        : ApplicationServiceBaseWithSeparateDtosAsync<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto>(unitOfWork, mapper, entityValidator, createValidator, updateValidator)
 {
 }
 
@@ -175,7 +175,7 @@ public sealed class TestApplicationServiceWithDto(IUnitOfWork unitOfWork, IMappe
 {
 }
 
-public sealed class TestApplicationServiceWithSeparateDtos(IUnitOfWork unitOfWork, IMapper mapper, IValidator<AppTestEntity>? entityValidator = null, IValidator<AppTestCreateDto>? createValidator = null, IValidator<AppTestUpdateDto>? updateValidator = null) : ApplicationServiceBaseWithSeparateDtos<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto, IUnitOfWork>(unitOfWork, mapper, entityValidator, createValidator, updateValidator)
+public sealed class TestApplicationServiceWithSeparateDtos(IUnitOfWork unitOfWork, IMapper mapper, IValidator<AppTestEntity>? entityValidator = null, IValidator<AppTestCreateDto>? createValidator = null, IValidator<AppTestUpdateDto>? updateValidator = null) : ApplicationServiceBaseWithSeparateDtos<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto>(unitOfWork, mapper, entityValidator, createValidator, updateValidator)
 {
 }
 
