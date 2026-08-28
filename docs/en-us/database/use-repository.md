@@ -60,6 +60,36 @@ await repository.ModifyAsync(customer, cancellationToken: cancellationToken);
 await unitOfWork.SaveChangesAsync(cancellationToken);
 ```
 
+## Strongly-typed identifiers
+
+`GetById` and `RemoveById` take `object`, so a wrong identifier type only fails at runtime. `IRepository<T, TId>` and `IRepositoryAsync<T, TId>` add typed overloads for entities that declare their identifier through `IEntity<TId>`:
+
+```csharp
+public class Customer : EntityBase<int>, IEntity<int>
+{
+    public string Name { get; set; } = string.Empty;
+}
+
+public sealed class CustomerStore(IRepositoryAsync<Customer, int> repository)
+{
+    public Task<Customer?> FindAsync(int id, CancellationToken cancellationToken) =>
+        repository.GetByIdAsync(id, cancellationToken);
+}
+```
+
+This contract is optional and additive:
+
+- It inherits the whole surface of `IRepository<T>` / `IRepositoryAsync<T>`, so nothing is lost by depending on it.
+- The typed members delegate to the `object`-based members, which remain the real implementation and remain supported. Existing code does not need to change.
+- Typed members: `GetById(TId)`, `GetById(TId, IPagingCriteria?)`, `RemoveById(TId)`, `RemoveById(IList<TId>)`, plus the `Async` counterparts.
+
+`AddMvp24HoursRepository` and `AddMvp24HoursRepositoryAsync` register it automatically for EF Core and MongoDB. Two constraints to keep in mind:
+
+- Resolve it from the container, not from the unit of work. `GetRepository<T>()` has a single type parameter and always returns `IRepository<T>`.
+- Passing a custom `repository` / `repositoryAsync` type to the registration methods leaves the typed contract unregistered, since a one-parameter implementation has no two-parameter counterpart to map to. Register `IRepository<,>` yourself in that case.
+
+`IEntityBase.EntityKey` stays `object?`, so the identifier is still boxed inside the repository; the gain is compile-time checking and a boxing-free call site.
+
 ## Relations
 
 `LoadRelation` / `LoadRelationAsync` load a reference or collection explicitly. Collection overloads support a filter and limit, plus ascending and descending variants.

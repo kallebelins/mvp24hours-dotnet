@@ -28,6 +28,54 @@ public class EFCoreServiceExtensionsTest
     }
 
     [Fact]
+    public void AddMvp24HoursRepository_ShouldRegisterTypedIdContractAlongsideUntyped()
+    {
+        var services = new ServiceCollection();
+        services.AddMvp24HoursRepository();
+
+        services.Should().Contain(d =>
+            d.ServiceType == typeof(IRepository<>) &&
+            d.ImplementationType == typeof(Repository<>));
+        services.Should().Contain(d =>
+            d.ServiceType == typeof(IRepository<,>) &&
+            d.ImplementationType == typeof(Repository<,>));
+    }
+
+    [Fact]
+    public void AddMvp24HoursRepositoryAsync_ShouldRegisterTypedIdContractAlongsideUntyped()
+    {
+        var services = new ServiceCollection();
+        services.AddMvp24HoursRepositoryAsync();
+
+        services.Should().Contain(d =>
+            d.ServiceType == typeof(IRepositoryAsync<>) &&
+            d.ImplementationType == typeof(RepositoryAsync<>));
+        services.Should().Contain(d =>
+            d.ServiceType == typeof(IRepositoryAsync<,>) &&
+            d.ImplementationType == typeof(RepositoryAsync<,>));
+    }
+
+    [Fact]
+    public void AddMvp24HoursRepository_WithCustomRepositoryType_ShouldNotRegisterTypedIdContract()
+    {
+        var services = new ServiceCollection();
+        services.AddMvp24HoursRepository(repository: typeof(Repository<>));
+
+        // A custom one-parameter repository has no two-parameter counterpart to map to, so the
+        // typed contract stays unregistered instead of silently bypassing the customization.
+        services.Should().NotContain(d => d.ServiceType == typeof(IRepository<,>));
+    }
+
+    [Fact]
+    public void AddMvp24HoursRepositoryAsync_WithCustomRepositoryType_ShouldNotRegisterTypedIdContract()
+    {
+        var services = new ServiceCollection();
+        services.AddMvp24HoursRepositoryAsync(repositoryAsync: typeof(RepositoryAsync<>));
+
+        services.Should().NotContain(d => d.ServiceType == typeof(IRepositoryAsync<,>));
+    }
+
+    [Fact]
     public void AddMvp24HoursRepositoryAsync_ShouldResolveAsyncServices()
     {
         using ServiceProvider provider = EfCoreTestHelpers.CreateAsyncServices();

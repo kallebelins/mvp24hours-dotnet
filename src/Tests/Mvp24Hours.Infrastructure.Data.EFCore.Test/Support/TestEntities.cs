@@ -24,6 +24,7 @@ public class TestDbContext : Mvp24HoursContext
     public DbSet<TestTenantEntity> TenantEntities => Set<TestTenantEntity>();
     public DbSet<TestVersionedEntity> VersionedEntities => Set<TestVersionedEntity>();
     public DbSet<TestDomainEventEntity> DomainEventEntities => Set<TestDomainEventEntity>();
+    public DbSet<TestTypedEntity> TypedEntities => Set<TestTypedEntity>();
 }
 
 public class TestEntity : EntityBase<int>
@@ -31,6 +32,17 @@ public class TestEntity : EntityBase<int>
     public string Name { get; set; } = string.Empty;
     public bool Active { get; set; } = true;
     public int Score { get; set; }
+}
+
+/// <summary>
+/// Entity that declares a strongly-typed identifier through <see cref="IEntity{TId}"/>,
+/// which is the constraint required by <c>IRepository&lt;T, TId&gt;</c>.
+/// <see cref="EntityBase{TKey}"/> only implements <see cref="IEntityBase"/>, so the marker
+/// has to be declared explicitly; <c>Id</c> already satisfies it.
+/// </summary>
+public class TestTypedEntity : EntityBase<int>, IEntity<int>
+{
+    public string Name { get; set; } = string.Empty;
 }
 
 public class TestLogEntity : EntityBase<int>, IEntityDateLog

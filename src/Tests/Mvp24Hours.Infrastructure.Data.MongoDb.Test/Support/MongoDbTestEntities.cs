@@ -182,6 +182,29 @@ public class TestEntity : IEntityBase
 }
 
 /// <summary>
+/// Entity that declares a strongly-typed identifier through <see cref="IEntity{TId}"/>, which is
+/// the constraint required by <c>IRepository&lt;T, TId&gt;</c> / <c>IRepositoryAsync&lt;T, TId&gt;</c>.
+/// </summary>
+public class TestTypedEntity : IEntityBase, IEntity<ObjectId>
+{
+    public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
+
+    public string Name { get; set; } = string.Empty;
+
+    public object EntityKey => Id;
+
+    public IReadOnlyCollection<MessageResult> GetNotifications()
+    {
+        return [];
+    }
+
+    public bool HasNotifications()
+    {
+        return false;
+    }
+}
+
+/// <summary>
 /// Entity implementing <see cref="IEntityLog{TForeignKey}"/> with a <see cref="string"/>
 /// foreign key. Used to exercise the soft-delete/audit path in
 /// <see cref="Mvp24Hours.Infrastructure.Data.MongoDb.Repository{T}"/> /

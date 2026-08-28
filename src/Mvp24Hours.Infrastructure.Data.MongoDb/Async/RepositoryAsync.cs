@@ -436,3 +436,48 @@ public class RepositoryAsync<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRep
     #endregion
 }
 
+
+/// <summary>
+///  <see cref="IRepositoryAsync{T, TId}"/>
+/// </summary>
+/// <remarks>
+/// Additive wrapper over <see cref="RepositoryAsync{T}"/>. Every typed member delegates to the
+/// <see cref="object"/>-based member of the base class, so each operation keeps a single
+/// real implementation and cannot diverge in behavior.
+/// </remarks>
+public class RepositoryAsync<T, TId>(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options, ILogger<RepositoryAsync<T, TId>>? logger = null)
+    : RepositoryAsync<T>(dbContext, options, logger), IRepositoryAsync<T, TId>
+    where T : class, IEntityBase, IEntity<TId>
+{
+    /// <summary>
+    ///  <see cref="IRepositoryAsync{T, TId}.GetByIdAsync(TId, CancellationToken)"/>
+    /// </summary>
+    public Task<T?> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
+    {
+        return base.GetByIdAsync((object)id!, cancellationToken);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepositoryAsync{T, TId}.GetByIdAsync(TId, IPagingCriteria, CancellationToken)"/>
+    /// </summary>
+    public Task<T?> GetByIdAsync(TId id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
+    {
+        return base.GetByIdAsync((object)id!, criteria, cancellationToken);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepositoryAsync{T, TId}.RemoveByIdAsync(TId, CancellationToken)"/>
+    /// </summary>
+    public Task RemoveByIdAsync(TId id, CancellationToken cancellationToken = default)
+    {
+        return base.RemoveByIdAsync((object)id!, cancellationToken);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepositoryAsync{T, TId}.RemoveByIdAsync(IList{TId}, CancellationToken)"/>
+    /// </summary>
+    public Task RemoveByIdAsync(IList<TId> ids, CancellationToken cancellationToken = default)
+    {
+        return base.RemoveByIdAsync(ids?.Cast<object>().ToList()!, cancellationToken);
+    }
+}

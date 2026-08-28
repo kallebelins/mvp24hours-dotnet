@@ -477,3 +477,48 @@ public class Repository<T>(DbContext dbContext, IOptions<EFCoreRepositoryOptions
 
     #endregion
 }
+
+/// <summary>
+///  <see cref="IRepository{T, TId}"/>
+/// </summary>
+/// <remarks>
+/// Additive wrapper over <see cref="Repository{T}"/>. Every typed member delegates to the
+/// <see cref="object"/>-based member of the base class, so each operation keeps a single
+/// real implementation and cannot diverge in behavior.
+/// </remarks>
+public class Repository<T, TId>(DbContext dbContext, IOptions<EFCoreRepositoryOptions> options, ILogger<Repository<T, TId>>? logger = null)
+    : Repository<T>(dbContext, options, logger), IRepository<T, TId>
+    where T : class, IEntityBase, IEntity<TId>
+{
+    /// <summary>
+    ///  <see cref="IRepository{T, TId}.GetById(TId)"/>
+    /// </summary>
+    public T? GetById(TId id)
+    {
+        return base.GetById((object)id!);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepository{T, TId}.GetById(TId, IPagingCriteria)"/>
+    /// </summary>
+    public T? GetById(TId id, IPagingCriteria? criteria)
+    {
+        return base.GetById((object)id!, criteria);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepository{T, TId}.RemoveById(TId)"/>
+    /// </summary>
+    public void RemoveById(TId id)
+    {
+        base.RemoveById((object)id!);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepository{T, TId}.RemoveById(IList{TId})"/>
+    /// </summary>
+    public void RemoveById(IList<TId> ids)
+    {
+        base.RemoveById(ids?.Cast<object>().ToList()!);
+    }
+}

@@ -230,6 +230,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **CronJob resilient distributed locking**: `ResilientCronJobService<T>` now supports optional
   cluster-safe execution lock acquisition through `IDistributedCronJobLock`, with skip metrics/logging
   on contention and guaranteed async disposal of lock handles.
+- **Repository contracts with strongly-typed identifiers**: new optional `IRepository<T, TId>` and
+  `IRepositoryAsync<T, TId>` in `Mvp24Hours.Core.Contract.Data`, for entities that declare their
+  identifier through `IEntity<TId>`. They inherit the full surface of `IRepository<T>` /
+  `IRepositoryAsync<T>` and add only `GetById(TId)`, `GetById(TId, IPagingCriteria?)`,
+  `RemoveById(TId)`, `RemoveById(IList<TId>)` and the `Async` counterparts.
+  - Purely **additive**: `IRepository<T>` / `IRepositoryAsync<T>` are unchanged, the `object`-based
+    members remain the real implementation (the typed members delegate to them) and are not obsolete,
+    and `IEntityBase.EntityKey` remains `object?`. No existing consumer needs to change.
+  - Implemented by EF Core and MongoDB as `Repository<T, TId>` / `RepositoryAsync<T, TId>`, derived
+    from the existing one-parameter classes so current subclasses (including
+    `BulkOperationsRepositoryAsync`) are untouched.
+  - `AddMvp24HoursRepository` / `AddMvp24HoursRepositoryAsync` register the typed contract alongside the
+    untyped one in both providers. Resolve it from the container: `IUnitOfWork.GetRepository<T>()` has a
+    single type parameter and still returns `IRepository<T>`. When a custom `repository` /
+    `repositoryAsync` type is supplied, the typed contract is intentionally left unregistered, because a
+    one-parameter implementation has no two-parameter counterpart and defaulting would silently bypass
+    the customization.
 
 ### Changed (incremental updates)
 
