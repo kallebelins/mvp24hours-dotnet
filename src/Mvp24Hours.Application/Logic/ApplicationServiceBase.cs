@@ -7,12 +7,12 @@ using System.Linq.Expressions;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Mvp24Hours.Application.Logic.Internal;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Extensions;
 
 namespace Mvp24Hours.Application.Logic;
 
@@ -67,10 +67,8 @@ public abstract class ApplicationServiceBase<TEntity, TUoW>(TUoW unitOfWork, IVa
 {
     #region [ Properties / Fields ]
 
-    private readonly IRepository<TEntity> _repository = unitOfWork.GetRepository<TEntity>();
+    private readonly ServiceOperations<TEntity> _operations = new(unitOfWork, validator, logger ?? NullLogger.Instance);
     private readonly TUoW _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-    private readonly IValidator<TEntity>? _validator = validator;
-    private readonly ILogger _logger = logger ?? NullLogger.Instance;
 
     /// <summary>
     /// Gets the unit of work instance for managing transactions.
@@ -80,18 +78,18 @@ public abstract class ApplicationServiceBase<TEntity, TUoW>(TUoW unitOfWork, IVa
     /// <summary>
     /// Gets the repository instance for data access operations.
     /// </summary>
-    protected virtual IRepository<TEntity> Repository => _repository;
+    protected virtual IRepository<TEntity> Repository => _operations.Repository;
 
     /// <summary>
     /// Gets the validator instance for entity validation.
     /// </summary>
-    protected virtual IValidator<TEntity>? Validator => _validator;
+    protected virtual IValidator<TEntity>? Validator => _operations.Validator;
 
     /// <summary>
     /// Gets the logger instance for logging operations. Never <see langword="null"/>:
     /// falls back to <see cref="NullLogger.Instance"/> when no logger is supplied.
     /// </summary>
-    protected virtual ILogger Logger => _logger;
+    protected virtual ILogger Logger => _operations.Logger;
 
     #endregion
 
@@ -125,15 +123,13 @@ public abstract class ApplicationServiceBase<TEntity, TUoW>(TUoW unitOfWork, IVa
     /// <inheritdoc/>
     public virtual IBusinessResult<bool> ListAny()
     {
-        _logger.LogDebug("[{ServiceName}] Executing ListAny for {EntityType}", GetType().Name, typeof(TEntity).Name);
-        return _repository.ListAny().ToBusiness();
+        return _operations.ListAny(GetType().Name);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> ListCount()
     {
-        _logger.LogDebug("[{ServiceName}] Executing ListCount for {EntityType}", GetType().Name, typeof(TEntity).Name);
-        return _repository.ListCount().ToBusiness();
+        return _operations.ListCount(GetType().Name);
     }
 
     /// <inheritdoc/>
@@ -145,22 +141,19 @@ public abstract class ApplicationServiceBase<TEntity, TUoW>(TUoW unitOfWork, IVa
     /// <inheritdoc/>
     public virtual IBusinessResult<IList<TEntity>> List(IPagingCriteria? criteria)
     {
-        _logger.LogDebug("[{ServiceName}] Executing List for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
-        return _repository.List(criteria).ToBusiness();
+        return _operations.List(GetType().Name, criteria);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<bool> GetByAny(Expression<Func<TEntity, bool>> clause)
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetByAny for {EntityType}", GetType().Name, typeof(TEntity).Name);
-        return _repository.GetByAny(clause).ToBusiness();
+        return _operations.GetByAny(GetType().Name, clause);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> GetByCount(Expression<Func<TEntity, bool>> clause)
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetByCount for {EntityType}", GetType().Name, typeof(TEntity).Name);
-        return _repository.GetByCount(clause).ToBusiness();
+        return _operations.GetByCount(GetType().Name, clause);
     }
 
     /// <inheritdoc/>
@@ -172,8 +165,7 @@ public abstract class ApplicationServiceBase<TEntity, TUoW>(TUoW unitOfWork, IVa
     /// <inheritdoc/>
     public virtual IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria)
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetBy for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
-        return _repository.GetBy(clause, criteria).ToBusiness();
+        return _operations.GetBy(GetType().Name, clause, criteria);
     }
 
     /// <inheritdoc/>
@@ -185,8 +177,7 @@ public abstract class ApplicationServiceBase<TEntity, TUoW>(TUoW unitOfWork, IVa
     /// <inheritdoc/>
     public virtual IBusinessResult<TEntity?> GetById(object id, IPagingCriteria? criteria)
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetById for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
-        return _repository.GetById(id, criteria).ToBusiness();
+        return _operations.GetById(GetType().Name, id, criteria);
     }
 
     #endregion
@@ -196,135 +187,49 @@ public abstract class ApplicationServiceBase<TEntity, TUoW>(TUoW unitOfWork, IVa
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Add(TEntity entity)
     {
-        _logger.LogDebug("[{ServiceName}] Executing Add for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        IList<IMessageResult> errors = entity.TryValidate(_validator);
-        if (!errors.AnySafe())
-        {
-            _repository.Add(entity);
-            return _unitOfWork.SaveChanges().ToBusiness();
-        }
-        return errors.ToBusiness<int>();
+        return _operations.Add(GetType().Name, entity);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Add(IList<TEntity> entities)
     {
-        _logger.LogDebug("[{ServiceName}] Executing Add for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
-
-        if (!entities.AnySafe())
-        {
-            return 0.ToBusiness();
-        }
-
-        foreach (TEntity entity in entities)
-        {
-            IList<IMessageResult> errors = entity.TryValidate(_validator);
-            if (errors.AnySafe())
-            {
-                return errors.ToBusiness<int>();
-            }
-        }
-
-        foreach (TEntity entity in entities)
-        {
-            _repository.Add(entity);
-        }
-
-        return _unitOfWork.SaveChanges().ToBusiness();
+        return _operations.Add(GetType().Name, entities);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Modify(TEntity entity)
     {
-        _logger.LogDebug("[{ServiceName}] Executing Modify for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        IList<IMessageResult> errors = entity.TryValidate(_validator);
-        if (!errors.AnySafe())
-        {
-            _repository.Modify(entity);
-            return _unitOfWork.SaveChanges().ToBusiness();
-        }
-        return errors.ToBusiness<int>();
+        return _operations.Modify(GetType().Name, entity);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Modify(IList<TEntity> entities)
     {
-        _logger.LogDebug("[{ServiceName}] Executing Modify for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
-
-        if (!entities.AnySafe())
-        {
-            return 0.ToBusiness();
-        }
-
-        foreach (TEntity entity in entities)
-        {
-            IList<IMessageResult> errors = entity.TryValidate(_validator);
-            if (errors.AnySafe())
-            {
-                return errors.ToBusiness<int>();
-            }
-        }
-
-        foreach (TEntity entity in entities)
-        {
-            _repository.Modify(entity);
-        }
-
-        return _unitOfWork.SaveChanges().ToBusiness();
+        return _operations.Modify(GetType().Name, entities);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Remove(TEntity entity)
     {
-        _logger.LogDebug("[{ServiceName}] Executing Remove for {EntityType}", GetType().Name, typeof(TEntity).Name);
-        _repository.Remove(entity);
-        return _unitOfWork.SaveChanges().ToBusiness();
+        return _operations.Remove(GetType().Name, entity);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Remove(IList<TEntity> entities)
     {
-        _logger.LogDebug("[{ServiceName}] Executing Remove for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
-
-        if (!entities.AnySafe())
-        {
-            return 0.ToBusiness();
-        }
-
-        foreach (TEntity entity in entities)
-        {
-            _repository.Remove(entity);
-        }
-
-        return _unitOfWork.SaveChanges().ToBusiness();
+        return _operations.Remove(GetType().Name, entities);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> RemoveById(object id)
     {
-        _logger.LogDebug("[{ServiceName}] Executing RemoveById for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
-        _repository.RemoveById(id);
-        return _unitOfWork.SaveChanges().ToBusiness();
+        return _operations.RemoveById(GetType().Name, id);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> RemoveById(IList<object> ids)
     {
-        _logger.LogDebug("[{ServiceName}] Executing RemoveById for {Count} {EntityType} entities", GetType().Name, ids?.Count ?? 0, typeof(TEntity).Name);
-
-        if (!ids.AnySafe())
-        {
-            return 0.ToBusiness();
-        }
-
-        foreach (object id in ids)
-        {
-            _repository.RemoveById(id);
-        }
-
-        return _unitOfWork.SaveChanges().ToBusiness();
+        return _operations.RemoveById(GetType().Name, ids);
     }
 
     #endregion
@@ -335,115 +240,35 @@ public abstract class ApplicationServiceBase<TEntity, TUoW>(TUoW unitOfWork, IVa
     public virtual IBusinessResult<bool> AnyBySpecification<TSpec>(TSpec specification)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger.LogDebug("[{ServiceName}] Executing AnyBySpecification for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        if (specification == null)
-        {
-            return false.ToBusiness();
-        }
-
-        // Try to use repository's specification method if available
-        if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
-        {
-            return readOnlyRepo.AnyBySpecification(specification).ToBusiness();
-        }
-
-        // Fallback: use the specification's expression directly
-        return _repository.GetByAny(specification.IsSatisfiedByExpression).ToBusiness();
+        return _operations.AnyBySpecification(GetType().Name, specification);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> CountBySpecification<TSpec>(TSpec specification)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger.LogDebug("[{ServiceName}] Executing CountBySpecification for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        if (specification == null)
-        {
-            return 0.ToBusiness();
-        }
-
-        // Try to use repository's specification method if available
-        if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
-        {
-            return readOnlyRepo.CountBySpecification(specification).ToBusiness();
-        }
-
-        // Fallback: use the specification's expression directly
-        return _repository.GetByCount(specification.IsSatisfiedByExpression).ToBusiness();
+        return _operations.CountBySpecification(GetType().Name, specification);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<IList<TEntity>> GetBySpecification<TSpec>(TSpec specification)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetBySpecification for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        if (specification == null)
-        {
-            return ((IList<TEntity>)[]).ToBusiness();
-        }
-
-        // Try to use repository's specification method if available
-        if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
-        {
-            return readOnlyRepo.GetBySpecification(specification).ToBusiness();
-        }
-
-        // Fallback: use the specification's expression directly with paging if available
-        IPagingCriteria? pagingCriteria = null;
-        if (specification is ISpecificationQueryEnhanced<TEntity> enhancedSpec)
-        {
-            pagingCriteria = CreatePagingCriteriaFromSpecification(enhancedSpec);
-        }
-
-        return _repository.GetBy(specification.IsSatisfiedByExpression, pagingCriteria).ToBusiness();
+        return _operations.GetBySpecification(GetType().Name, specification, CreatePagingCriteriaFromSpecification);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<TEntity?> GetSingleBySpecification<TSpec>(TSpec specification)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetSingleBySpecification for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        if (specification == null)
-        {
-            return ((TEntity?)null).ToBusiness();
-        }
-
-        // Try to use repository's specification method if available
-        if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
-        {
-            return readOnlyRepo.GetSingleBySpecification(specification).ToBusiness();
-        }
-
-        // Fallback: get by expression and take single
-        IList<TEntity> result = _repository.GetBy(specification.IsSatisfiedByExpression, null);
-        TEntity? entity = result?.SingleOrDefault();
-        return entity.ToBusiness();
+        return _operations.GetSingleBySpecification(GetType().Name, specification);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<TEntity?> GetFirstBySpecification<TSpec>(TSpec specification)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetFirstBySpecification for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        if (specification == null)
-        {
-            return ((TEntity?)null).ToBusiness();
-        }
-
-        // Try to use repository's specification method if available
-        if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
-        {
-            return readOnlyRepo.GetFirstBySpecification(specification).ToBusiness();
-        }
-
-        // Fallback: get by expression and take first
-        IList<TEntity> result = _repository.GetBy(specification.IsSatisfiedByExpression, null);
-        TEntity? entity = result?.FirstOrDefault();
-        return entity.ToBusiness();
+        return _operations.GetFirstBySpecification(GetType().Name, specification);
     }
 
     /// <summary>

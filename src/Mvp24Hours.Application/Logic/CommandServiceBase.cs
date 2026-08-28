@@ -6,11 +6,11 @@
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Mvp24Hours.Application.Logic.Internal;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Extensions;
 
 namespace Mvp24Hours.Application.Logic;
 
@@ -68,10 +68,8 @@ public abstract class CommandServiceBase<TEntity, TUoW>(TUoW unitOfWork, IValida
 {
     #region [ Properties / Fields ]
 
-    private readonly IRepository<TEntity> _repository = unitOfWork.GetRepository<TEntity>();
+    private readonly ServiceOperations<TEntity> _operations = new(unitOfWork, validator, logger ?? NullLogger.Instance);
     private readonly TUoW _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-    private readonly IValidator<TEntity>? _validator = validator;
-    private readonly ILogger _logger = logger ?? NullLogger.Instance;
 
     /// <summary>
     /// Gets the unit of work instance for managing transactions.
@@ -81,18 +79,18 @@ public abstract class CommandServiceBase<TEntity, TUoW>(TUoW unitOfWork, IValida
     /// <summary>
     /// Gets the repository instance for data access operations.
     /// </summary>
-    protected virtual IRepository<TEntity> Repository => _repository;
+    protected virtual IRepository<TEntity> Repository => _operations.Repository;
 
     /// <summary>
     /// Gets the validator instance for entity validation.
     /// </summary>
-    protected virtual IValidator<TEntity>? Validator => _validator;
+    protected virtual IValidator<TEntity>? Validator => _operations.Validator;
 
     /// <summary>
     /// Gets the logger instance for logging operations. Never <see langword="null"/>:
     /// falls back to <see cref="NullLogger.Instance"/> when no logger is supplied.
     /// </summary>
-    protected virtual ILogger Logger => _logger;
+    protected virtual ILogger Logger => _operations.Logger;
 
     #endregion
 
@@ -126,135 +124,49 @@ public abstract class CommandServiceBase<TEntity, TUoW>(TUoW unitOfWork, IValida
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Add(TEntity entity)
     {
-        _logger.LogDebug("[{ServiceName}] Executing Add for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        IList<IMessageResult> errors = entity.TryValidate(_validator);
-        if (!errors.AnySafe())
-        {
-            _repository.Add(entity);
-            return _unitOfWork.SaveChanges().ToBusiness();
-        }
-        return errors.ToBusiness<int>();
+        return _operations.Add(GetType().Name, entity);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Add(IList<TEntity> entities)
     {
-        _logger.LogDebug("[{ServiceName}] Executing Add for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
-
-        if (!entities.AnySafe())
-        {
-            return 0.ToBusiness();
-        }
-
-        foreach (TEntity entity in entities)
-        {
-            IList<IMessageResult> errors = entity.TryValidate(_validator);
-            if (errors.AnySafe())
-            {
-                return errors.ToBusiness<int>();
-            }
-        }
-
-        foreach (TEntity entity in entities)
-        {
-            _repository.Add(entity);
-        }
-
-        return _unitOfWork.SaveChanges().ToBusiness();
+        return _operations.Add(GetType().Name, entities);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Modify(TEntity entity)
     {
-        _logger.LogDebug("[{ServiceName}] Executing Modify for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        IList<IMessageResult> errors = entity.TryValidate(_validator);
-        if (!errors.AnySafe())
-        {
-            _repository.Modify(entity);
-            return _unitOfWork.SaveChanges().ToBusiness();
-        }
-        return errors.ToBusiness<int>();
+        return _operations.Modify(GetType().Name, entity);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Modify(IList<TEntity> entities)
     {
-        _logger.LogDebug("[{ServiceName}] Executing Modify for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
-
-        if (!entities.AnySafe())
-        {
-            return 0.ToBusiness();
-        }
-
-        foreach (TEntity entity in entities)
-        {
-            IList<IMessageResult> errors = entity.TryValidate(_validator);
-            if (errors.AnySafe())
-            {
-                return errors.ToBusiness<int>();
-            }
-        }
-
-        foreach (TEntity entity in entities)
-        {
-            _repository.Modify(entity);
-        }
-
-        return _unitOfWork.SaveChanges().ToBusiness();
+        return _operations.Modify(GetType().Name, entities);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Remove(TEntity entity)
     {
-        _logger.LogDebug("[{ServiceName}] Executing Remove for {EntityType}", GetType().Name, typeof(TEntity).Name);
-        _repository.Remove(entity);
-        return _unitOfWork.SaveChanges().ToBusiness();
+        return _operations.Remove(GetType().Name, entity);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Remove(IList<TEntity> entities)
     {
-        _logger.LogDebug("[{ServiceName}] Executing Remove for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
-
-        if (!entities.AnySafe())
-        {
-            return 0.ToBusiness();
-        }
-
-        foreach (TEntity entity in entities)
-        {
-            _repository.Remove(entity);
-        }
-
-        return _unitOfWork.SaveChanges().ToBusiness();
+        return _operations.Remove(GetType().Name, entities);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> RemoveById(object id)
     {
-        _logger.LogDebug("[{ServiceName}] Executing RemoveById for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
-        _repository.RemoveById(id);
-        return _unitOfWork.SaveChanges().ToBusiness();
+        return _operations.RemoveById(GetType().Name, id);
     }
 
     /// <inheritdoc/>
     public virtual IBusinessResult<int> RemoveById(IList<object> ids)
     {
-        _logger.LogDebug("[{ServiceName}] Executing RemoveById for {Count} {EntityType} entities", GetType().Name, ids?.Count ?? 0, typeof(TEntity).Name);
-
-        if (!ids.AnySafe())
-        {
-            return 0.ToBusiness();
-        }
-
-        foreach (object id in ids)
-        {
-            _repository.RemoveById(id);
-        }
-
-        return _unitOfWork.SaveChanges().ToBusiness();
+        return _operations.RemoveById(GetType().Name, ids);
     }
 
     #endregion

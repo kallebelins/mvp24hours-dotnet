@@ -7,12 +7,12 @@ using System.Linq.Expressions;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Mvp24Hours.Application.Logic.Internal;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Extensions;
 
 namespace Mvp24Hours.Application.Logic;
 
@@ -68,10 +68,8 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
 {
     #region [ Properties / Fields ]
 
-    private readonly IRepositoryAsync<TEntity> _repository = unitOfWork.GetRepository<TEntity>();
+    private readonly ServiceOperationsAsync<TEntity> _operations = new(unitOfWork, validator, logger ?? NullLogger.Instance);
     private readonly TUoW _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-    private readonly IValidator<TEntity>? _validator = validator;
-    private readonly ILogger _logger = logger ?? NullLogger.Instance;
 
     /// <summary>
     /// Gets the unit of work instance for managing transactions.
@@ -81,18 +79,18 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <summary>
     /// Gets the repository instance for data access operations.
     /// </summary>
-    protected virtual IRepositoryAsync<TEntity> Repository => _repository;
+    protected virtual IRepositoryAsync<TEntity> Repository => _operations.Repository;
 
     /// <summary>
     /// Gets the validator instance for entity validation.
     /// </summary>
-    protected virtual IValidator<TEntity>? Validator => _validator;
+    protected virtual IValidator<TEntity>? Validator => _operations.Validator;
 
     /// <summary>
     /// Gets the logger instance for logging operations. Never <see langword="null"/>:
     /// falls back to <see cref="NullLogger.Instance"/> when no logger is supplied.
     /// </summary>
-    protected virtual ILogger Logger => _logger;
+    protected virtual ILogger Logger => _operations.Logger;
 
     #endregion
 
@@ -126,15 +124,13 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<bool>> ListAnyAsync(CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing ListAnyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
-        return _repository.ListAnyAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.ListAnyAsync(GetType().Name, cancellationToken);
     }
 
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<int>> ListCountAsync(CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing ListCountAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
-        return _repository.ListCountAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.ListCountAsync(GetType().Name, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -146,22 +142,19 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<IList<TEntity>>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing ListAsync for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
-        return _repository.ListAsync(criteria, cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.ListAsync(GetType().Name, criteria, cancellationToken);
     }
 
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<bool>> GetByAnyAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetByAnyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
-        return _repository.GetByAnyAsync(clause, cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.GetByAnyAsync(GetType().Name, clause, cancellationToken);
     }
 
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<int>> GetByCountAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetByCountAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
-        return _repository.GetByCountAsync(clause, cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.GetByCountAsync(GetType().Name, clause, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -173,8 +166,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetByAsync for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
-        return _repository.GetByAsync(clause, criteria, cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.GetByAsync(GetType().Name, clause, criteria, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -186,8 +178,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetByIdAsync for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
-        return _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.GetByIdAsync(GetType().Name, id, criteria, cancellationToken);
     }
 
     #endregion
@@ -195,121 +186,51 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     #region [ ICommandServiceAsync Implementation ]
 
     /// <inheritdoc/>
-    public virtual async Task<IBusinessResult<int>> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<int>> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing AddAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        IList<IMessageResult> errors = entity.TryValidate(_validator);
-        if (!errors.AnySafe())
-        {
-            await _repository.AddAsync(entity, cancellationToken: cancellationToken);
-            return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
-        }
-        return errors.ToBusiness<int>();
+        return _operations.AddAsync(GetType().Name, entity, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IBusinessResult<int>> AddAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<int>> AddAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing AddAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
-
-        if (!entities.AnySafe())
-        {
-            return 0.ToBusiness();
-        }
-
-        foreach (TEntity entity in entities)
-        {
-            IList<IMessageResult> errors = entity.TryValidate(_validator);
-            if (errors.AnySafe())
-            {
-                return errors.ToBusiness<int>();
-            }
-        }
-
-        await Task.WhenAll(entities.Select(entity => _repository.AddAsync(entity, cancellationToken: cancellationToken)));
-        return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.AddAsync(GetType().Name, entities, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IBusinessResult<int>> ModifyAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<int>> ModifyAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing ModifyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        IList<IMessageResult> errors = entity.TryValidate(_validator);
-        if (!errors.AnySafe())
-        {
-            await _repository.ModifyAsync(entity, cancellationToken: cancellationToken);
-            return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
-        }
-        return errors.ToBusiness<int>();
+        return _operations.ModifyAsync(GetType().Name, entity, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IBusinessResult<int>> ModifyAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<int>> ModifyAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing ModifyAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
-
-        if (!entities.AnySafe())
-        {
-            return 0.ToBusiness();
-        }
-
-        foreach (TEntity entity in entities)
-        {
-            IList<IMessageResult> errors = entity.TryValidate(_validator);
-            if (errors.AnySafe())
-            {
-                return errors.ToBusiness<int>();
-            }
-        }
-
-        await Task.WhenAll(entities.Select(entity => _repository.ModifyAsync(entity, cancellationToken: cancellationToken)));
-        return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.ModifyAsync(GetType().Name, entities, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IBusinessResult<int>> RemoveAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<int>> RemoveAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing RemoveAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
-        await _repository.RemoveAsync(entity, cancellationToken: cancellationToken);
-        return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.RemoveAsync(GetType().Name, entity, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IBusinessResult<int>> RemoveAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<int>> RemoveAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing RemoveAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
-
-        if (!entities.AnySafe())
-        {
-            return 0.ToBusiness();
-        }
-
-        await Task.WhenAll(entities.Select(entity => _repository.RemoveAsync(entity, cancellationToken: cancellationToken)));
-        return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.RemoveAsync(GetType().Name, entities, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<int>> RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
-        await _repository.RemoveByIdAsync(id, cancellationToken: cancellationToken);
-        return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.RemoveByIdAsync(GetType().Name, id, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(IList<object> ids, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<int>> RemoveByIdAsync(IList<object> ids, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {Count} {EntityType} entities", GetType().Name, ids?.Count ?? 0, typeof(TEntity).Name);
-
-        if (!ids.AnySafe())
-        {
-            return 0.ToBusiness();
-        }
-
-        await Task.WhenAll(ids.Select(id => _repository.RemoveByIdAsync(id, cancellationToken: cancellationToken)));
-        return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.RemoveByIdAsync(GetType().Name, ids, cancellationToken);
     }
 
     #endregion
@@ -317,118 +238,38 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     #region [ Specification Pattern Implementation ]
 
     /// <inheritdoc/>
-    public virtual async Task<IBusinessResult<bool>> AnyBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<bool>> AnyBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger.LogDebug("[{ServiceName}] Executing AnyBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        if (specification == null)
-        {
-            return false.ToBusiness();
-        }
-
-        // Try to use repository's specification method if available
-        if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
-        {
-            return (await readOnlyRepo.AnyBySpecificationAsync(specification, cancellationToken)).ToBusiness();
-        }
-
-        // Fallback: use the specification's expression directly
-        return await _repository.GetByAnyAsync(specification.IsSatisfiedByExpression, cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.AnyBySpecificationAsync(GetType().Name, specification, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IBusinessResult<int>> CountBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<int>> CountBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger.LogDebug("[{ServiceName}] Executing CountBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        if (specification == null)
-        {
-            return 0.ToBusiness();
-        }
-
-        // Try to use repository's specification method if available
-        if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
-        {
-            return (await readOnlyRepo.CountBySpecificationAsync(specification, cancellationToken)).ToBusiness();
-        }
-
-        // Fallback: use the specification's expression directly
-        return await _repository.GetByCountAsync(specification.IsSatisfiedByExpression, cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.CountBySpecificationAsync(GetType().Name, specification, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IBusinessResult<IList<TEntity>>> GetBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<IList<TEntity>>> GetBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        if (specification == null)
-        {
-            return ((IList<TEntity>)[]).ToBusiness();
-        }
-
-        // Try to use repository's specification method if available
-        if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
-        {
-            return (await readOnlyRepo.GetBySpecificationAsync(specification, cancellationToken)).ToBusiness();
-        }
-
-        // Fallback: use the specification's expression directly with paging if available
-        IPagingCriteria? pagingCriteria = null;
-        if (specification is ISpecificationQueryEnhanced<TEntity> enhancedSpec)
-        {
-            pagingCriteria = CreatePagingCriteriaFromSpecification(enhancedSpec);
-        }
-
-        return await _repository.GetByAsync(specification.IsSatisfiedByExpression, pagingCriteria, cancellationToken: cancellationToken).ToBusinessAsync();
+        return _operations.GetBySpecificationAsync(GetType().Name, specification, CreatePagingCriteriaFromSpecification, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IBusinessResult<TEntity?>> GetSingleBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<TEntity?>> GetSingleBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetSingleBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        if (specification == null)
-        {
-            return ((TEntity?)null).ToBusiness();
-        }
-
-        // Try to use repository's specification method if available
-        if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
-        {
-            return (await readOnlyRepo.GetSingleBySpecificationAsync(specification, cancellationToken)).ToBusiness();
-        }
-
-        // Fallback: get by expression and take single
-        IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
-        TEntity? entity = result?.SingleOrDefault();
-        return entity.ToBusiness();
+        return _operations.GetSingleBySpecificationAsync(GetType().Name, specification, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IBusinessResult<TEntity?>> GetFirstBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<TEntity?>> GetFirstBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger.LogDebug("[{ServiceName}] Executing GetFirstBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
-
-        if (specification == null)
-        {
-            return ((TEntity?)null).ToBusiness();
-        }
-
-        // Try to use repository's specification method if available
-        if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
-        {
-            return (await readOnlyRepo.GetFirstBySpecificationAsync(specification, cancellationToken)).ToBusiness();
-        }
-
-        // Fallback: get by expression and take first
-        IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
-        TEntity? entity = result?.FirstOrDefault();
-        return entity.ToBusiness();
+        return _operations.GetFirstBySpecificationAsync(GetType().Name, specification, cancellationToken);
     }
 
     /// <summary>
