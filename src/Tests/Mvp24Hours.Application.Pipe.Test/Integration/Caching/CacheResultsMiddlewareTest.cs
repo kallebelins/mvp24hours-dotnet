@@ -210,6 +210,7 @@ public class CacheResultsMiddlewareTest
         public IList<IMessageResult> Messages { get; } = [];
         public string Token => null!;
         public bool IsLocked { get; private set; }
+        [Obsolete("Use GetContent<T>()/AddContent<T>() for type-safe access. Will be removed in v12.")]
         public dynamic DynamicContents => null!;
 
         public void AddContent<T>(T obj) { }

@@ -166,7 +166,9 @@ public class PipelineMessageTest
         var message = new PipelineMessage();
         message.AddContent("name", "Alice");
 
+#pragma warning disable CS0618 // intentional: covers obsolete DynamicContents until removal in v12
         dynamic contents = message.DynamicContents;
+#pragma warning restore CS0618
 
         string name = contents.name;
         name.Should().Be("Alice");

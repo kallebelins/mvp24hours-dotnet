@@ -152,6 +152,7 @@ public class CoreExtensionsRemainingCoverageTest
 
         public bool IsFaulty { get; private set; }
 
+        [Obsolete("Use GetContent<T>()/AddContent<T>() for type-safe access. Will be removed in v12.")]
         public dynamic DynamicContents => _content;
 
         public IList<IMessageResult> Messages { get; } = [];

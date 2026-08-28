@@ -96,6 +96,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   The constant value (300) and its visibility are unchanged, and it remains a default (not a cap),
   overridable per provider via `EFCoreRepositoryOptions.MaxQtyByQueryPage` /
   `MongoDbRepositoryOptions.MaxQtyByQueryPage`.
+- **`IPipelineMessage.DynamicContents`** (`Mvp24Hours.Core.Contract.Infrastructure.Pipe`) and its
+  implementation `PipelineMessage.DynamicContents` are now `[Obsolete]`: *"Use
+  `GetContent<T>()`/`AddContent<T>()` for type-safe access. Will be removed in v12."* The property
+  resolves members at runtime through `DynamicObject`, so a missing key throws
+  `ArgumentOutOfRangeException` and a null assignment throws `ArgumentNullException` — both only
+  when the line executes. The typed members (`AddContent<T>`, `GetContent<T>`, `HasContent<T>`,
+  `GetContentAll`) provide the same capability with compile-time checking. Neither the property nor
+  the `DynamicContents` class was removed, and behavior is unchanged. Types that implement
+  `IPipelineMessage` directly must keep implementing the member until v12; annotate it with the same
+  `[Obsolete]` attribute or suppress `CS0618` locally. See
+  [Pipeline → Message contents](docs/en-us/pipeline.md).
 
 ### Fixed
 

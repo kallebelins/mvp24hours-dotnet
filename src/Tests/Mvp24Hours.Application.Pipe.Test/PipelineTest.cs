@@ -593,6 +593,7 @@ public class PipelineTest
         // arrange
         IPipelineMessage input = new PipelineMessage();
 
+#pragma warning disable CS0618 // intentional: covers obsolete DynamicContents until removal in v12
         // operations
         input.DynamicContents.Person = new Person { Name = "John Smith", CC = new CC { Number = "4532849103927456", CVV = "435", ExpirationDate = "11/32" } };
         input.AddContent("person_name", input.DynamicContents.Person.Name);
@@ -624,6 +625,7 @@ public class PipelineTest
         Assert.Equal(personExpected.CC.Number, personActual.CC.Number);
         Assert.Equal(personExpected.CC.CVV, personActual.CC.CVV);
         Assert.Equal(personExpected.CC.ExpirationDate, personActual.CC.ExpirationDate);
+#pragma warning restore CS0618
     }
 
     [Fact, Priority(18)]
@@ -634,6 +636,7 @@ public class PipelineTest
         ArgumentNullException? setExceptionNull = null;
         ArgumentOutOfRangeException? getExceptionOutOfRange = null;
 
+#pragma warning disable CS0618 // intentional: covers obsolete DynamicContents until removal in v12
         // operations
         try
         {
@@ -652,6 +655,7 @@ public class PipelineTest
         {
             getExceptionOutOfRange = ex;
         }
+#pragma warning restore CS0618
 
         // assert
         Assert.NotNull(setExceptionNull);

@@ -72,6 +72,32 @@ await pipeline.ExecuteAsync(new PipelineMessage());
 
 When `ForceRollbackOnFalure` is true, only successfully executed earlier operations are compensated, in reverse order. `IsRequired` operations can still execute when the message is locked.
 
+## Message contents
+
+Read and write pipeline state through the typed members of `IPipelineMessage`: `AddContent<T>(T)`, `AddContent<T>(string, T)`, `GetContent<T>()`, `GetContent<T>(string)`, `HasContent<T>()`, `HasContent(string)`, and `GetContentAll()`.
+
+```csharp
+IPipelineMessage message = new PipelineMessage();
+
+message.AddContent(new Order(...));            // keyed by the type full name
+message.AddContent("correlation-id", "abc123"); // keyed by string
+
+Order order = message.GetContent<Order>();
+string correlationId = message.GetContent<string>("correlation-id");
+```
+
+`IPipelineMessage.DynamicContents` is deprecated and will be removed in v12. It resolves members at runtime, so a missing key throws `ArgumentOutOfRangeException` and a null assignment throws `ArgumentNullException` — both only when the line executes. Migrate to the typed members:
+
+```csharp
+// Before (deprecated)
+message.DynamicContents.Order = new Order(...);
+Order order = message.DynamicContents.Order;
+
+// After
+message.AddContent("Order", new Order(...));
+Order order = message.GetContent<Order>("Order");
+```
+
 ## Validation, exception mapping, and middleware
 
 ```csharp
