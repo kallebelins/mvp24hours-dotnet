@@ -5,6 +5,7 @@
 //=====================================================================================
 using FluentValidation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
@@ -70,7 +71,7 @@ public abstract class CommandServiceBase<TEntity, TUoW>(TUoW unitOfWork, IValida
     private readonly IRepository<TEntity> _repository = unitOfWork.GetRepository<TEntity>();
     private readonly TUoW _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     private readonly IValidator<TEntity>? _validator = validator;
-    private readonly ILogger? _logger = logger;
+    private readonly ILogger _logger = logger ?? NullLogger.Instance;
 
     /// <summary>
     /// Gets the unit of work instance for managing transactions.
@@ -88,9 +89,10 @@ public abstract class CommandServiceBase<TEntity, TUoW>(TUoW unitOfWork, IValida
     protected virtual IValidator<TEntity>? Validator => _validator;
 
     /// <summary>
-    /// Gets the logger instance for logging operations.
+    /// Gets the logger instance for logging operations. Never <see langword="null"/>:
+    /// falls back to <see cref="NullLogger.Instance"/> when no logger is supplied.
     /// </summary>
-    protected virtual ILogger? Logger => _logger;
+    protected virtual ILogger Logger => _logger;
 
     #endregion
 
@@ -124,7 +126,7 @@ public abstract class CommandServiceBase<TEntity, TUoW>(TUoW unitOfWork, IValida
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Add(TEntity entity)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing Add for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing Add for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
         IList<IMessageResult> errors = entity.TryValidate(_validator);
         if (!errors.AnySafe())
@@ -138,7 +140,7 @@ public abstract class CommandServiceBase<TEntity, TUoW>(TUoW unitOfWork, IValida
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Add(IList<TEntity> entities)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing Add for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing Add for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
         if (!entities.AnySafe())
         {
@@ -165,7 +167,7 @@ public abstract class CommandServiceBase<TEntity, TUoW>(TUoW unitOfWork, IValida
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Modify(TEntity entity)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing Modify for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing Modify for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
         IList<IMessageResult> errors = entity.TryValidate(_validator);
         if (!errors.AnySafe())
@@ -179,7 +181,7 @@ public abstract class CommandServiceBase<TEntity, TUoW>(TUoW unitOfWork, IValida
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Modify(IList<TEntity> entities)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing Modify for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing Modify for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
         if (!entities.AnySafe())
         {
@@ -206,7 +208,7 @@ public abstract class CommandServiceBase<TEntity, TUoW>(TUoW unitOfWork, IValida
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Remove(TEntity entity)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing Remove for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing Remove for {EntityType}", GetType().Name, typeof(TEntity).Name);
         _repository.Remove(entity);
         return _unitOfWork.SaveChanges().ToBusiness();
     }
@@ -214,7 +216,7 @@ public abstract class CommandServiceBase<TEntity, TUoW>(TUoW unitOfWork, IValida
     /// <inheritdoc/>
     public virtual IBusinessResult<int> Remove(IList<TEntity> entities)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing Remove for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing Remove for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
         if (!entities.AnySafe())
         {
@@ -232,7 +234,7 @@ public abstract class CommandServiceBase<TEntity, TUoW>(TUoW unitOfWork, IValida
     /// <inheritdoc/>
     public virtual IBusinessResult<int> RemoveById(object id)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing RemoveById for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
+        _logger.LogDebug("[{ServiceName}] Executing RemoveById for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
         _repository.RemoveById(id);
         return _unitOfWork.SaveChanges().ToBusiness();
     }
@@ -240,7 +242,7 @@ public abstract class CommandServiceBase<TEntity, TUoW>(TUoW unitOfWork, IValida
     /// <inheritdoc/>
     public virtual IBusinessResult<int> RemoveById(IList<object> ids)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing RemoveById for {Count} {EntityType} entities", GetType().Name, ids?.Count ?? 0, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing RemoveById for {Count} {EntityType} entities", GetType().Name, ids?.Count ?? 0, typeof(TEntity).Name);
 
         if (!ids.AnySafe())
         {

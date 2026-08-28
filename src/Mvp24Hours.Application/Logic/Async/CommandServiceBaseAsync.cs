@@ -5,6 +5,7 @@
 //=====================================================================================
 using FluentValidation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
@@ -71,7 +72,7 @@ public abstract class CommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork, IV
     private readonly IRepositoryAsync<TEntity> _repository = unitOfWork.GetRepository<TEntity>();
     private readonly TUoW _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     private readonly IValidator<TEntity>? _validator = validator;
-    private readonly ILogger? _logger = logger;
+    private readonly ILogger _logger = logger ?? NullLogger.Instance;
 
     /// <summary>
     /// Gets the unit of work instance for managing transactions.
@@ -89,9 +90,10 @@ public abstract class CommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork, IV
     protected virtual IValidator<TEntity>? Validator => _validator;
 
     /// <summary>
-    /// Gets the logger instance for logging operations.
+    /// Gets the logger instance for logging operations. Never <see langword="null"/>:
+    /// falls back to <see cref="NullLogger.Instance"/> when no logger is supplied.
     /// </summary>
-    protected virtual ILogger? Logger => _logger;
+    protected virtual ILogger Logger => _logger;
 
     #endregion
 
@@ -125,7 +127,7 @@ public abstract class CommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork, IV
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing AddAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing AddAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
         IList<IMessageResult> errors = entity.TryValidate(_validator);
         if (!errors.AnySafe())
@@ -139,7 +141,7 @@ public abstract class CommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork, IV
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> AddAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing AddAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing AddAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
         if (!entities.AnySafe())
         {
@@ -162,7 +164,7 @@ public abstract class CommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork, IV
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> ModifyAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing ModifyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing ModifyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
         IList<IMessageResult> errors = entity.TryValidate(_validator);
         if (!errors.AnySafe())
@@ -176,7 +178,7 @@ public abstract class CommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork, IV
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> ModifyAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing ModifyAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing ModifyAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
         if (!entities.AnySafe())
         {
@@ -199,7 +201,7 @@ public abstract class CommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork, IV
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> RemoveAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing RemoveAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing RemoveAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
         await _repository.RemoveAsync(entity, cancellationToken: cancellationToken);
         return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
     }
@@ -207,7 +209,7 @@ public abstract class CommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork, IV
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> RemoveAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing RemoveAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing RemoveAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
         if (!entities.AnySafe())
         {
@@ -221,7 +223,7 @@ public abstract class CommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork, IV
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
+        _logger.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
         await _repository.RemoveByIdAsync(id, cancellationToken: cancellationToken);
         return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
     }
@@ -229,7 +231,7 @@ public abstract class CommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork, IV
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(IList<object> ids, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {Count} {EntityType} entities", GetType().Name, ids?.Count ?? 0, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {Count} {EntityType} entities", GetType().Name, ids?.Count ?? 0, typeof(TEntity).Name);
 
         if (!ids.AnySafe())
         {

@@ -87,6 +87,39 @@ public sealed class CustomerService(
         unitOfWork, mapper, entityValidator, createValidator, updateValidator);
 ```
 
+### Logging
+
+Every service base takes the logger as an **optional last constructor parameter** and exposes it
+through a non-nullable `protected virtual ILogger Logger`. When no logger is supplied the base falls
+back to `NullLogger`, so `Logger` is never `null` and derived code can call it without `?.`.
+
+```csharp
+public sealed class CustomerService(
+    IUnitOfWorkAsync unitOfWork,
+    IMapper mapper,
+    ILogger<CustomerService>? logger = null)
+    : ApplicationServiceBaseWithDtoAsync<Customer, CustomerDto, IUnitOfWorkAsync>(
+        unitOfWork, mapper, null, null, logger)
+{
+    public async Task<IBusinessResult<CustomerDto>> ActivateAsync(int id)
+    {
+        Logger.LogInformation("Activating customer {CustomerId}", id);
+        // ...
+    }
+}
+```
+
+Notes:
+
+- The abstract bases declare `ILogger` (non-generic) because the concrete derived type is unknown at
+  that level. Pass an `ILogger<TYourService>` from DI — it satisfies `ILogger` and keeps your own
+  category name.
+- `RepositoryService`/`RepositoryServiceAsync` and their paging subclasses are concrete classes, so
+  they keep a categorized `ILogger<T>`.
+- Declare `ILogger<TYourService>` (not the non-generic `ILogger`) on your own constructor. The DI
+  container registers `ILogger<T>`, not `ILogger`, so a non-generic parameter would silently resolve
+  to `null` and fall back to `NullLogger`.
+
 ### PATCH semantics
 
 `Patch`/`PatchAsync` call the `protected virtual ApplyPatchToEntity(TUpdateDto, TEntity)`

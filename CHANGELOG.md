@@ -40,6 +40,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `true`, rethrown — matching the behavior already used for pipeline operations and rollback. Consumers
   relying on the previous "detached" timing (e.g. tests using `Task.Delay`/`Thread.Sleep` to wait for an
   event handler) should no longer need that workaround.
+- **Application service bases — single logging convention**: every base under
+  `Mvp24Hours.Application.Logic` (and `Logic/Async`) now follows the same pattern: an optional
+  `ILogger? logger = null` as the last constructor parameter, a non-nullable `protected virtual ILogger Logger`
+  property, and a `NullLogger` fallback when no logger is supplied. This is **additive** — the new parameter
+  is optional and appended, so existing derived classes keep compiling without changes.
+  - `ApplicationServiceBaseWithDto`, `ApplicationServiceBaseWithSeparateDtos`,
+    `BulkCommandServiceBaseAsync`, `BulkCommandServiceWithDtoBaseAsync`,
+    `BulkCommandServiceWithSeparateDtosBaseAsync` (and the `Async` counterparts of the first two) had
+    logging **permanently disabled** by a hardcoded `private readonly ILogger _logger = NullLogger.Instance;`.
+    They now accept a logger and honor it.
+  - `ApplicationServiceBase`, `QueryServiceBase`, `CommandServiceBase` (and the `Async` counterparts)
+    changed `protected virtual ILogger? Logger` to `protected virtual ILogger Logger`; the value is never
+    null, so overrides/consumers no longer need `?.`. No constructor parameter was removed or reordered.
+  - `RepositoryPagingService`/`RepositoryPagingServiceAsync` now forward the injected logger to the base
+    `RepositoryService`/`RepositoryServiceAsync`, which previously always fell back to `NullLogger`.
+  - `RepositoryService`/`RepositoryServiceAsync` (and the paging subclasses) log messages migrated from
+    fixed strings (`"application-repositoryservice-listany"`) to the structured template already used by
+    the other bases (`"[{ServiceName}] Executing ListAny for {EntityType}"`). Consumers matching on the
+    old literal message text must update their filters. The `application-*` message style remains in the
+    DTO/Bulk bases and in the cache/event/validation support types — unchanged in this release.
 
 ### Security
 

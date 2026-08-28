@@ -75,13 +75,15 @@ namespace Mvp24Hours.Application.Logic;
 /// <param name="entityValidator">The validator for entity validation.</param>
 /// <param name="createDtoValidator">The validator for create DTO validation.</param>
 /// <param name="updateDtoValidator">The validator for update DTO validation.</param>
+/// <param name="logger">The logger for logging operations. When omitted, logging is disabled via <see cref="NullLogger.Instance"/>.</param>
 /// <exception cref="ArgumentNullException">Thrown when unitOfWork or mapper is null.</exception>
 public abstract class ApplicationServiceBaseWithSeparateDtosAsync<TEntity, TDto, TCreateDto, TUpdateDto, TUoW>(
     TUoW unitOfWork,
     IMapper mapper,
     IValidator<TEntity>? entityValidator,
     IValidator<TCreateDto>? createDtoValidator,
-    IValidator<TUpdateDto>? updateDtoValidator)
+    IValidator<TUpdateDto>? updateDtoValidator,
+    ILogger? logger = null)
     : IApplicationServiceWithSeparateDtosAsync<TEntity, TDto, TCreateDto, TUpdateDto>,
       IReadOnlyApplicationServiceWithSeparateDtosAsync<TEntity, TDto>
     where TEntity : class, IEntityBase
@@ -98,7 +100,7 @@ public abstract class ApplicationServiceBaseWithSeparateDtosAsync<TEntity, TDto,
     private readonly IValidator<TEntity>? _entityValidator = entityValidator;
     private readonly IValidator<TCreateDto>? _createDtoValidator = createDtoValidator;
     private readonly IValidator<TUpdateDto>? _updateDtoValidator = updateDtoValidator;
-    private readonly ILogger _logger = NullLogger.Instance;
+    private readonly ILogger _logger = logger ?? NullLogger.Instance;
 
     /// <summary>
     /// Gets the unit of work instance for managing transactions.
@@ -129,6 +131,12 @@ public abstract class ApplicationServiceBaseWithSeparateDtosAsync<TEntity, TDto,
     /// Gets the validator instance for update DTO validation.
     /// </summary>
     protected virtual IValidator<TUpdateDto>? UpdateDtoValidator => _updateDtoValidator;
+
+    /// <summary>
+    /// Gets the logger instance for logging operations. Never <see langword="null"/>:
+    /// falls back to <see cref="NullLogger.Instance"/> when no logger is supplied.
+    /// </summary>
+    protected virtual ILogger Logger => _logger;
 
     #endregion
 

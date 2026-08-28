@@ -67,12 +67,14 @@ namespace Mvp24Hours.Application.Logic;
 /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
 /// <param name="entityValidator">The validator for entity validation.</param>
 /// <param name="dtoValidator">The validator for DTO validation.</param>
+/// <param name="logger">The logger for logging operations. When omitted, logging is disabled via <see cref="NullLogger.Instance"/>.</param>
 /// <exception cref="ArgumentNullException">Thrown when unitOfWork or mapper is null.</exception>
 public abstract class ApplicationServiceBaseWithDtoAsync<TEntity, TDto, TUoW>(
     TUoW unitOfWork,
     IMapper mapper,
     IValidator<TEntity>? entityValidator,
-    IValidator<TDto>? dtoValidator)
+    IValidator<TDto>? dtoValidator,
+    ILogger? logger = null)
     : IApplicationServiceWithDtoAsync<TEntity, TDto>, IReadOnlyApplicationServiceWithDtoAsync<TEntity, TDto>
     where TEntity : class, IEntityBase
     where TDto : class
@@ -85,7 +87,7 @@ public abstract class ApplicationServiceBaseWithDtoAsync<TEntity, TDto, TUoW>(
     private readonly IMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     private readonly IValidator<TEntity>? _entityValidator = entityValidator;
     private readonly IValidator<TDto>? _dtoValidator = dtoValidator;
-    private readonly ILogger _logger = NullLogger.Instance;
+    private readonly ILogger _logger = logger ?? NullLogger.Instance;
 
     /// <summary>
     /// Gets the unit of work instance for managing transactions.
@@ -111,6 +113,12 @@ public abstract class ApplicationServiceBaseWithDtoAsync<TEntity, TDto, TUoW>(
     /// Gets the validator instance for DTO validation.
     /// </summary>
     protected virtual IValidator<TDto>? DtoValidator => _dtoValidator;
+
+    /// <summary>
+    /// Gets the logger instance for logging operations. Never <see langword="null"/>:
+    /// falls back to <see cref="NullLogger.Instance"/> when no logger is supplied.
+    /// </summary>
+    protected virtual ILogger Logger => _logger;
 
     #endregion
 

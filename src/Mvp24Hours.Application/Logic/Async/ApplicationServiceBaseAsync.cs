@@ -6,6 +6,7 @@
 using System.Linq.Expressions;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
@@ -70,7 +71,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     private readonly IRepositoryAsync<TEntity> _repository = unitOfWork.GetRepository<TEntity>();
     private readonly TUoW _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     private readonly IValidator<TEntity>? _validator = validator;
-    private readonly ILogger? _logger = logger;
+    private readonly ILogger _logger = logger ?? NullLogger.Instance;
 
     /// <summary>
     /// Gets the unit of work instance for managing transactions.
@@ -88,9 +89,10 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     protected virtual IValidator<TEntity>? Validator => _validator;
 
     /// <summary>
-    /// Gets the logger instance for logging operations.
+    /// Gets the logger instance for logging operations. Never <see langword="null"/>:
+    /// falls back to <see cref="NullLogger.Instance"/> when no logger is supplied.
     /// </summary>
-    protected virtual ILogger? Logger => _logger;
+    protected virtual ILogger Logger => _logger;
 
     #endregion
 
@@ -124,14 +126,14 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<bool>> ListAnyAsync(CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing ListAnyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing ListAnyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
         return _repository.ListAnyAsync(cancellationToken: cancellationToken).ToBusinessAsync();
     }
 
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<int>> ListCountAsync(CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing ListCountAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing ListCountAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
         return _repository.ListCountAsync(cancellationToken: cancellationToken).ToBusinessAsync();
     }
 
@@ -144,21 +146,21 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<IList<TEntity>>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing ListAsync for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing ListAsync for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
         return _repository.ListAsync(criteria, cancellationToken: cancellationToken).ToBusinessAsync();
     }
 
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<bool>> GetByAnyAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing GetByAnyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing GetByAnyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
         return _repository.GetByAnyAsync(clause, cancellationToken: cancellationToken).ToBusinessAsync();
     }
 
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<int>> GetByCountAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing GetByCountAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing GetByCountAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
         return _repository.GetByCountAsync(clause, cancellationToken: cancellationToken).ToBusinessAsync();
     }
 
@@ -171,7 +173,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing GetByAsync for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing GetByAsync for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
         return _repository.GetByAsync(clause, criteria, cancellationToken: cancellationToken).ToBusinessAsync();
     }
 
@@ -184,7 +186,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing GetByIdAsync for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
+        _logger.LogDebug("[{ServiceName}] Executing GetByIdAsync for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
         return _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken).ToBusinessAsync();
     }
 
@@ -195,7 +197,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing AddAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing AddAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
         IList<IMessageResult> errors = entity.TryValidate(_validator);
         if (!errors.AnySafe())
@@ -209,7 +211,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> AddAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing AddAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing AddAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
         if (!entities.AnySafe())
         {
@@ -232,7 +234,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> ModifyAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing ModifyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing ModifyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
         IList<IMessageResult> errors = entity.TryValidate(_validator);
         if (!errors.AnySafe())
@@ -246,7 +248,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> ModifyAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing ModifyAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing ModifyAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
         if (!entities.AnySafe())
         {
@@ -269,7 +271,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> RemoveAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing RemoveAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing RemoveAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
         await _repository.RemoveAsync(entity, cancellationToken: cancellationToken);
         return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
     }
@@ -277,7 +279,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> RemoveAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing RemoveAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing RemoveAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
         if (!entities.AnySafe())
         {
@@ -291,7 +293,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
+        _logger.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
         await _repository.RemoveByIdAsync(id, cancellationToken: cancellationToken);
         return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
     }
@@ -299,7 +301,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     /// <inheritdoc/>
     public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(IList<object> ids, CancellationToken cancellationToken = default)
     {
-        _logger?.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {Count} {EntityType} entities", GetType().Name, ids?.Count ?? 0, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {Count} {EntityType} entities", GetType().Name, ids?.Count ?? 0, typeof(TEntity).Name);
 
         if (!ids.AnySafe())
         {
@@ -318,7 +320,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     public virtual async Task<IBusinessResult<bool>> AnyBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger?.LogDebug("[{ServiceName}] Executing AnyBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing AnyBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
         if (specification == null)
         {
@@ -339,7 +341,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     public virtual async Task<IBusinessResult<int>> CountBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger?.LogDebug("[{ServiceName}] Executing CountBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing CountBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
         if (specification == null)
         {
@@ -360,7 +362,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     public virtual async Task<IBusinessResult<IList<TEntity>>> GetBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger?.LogDebug("[{ServiceName}] Executing GetBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing GetBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
         if (specification == null)
         {
@@ -387,7 +389,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     public virtual async Task<IBusinessResult<TEntity?>> GetSingleBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger?.LogDebug("[{ServiceName}] Executing GetSingleBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing GetSingleBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
         if (specification == null)
         {
@@ -410,7 +412,7 @@ public abstract class ApplicationServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     public virtual async Task<IBusinessResult<TEntity?>> GetFirstBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
         where TSpec : ISpecificationQuery<TEntity>
     {
-        _logger?.LogDebug("[{ServiceName}] Executing GetFirstBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
+        _logger.LogDebug("[{ServiceName}] Executing GetFirstBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
         if (specification == null)
         {

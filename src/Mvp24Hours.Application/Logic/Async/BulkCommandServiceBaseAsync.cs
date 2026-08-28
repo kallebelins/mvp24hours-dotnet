@@ -6,7 +6,6 @@
 using System.Diagnostics;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
@@ -80,16 +79,16 @@ namespace Mvp24Hours.Application.Logic;
 /// <param name="unitOfWork">The unit of work for transaction management.</param>
 /// <param name="bulkOperations">The bulk operations provider for high-performance batch processing.</param>
 /// <param name="validator">The validator for entity validation.</param>
+/// <param name="logger">The logger for logging operations. When omitted, logging is disabled via <c>NullLogger.Instance</c>.</param>
 /// <exception cref="ArgumentNullException">Thrown when unitOfWork or bulkOperations is null.</exception>
-public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork, IBulkOperationsAsync<TEntity> bulkOperations, IValidator<TEntity>? validator)
-    : CommandServiceBaseAsync<TEntity, TUoW>(unitOfWork, validator), IBulkCommandServiceAsync<TEntity>
+public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork, IBulkOperationsAsync<TEntity> bulkOperations, IValidator<TEntity>? validator, ILogger? logger = null)
+    : CommandServiceBaseAsync<TEntity, TUoW>(unitOfWork, validator, logger), IBulkCommandServiceAsync<TEntity>
     where TEntity : class, IEntityBase
     where TUoW : class, IUnitOfWorkAsync
 {
     #region [ Properties / Fields ]
 
     private readonly IValidator<TEntity>? _validator = validator;
-    private readonly ILogger _logger = NullLogger.Instance;
 
     /// <summary>
     /// Gets the bulk operations provider for high-performance batch processing.
@@ -131,7 +130,7 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     {
         ArgumentNullException.ThrowIfNull(entities);
 
-        _logger.LogDebug("application-bulkcommandserviceasync-bulkaddasync-start Count={Count} BatchSize={BatchSize}",
+        Logger.LogDebug("application-bulkcommandserviceasync-bulkaddasync-start Count={Count} BatchSize={BatchSize}",
             entities.Count, options.BatchSize);
 
         var stopwatch = Stopwatch.StartNew();
@@ -153,7 +152,7 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
 
             stopwatch.Stop();
 
-            _logger.LogDebug("application-bulkcommandserviceasync-bulkaddasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+            Logger.LogDebug("application-bulkcommandserviceasync-bulkaddasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
                 result.RowsAffected, stopwatch.ElapsedMilliseconds, result.IsSuccess);
 
             return result.ToBusiness();
@@ -162,7 +161,7 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
         {
             stopwatch.Stop();
 
-            _logger.LogError(ex, "application-bulkcommandserviceasync-bulkaddasync-error Error={Error} ElapsedMs={ElapsedMs}",
+            Logger.LogError(ex, "application-bulkcommandserviceasync-bulkaddasync-error Error={Error} ElapsedMs={ElapsedMs}",
                 ex.Message, stopwatch.ElapsedMilliseconds);
 
             return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
@@ -189,7 +188,7 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     {
         ArgumentNullException.ThrowIfNull(entities);
 
-        _logger.LogDebug("application-bulkcommandserviceasync-bulkmodifyasync-start Count={Count} BatchSize={BatchSize}",
+        Logger.LogDebug("application-bulkcommandserviceasync-bulkmodifyasync-start Count={Count} BatchSize={BatchSize}",
             entities.Count, options.BatchSize);
 
         var stopwatch = Stopwatch.StartNew();
@@ -211,7 +210,7 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
 
             stopwatch.Stop();
 
-            _logger.LogDebug("application-bulkcommandserviceasync-bulkmodifyasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+            Logger.LogDebug("application-bulkcommandserviceasync-bulkmodifyasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
                 result.RowsAffected, stopwatch.ElapsedMilliseconds, result.IsSuccess);
 
             return result.ToBusiness();
@@ -220,7 +219,7 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
         {
             stopwatch.Stop();
 
-            _logger.LogError(ex, "application-bulkcommandserviceasync-bulkmodifyasync-error Error={Error} ElapsedMs={ElapsedMs}",
+            Logger.LogError(ex, "application-bulkcommandserviceasync-bulkmodifyasync-error Error={Error} ElapsedMs={ElapsedMs}",
                 ex.Message, stopwatch.ElapsedMilliseconds);
 
             return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
@@ -247,7 +246,7 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
     {
         ArgumentNullException.ThrowIfNull(entities);
 
-        _logger.LogDebug("application-bulkcommandserviceasync-bulkremoveasync-start Count={Count} BatchSize={BatchSize}",
+        Logger.LogDebug("application-bulkcommandserviceasync-bulkremoveasync-start Count={Count} BatchSize={BatchSize}",
             entities.Count, options.BatchSize);
 
         var stopwatch = Stopwatch.StartNew();
@@ -259,7 +258,7 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
 
             stopwatch.Stop();
 
-            _logger.LogDebug("application-bulkcommandserviceasync-bulkremoveasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+            Logger.LogDebug("application-bulkcommandserviceasync-bulkremoveasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
                 result.RowsAffected, stopwatch.ElapsedMilliseconds, result.IsSuccess);
 
             return result.ToBusiness();
@@ -268,7 +267,7 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
         {
             stopwatch.Stop();
 
-            _logger.LogError(ex, "application-bulkcommandserviceasync-bulkremoveasync-error Error={Error} ElapsedMs={ElapsedMs}",
+            Logger.LogError(ex, "application-bulkcommandserviceasync-bulkremoveasync-error Error={Error} ElapsedMs={ElapsedMs}",
                 ex.Message, stopwatch.ElapsedMilliseconds);
 
             return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
@@ -296,7 +295,7 @@ public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW unitOfWork
             IList<IMessageResult> errors = entity.TryValidate(_validator);
             if (errors.AnySafe())
             {
-                _logger.LogDebug("application-bulkcommandserviceasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
+                Logger.LogDebug("application-bulkcommandserviceasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
                     typeof(TEntity).Name, errors.Count);
                 return errors.ToBusiness<bool>();
             }

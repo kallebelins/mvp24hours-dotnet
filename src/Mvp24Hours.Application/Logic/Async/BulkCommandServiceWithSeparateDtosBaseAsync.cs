@@ -7,7 +7,6 @@ using System.Diagnostics;
 using AutoMapper;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
@@ -77,6 +76,7 @@ namespace Mvp24Hours.Application.Logic;
 /// <param name="createDtoValidator">The validator for create DTO validation.</param>
 /// <param name="updateDtoValidator">The validator for update DTO validation.</param>
 /// <param name="entityValidator">The validator for entity validation.</param>
+/// <param name="logger">The logger for logging operations. When omitted, logging is disabled via <c>NullLogger.Instance</c>.</param>
 /// <exception cref="ArgumentNullException">Thrown when unitOfWork, bulkOperations, or mapper is null.</exception>
 public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCreateDto, TUpdateDto, TUoW>(
     TUoW unitOfWork,
@@ -84,8 +84,9 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
     IMapper mapper,
     IValidator<TCreateDto>? createDtoValidator,
     IValidator<TUpdateDto>? updateDtoValidator,
-    IValidator<TEntity>? entityValidator)
-    : BulkCommandServiceBaseAsync<TEntity, TUoW>(unitOfWork, bulkOperations, entityValidator), IBulkCommandServiceWithSeparateDtosAsync<TCreateDto, TUpdateDto>
+    IValidator<TEntity>? entityValidator,
+    ILogger? logger = null)
+    : BulkCommandServiceBaseAsync<TEntity, TUoW>(unitOfWork, bulkOperations, entityValidator, logger), IBulkCommandServiceWithSeparateDtosAsync<TCreateDto, TUpdateDto>
     where TEntity : class, IEntityBase
     where TCreateDto : class
     where TUpdateDto : class
@@ -94,7 +95,6 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
     #region [ Properties / Fields ]
 
     private readonly IValidator<TEntity>? _entityValidator = entityValidator;
-    private readonly ILogger _logger = NullLogger.Instance;
 
     /// <summary>
     /// Gets the AutoMapper instance for Entity/DTO mapping.
@@ -164,7 +164,7 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
         BulkOperationOptions options,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-bulkaddasync-start Count={Count} BatchSize={BatchSize}",
+        Logger.LogDebug("application-bulkcommandserviceseparatedtosasync-bulkaddasync-start Count={Count} BatchSize={BatchSize}",
             dtos?.Count ?? 0, options.BatchSize);
 
         var stopwatch = Stopwatch.StartNew();
@@ -188,7 +188,7 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
 
             stopwatch.Stop();
 
-            _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-bulkaddasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+            Logger.LogDebug("application-bulkcommandserviceseparatedtosasync-bulkaddasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
                 result.Data?.RowsAffected ?? 0, stopwatch.ElapsedMilliseconds, result.Data?.IsSuccess ?? false);
 
             return result;
@@ -197,7 +197,7 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
         {
             stopwatch.Stop();
 
-            _logger.LogError(ex, "application-bulkcommandserviceseparatedtosasync-bulkaddasync-error Error={Error} ElapsedMs={ElapsedMs}",
+            Logger.LogError(ex, "application-bulkcommandserviceseparatedtosasync-bulkaddasync-error Error={Error} ElapsedMs={ElapsedMs}",
                 ex.Message, stopwatch.ElapsedMilliseconds);
 
             return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
@@ -222,7 +222,7 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
         BulkOperationOptions options,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-bulkmodifyasync-start Count={Count} BatchSize={BatchSize}",
+        Logger.LogDebug("application-bulkcommandserviceseparatedtosasync-bulkmodifyasync-start Count={Count} BatchSize={BatchSize}",
             dtos?.Count ?? 0, options.BatchSize);
 
         var stopwatch = Stopwatch.StartNew();
@@ -246,7 +246,7 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
 
             stopwatch.Stop();
 
-            _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-bulkmodifyasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+            Logger.LogDebug("application-bulkcommandserviceseparatedtosasync-bulkmodifyasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
                 result.Data?.RowsAffected ?? 0, stopwatch.ElapsedMilliseconds, result.Data?.IsSuccess ?? false);
 
             return result;
@@ -255,7 +255,7 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
         {
             stopwatch.Stop();
 
-            _logger.LogError(ex, "application-bulkcommandserviceseparatedtosasync-bulkmodifyasync-error Error={Error} ElapsedMs={ElapsedMs}",
+            Logger.LogError(ex, "application-bulkcommandserviceseparatedtosasync-bulkmodifyasync-error Error={Error} ElapsedMs={ElapsedMs}",
                 ex.Message, stopwatch.ElapsedMilliseconds);
 
             return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
@@ -314,7 +314,7 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
                 IList<IMessageResult> dtoErrors = dto.TryValidate(CreateDtoValidator);
                 if (dtoErrors.AnySafe())
                 {
-                    _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validatecreatedtos-failed DtoType={DtoType} ErrorCount={ErrorCount}",
+                    Logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validatecreatedtos-failed DtoType={DtoType} ErrorCount={ErrorCount}",
                         typeof(TCreateDto).Name, dtoErrors.Count);
                     return Task.FromResult(dtoErrors.ToBusiness<IList<TEntity>>());
                 }
@@ -329,7 +329,7 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
                 IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
                 if (entityErrors.AnySafe())
                 {
-                    _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
+                    Logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
                         typeof(TEntity).Name, entityErrors.Count);
                     return Task.FromResult(entityErrors.ToBusiness<IList<TEntity>>());
                 }
@@ -369,7 +369,7 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
                 IList<IMessageResult> dtoErrors = dto.TryValidate(UpdateDtoValidator);
                 if (dtoErrors.AnySafe())
                 {
-                    _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validateupdatedtos-failed DtoType={DtoType} ErrorCount={ErrorCount}",
+                    Logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validateupdatedtos-failed DtoType={DtoType} ErrorCount={ErrorCount}",
                         typeof(TUpdateDto).Name, dtoErrors.Count);
                     return Task.FromResult(dtoErrors.ToBusiness<IList<TEntity>>());
                 }
@@ -384,7 +384,7 @@ public abstract class BulkCommandServiceWithSeparateDtosBaseAsync<TEntity, TCrea
                 IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
                 if (entityErrors.AnySafe())
                 {
-                    _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
+                    Logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
                         typeof(TEntity).Name, entityErrors.Count);
                     return Task.FromResult(entityErrors.ToBusiness<IList<TEntity>>());
                 }
