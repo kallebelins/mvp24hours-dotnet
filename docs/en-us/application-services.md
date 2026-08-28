@@ -236,6 +236,61 @@ services.AddMvp24HoursApplicationEventsWithOutbox(
 
 The built-in outbox is in memory and loses events on restart. Register a persistent `IApplicationEventOutbox` for production.
 
+### Combining cross-cutting concerns
+
+`CacheableQueryServiceBaseAsync`, `CacheableApplicationServiceBaseAsync`, `ObservableApplicationServiceBaseAsync`
+and `EventAwareCommandServiceBaseAsync` are **mutually exclusive by inheritance**: a service derives
+from exactly one of them, because C# does not support multiple base classes. Pick the base that
+matches the dominant concern of the service (caching queries, dispatching domain events, or emitting
+observability signals) and compose the remaining concerns manually inside the service body, using the
+same support types the base classes themselves rely on:
+
+| Concern | Support type (not a base class) |
+|---|---|
+| Query caching | `IQueryCacheProvider`, `ICacheInvalidator`, `IQueryCacheKeyGenerator` |
+| Application events | `IApplicationEventDispatcher` |
+| Observability | `ApplicationActivitySource`, `IOperationMetrics`, `IApplicationAuditStore`, `ICorrelationIdAccessor` |
+| Exception-to-result mapping | `SafeExecutor`, `IExceptionToResultMapper` |
+
+```csharp
+public sealed class CustomerService(
+    IUnitOfWorkAsync unitOfWork,
+    IQueryCacheProvider cacheProvider,
+    IApplicationEventDispatcher eventDispatcher,
+    ILogger<CustomerService>? logger = null)
+    : EventAwareCommandServiceBaseAsync<Customer, IUnitOfWorkAsync>(unitOfWork, eventDispatcher, logger: logger)
+{
+    // Cross-cutting concern not covered by the chosen base (caching, here) is composed
+    // directly with the same provider CacheableApplicationServiceBaseAsync would have used.
+    public async Task<IBusinessResult<Customer?>> GetByIdCachedAsync(int id, CancellationToken ct = default)
+    {
+        var cacheKey = $"customer:{id}";
+        if (await cacheProvider.TryGetAsync<Customer>(cacheKey, ct) is { Found: true } hit)
+        {
+            return BusinessResult.Create(hit.Value);
+        }
+
+        var result = await GetByIdAsync(id, ct);
+        if (result.HasData())
+        {
+            await cacheProvider.SetAsync(cacheKey, result.Data, ct: ct);
+        }
+        return result;
+    }
+}
+```
+
+This mirrors the decorator pattern already used by the CQRS module for the mediator
+(`IMediatorDecorator`/`MediatorDecoratorBase` in `Mvp24Hours.Infrastructure.Cqrs.Abstractions`):
+wrap or compose the cross-cutting behavior around a single inner implementation instead of
+stacking base classes. There is currently no equivalent `IApplicationServiceDecorator` for
+application services — the four base classes above cover the common single-concern cases, and no
+concrete need for combining more than one at once (cache + events, cache + observability, and so on)
+has been confirmed. If your service needs two or more of these concerns simultaneously and the
+composition above does not fit, open an issue describing the scenario before introducing a new
+decorator abstraction or a third-party library such as [Scrutor](https://github.com/khellang/Scrutor)
+for it.
+
 ## Exception-to-result mapping
 
 ```csharp
