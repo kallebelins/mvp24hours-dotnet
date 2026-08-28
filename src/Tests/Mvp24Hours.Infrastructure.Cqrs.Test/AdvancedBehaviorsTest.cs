@@ -104,6 +104,25 @@ public class AdvancedBehaviorsTest
     }
 
     [Fact]
+    public async Task CachingBehavior_NonCacheableRequest_ShouldBypassCacheAndExecuteEveryCall()
+    {
+        NonCacheableTestQueryHandler.ExecutionCount = 0;
+
+        ServiceProvider sp = CreateProvider(services =>
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>)));
+
+        IMediator mediator = sp.GetRequiredService<IMediator>();
+        var query = new NonCacheableTestQuery { Id = "1" };
+
+        string first = await mediator.SendAsync(query);
+        string second = await mediator.SendAsync(query);
+
+        // Non-cacheable requests execute the handler every time (no ICacheable marker).
+        Assert.NotEqual(first, second);
+        Assert.Equal(2, NonCacheableTestQueryHandler.ExecutionCount);
+    }
+
+    [Fact]
     public async Task CacheInvalidationBehavior_ShouldRemoveCachedEntries()
     {
         CacheableTestQueryHandler.ExecutionCount = 0;
@@ -141,6 +160,24 @@ public class AdvancedBehaviorsTest
     }
 
     [Fact]
+    public async Task RetryBehavior_NonRetryableRequest_ShouldPropagateFailureWithoutRetrying()
+    {
+        NonRetryableTestCommand.AttemptCount = 0;
+
+        ServiceProvider sp = CreateProvider(services =>
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RetryBehavior<,>)));
+
+        IMediator mediator = sp.GetRequiredService<IMediator>();
+
+        // No IRetryable marker: the behavior bypasses retry logic and the transient
+        // failure propagates on the first attempt instead of being retried.
+        await Assert.ThrowsAsync<TimeoutException>(() =>
+            mediator.SendAsync(new NonRetryableTestCommand { FailUntilAttempt = 2 }));
+
+        Assert.Equal(1, NonRetryableTestCommand.AttemptCount);
+    }
+
+    [Fact]
     public void RetryPolicyExtensions_ShouldDetectDatabaseAndNetworkErrors()
     {
         var timeout = new Exception("SQL timeout while executing database command");
@@ -167,6 +204,26 @@ public class AdvancedBehaviorsTest
         Assert.Equal(10, first);
         Assert.Equal(first, second);
         Assert.Equal(1, IdempotentTestCommandHandler.ExecutionCount);
+    }
+
+    [Fact]
+    public async Task IdempotencyBehavior_NonIdempotentRequest_ShouldExecuteHandlerEveryCall()
+    {
+        NonIdempotentTestCommandHandler.ExecutionCount = 0;
+
+        ServiceProvider sp = CreateProvider(services =>
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(IdempotencyBehavior<,>)));
+
+        IMediator mediator = sp.GetRequiredService<IMediator>();
+        var command = new NonIdempotentTestCommand { OperationKey = "payment-42" };
+
+        int first = await mediator.SendAsync(command);
+        int second = await mediator.SendAsync(command);
+
+        // No IIdempotentCommand marker: the behavior bypasses the cache and the
+        // handler executes on every call, so results differ.
+        Assert.NotEqual(first, second);
+        Assert.Equal(2, NonIdempotentTestCommandHandler.ExecutionCount);
     }
 
     [Fact]

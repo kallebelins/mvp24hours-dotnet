@@ -271,6 +271,51 @@ public class ServiceCollectionExtensionsAdvancedTest
         Assert.Contains(hosted, h => h.GetType().Name.Contains("InboxCleanup"));
     }
 
+    [Fact]
+    public void WithAllBehaviors_ShouldResolveMarkerScopedBehaviorsInDocumentedOrder()
+    {
+        // Arrange — WithAllBehaviors() enables a subset of the 20 registerable behaviors,
+        // including all 5 marker-scoped ones (Caching, Transaction, Idempotency, Retry via
+        // WithAllBehaviors, plus their siblings). The registration order documented as
+        // comments in ServiceCollectionExtensions.AddMvpMediator (outer -> inner) must be
+        // preserved regardless of where the marker interfaces themselves are declared.
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMediatorMemoryCache();
+        services.AddMvpMediator(options =>
+        {
+            options.RegisterHandlersFromAssembly(typeof(TestCommand).Assembly);
+            options.WithAllBehaviors();
+        });
+        ServiceProvider sp = services.BuildServiceProvider();
+
+        // Act
+        List<Type> resolvedOrder = sp.GetServices<IPipelineBehavior<TestCommand, string>>()
+            .Select(b => b.GetType())
+            .ToList();
+
+        // Assert — expected outer -> inner order per the documented sequence for the
+        // behaviors enabled by WithAllBehaviors().
+        Type[] expectedOrder =
+        [
+            typeof(UnhandledExceptionBehavior<TestCommand, string>),
+            typeof(RequestContextBehavior<TestCommand, string>),
+            typeof(TracingBehavior<TestCommand, string>),
+            typeof(TelemetryBehavior<TestCommand, string>),
+            typeof(LoggingBehavior<TestCommand, string>),
+            typeof(PerformanceBehavior<TestCommand, string>),
+            typeof(AuditBehavior<TestCommand, string>),
+            typeof(AuthorizationBehavior<TestCommand, string>),
+            typeof(ValidationBehavior<TestCommand, string>),
+            typeof(IdempotencyBehavior<TestCommand, string>),
+            typeof(CachingBehavior<TestCommand, string>),
+            typeof(RetryBehavior<TestCommand, string>),
+            typeof(TransactionBehavior<TestCommand, string>)
+        ];
+
+        Assert.Equal(expectedOrder, resolvedOrder);
+    }
+
     private static void AssertBehaviorRegistered(Action<MediatorOptions> configure, Type expectedBehavior)
     {
         var services = new ServiceCollection();

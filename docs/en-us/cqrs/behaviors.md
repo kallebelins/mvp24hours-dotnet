@@ -146,6 +146,38 @@ options.WithAuditBehavior(auditAllCommands: false);
 
 Implement `IAuditable` to control request/response payload capture and metadata. Payload capture defaults to false to avoid leaking sensitive data.
 
+## Scoping behaviors by request type
+
+Several behaviors only apply to requests that opt in via a marker interface. If a request doesn't implement the marker, the behavior calls `next()` immediately and does nothing else — equivalent to the behavior not being registered at all for that request. This lets you register a behavior once globally (via `MediatorOptions`) while controlling per-request-type whether it actually runs.
+
+| Behavior | Marker interface | Effect when the marker is absent |
+| --- | --- | --- |
+| `CachingBehavior` | `ICacheable` | Handler executes on every call; no cache read/write. |
+| `TransactionBehavior` / `TransactionWithEventsBehavior` | `ITransactional` | Handler executes without a wrapping transaction (also requires `IUnitOfWorkAsync` to be available). |
+| `IdempotencyBehavior` | `IIdempotentCommand` | Handler executes on every call; no idempotency key lookup/cache. |
+| `RetryBehavior` | `IRetryable` | Transient failures propagate immediately; no retry attempts. |
+| `CircuitBreakerBehavior` | `ICircuitBreakerProtected` | Requests bypass the circuit breaker entirely, even if other requests tripped it. |
+
+All five marker interfaces live in the `Mvp24Hours.Infrastructure.Cqrs.Behaviors` namespace (declared in `Abstractions/` for discoverability, but the namespace matches the behavior that consumes them). Apply a marker directly on the request:
+
+```csharp
+public sealed record GetProductById(int ProductId)
+    : IMediatorQuery<Product>, ICacheable
+{
+    public string? CacheKey => $"product:{ProductId}";
+    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
+}
+
+public sealed record CreateOrder(string CustomerName)
+    : IMediatorCommand<Order>, ITransactional, IRetryable;
+```
+
+A single request can combine multiple markers (e.g. `ITransactional` and `IRetryable`) — each behavior checks only its own marker, independently of the others.
+
+**Default behavior:** this scoping is unconditional and always active once a behavior is registered — there is no `MediatorOptions` flag to disable it. Enabling `RegisterTransactionBehavior`, `RegisterIdempotencyBehavior`, `RegisterRetryBehavior`, or `RegisterCircuitBreakerBehavior` does **not** make the behavior run for every request; it only makes the behavior available in the pipeline for requests that carry the matching marker. This is by design: registering `TransactionBehavior` globally and having it apply to every command regardless of marker would silently wrap unrelated commands in transactions.
+
+`ValidationBehavior`, `AuthorizationBehavior`, `LoggingBehavior`, `TracingBehavior`, `TelemetryBehavior`, `PerformanceBehavior`, and `UnhandledExceptionBehavior` are cross-cutting by design and do not use this opt-in marker pattern — once registered, they apply to every request (`AuthorizationBehavior` and `AuditBehavior` have their own opt-in markers, `IAuthorized` and `IAuditable`, following the same idiom).
+
 ## Custom behavior
 
 ```csharp
