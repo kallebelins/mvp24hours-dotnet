@@ -9,7 +9,7 @@ Register only the features your API uses, then add their middleware in a deliber
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddMvp24HoursProblemDetails();
+builder.Services.AddNativeProblemDetailsAll(builder.Environment);
 builder.Services.AddMvp24HoursRequestContext();
 builder.Services.AddMvp24HoursRequestObservability();
 builder.Services.AddMvp24HoursSecurityHeaders();
@@ -20,7 +20,7 @@ builder.Services.AddMvp24HoursOutputCache();
 var app = builder.Build();
 app.UseMvp24HoursRequestContext();
 app.UseMvp24HoursRequestObservability();
-app.UseMvp24HoursProblemDetails();
+app.UseNativeProblemDetailsHandling();
 app.UseMvp24HoursSecurityHeaders();
 app.UseMvp24HoursRateLimiting();
 app.UseMvp24HoursOutputCache();
@@ -28,11 +28,34 @@ app.UseMvp24HoursOutputCache();
 
 `AddMvp24HoursOutputCaching` and `UseMvp24HoursOutputCaching` are compatibility APIs. New applications should use `AddMvp24HoursOutputCache` and `UseMvp24HoursOutputCache`.
 
+### Error handling: deprecated middlewares
+
+`AddNativeProblemDetailsAll` + `UseNativeProblemDetailsHandling` is the only recommended error handling path. The two custom middlewares below are deprecated and will be removed in v12:
+
+| Deprecated | Replacement |
+| --- | --- |
+| `ExceptionMiddleware`, `AddMvp24HoursWebExceptions`, `UseMvp24HoursExceptionHandling` | `AddNativeProblemDetailsAll` + `UseNativeProblemDetailsHandling` |
+| `ProblemDetailsMiddleware`, `UseMvp24HoursProblemDetails` | `UseNativeProblemDetailsHandling` |
+
+`AddMvp24HoursProblemDetails` and `AddMvp24HoursProblemDetailsAll` are **not** deprecated: they are the shared registration for `ModelStateValidationFilter` and `ProblemDetailsResultFilter`, which `AddNativeProblemDetails` does not register. Combine them with the native path when you need those MVC filters.
+
+```csharp
+// before
+builder.Services.AddMvp24HoursWebExceptions(o => o.TraceMiddleware = false);
+var app = builder.Build();
+app.UseMvp24HoursExceptionHandling();
+
+// after
+builder.Services.AddNativeProblemDetailsAll(builder.Environment);
+var app = builder.Build();
+app.UseNativeProblemDetailsHandling();
+```
+
 ## Production matrix
 
 | Middleware / feature | Options class | Tested defaults | Production guidance |
 |---|---|---|---|
-| Legacy exception middleware | `ExceptionOptions` | tracing off; built-in status mapper | Prefer RFC 7807 Problem Details for new APIs. |
+| Legacy exception middleware (**deprecated**, removed in v12) | `ExceptionOptions` | tracing off; built-in status mapper | Use `AddNativeProblemDetailsAll` + `UseNativeProblemDetailsHandling`. |
 | Correlation ID | `CorrelationIdOptions` | `X-Correlation-ID`; response header on | Accept a gateway-provided ID only from trusted infrastructure. |
 | Security headers | `SecurityHeadersOptions` | HSTS, CSP and frame protection on | Review CSP and preload before deployment. |
 | ETag | `ETagOptions` | enabled; content hash; strong ETags | Keep strong hashes unless representation semantics require weak ETags. |

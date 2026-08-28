@@ -87,6 +87,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Deprecated
 
+- **Custom error-handling middlewares in `Mvp24Hours.WebAPI`**: `ExceptionMiddleware` and
+  `ProblemDetailsMiddleware` — and the extension methods that configure and register them
+  (`AddMvp24HoursWebExceptions`, `UseMvp24HoursExceptionHandling`, `UseMvp24HoursProblemDetails`) —
+  are now `[Obsolete]`: *"Use `AddNativeProblemDetails()`/`UseNativeProblemDetailsHandling()`
+  instead. Will be removed in v12."* The native path builds on the ASP.NET Core
+  `IProblemDetailsService`, so it gets content negotiation, `UseExceptionHandler` and
+  `UseStatusCodePages` integration for free. `ExceptionMiddleware` never produced RFC 7807 at
+  all — it writes an `IBusinessResult` payload — so migrating away from it **changes the response
+  body**, which is precisely the reason for the deprecation.
+  **`AddMvp24HoursProblemDetails` (both overloads) and `AddMvp24HoursProblemDetailsAll` are NOT
+  deprecated**: besides the exception mappers, they register the MVC filters
+  `ModelStateValidationFilter` and `ProblemDetailsResultFilter`, which `AddNativeProblemDetails`
+  does not register. Keep calling them next to the native path when you rely on those filters, and
+  swap only the pipeline call (`app.UseMvp24HoursProblemDetails()` →
+  `app.UseNativeProblemDetailsHandling()`). Nothing was removed and no behavior changed.
+  See [WebAPI → Error handling](docs/en-us/webapi.md) and
+  [Problem Details](docs/en-us/modernization/problem-details.md).
 - **`ContantsHelper` → `ConstantsHelper`** (typo fix, `Mvp24Hours.Core.Helpers`). The correctly
   spelled `ConstantsHelper` is now the canonical type and is used across production code, tests,
   samples, and docs. `ContantsHelper` (with `ContantsHelper.Data`) remains as an `[Obsolete]` shim

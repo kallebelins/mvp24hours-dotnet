@@ -23,6 +23,7 @@ namespace Mvp24Hours.WebAPI.Test;
 public class ApplicationBuilderTest
 {
     [Fact]
+#pragma warning disable CS0618 // intentional: covers obsolete ExceptionMiddleware path until removal in v12
     public async Task TestExceptions1()
     {
         // arrange
@@ -79,6 +80,7 @@ public class ApplicationBuilderTest
         // assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+#pragma warning restore CS0618
 
     [Fact]
     public async Task TestCors1()

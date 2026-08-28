@@ -23,12 +23,67 @@ builder.Services.AddMvp24HoursSwagger("MyAPI");
 /// compression
 builder.Services.AddMvp24HoursWebGzip();
 
-/// exception middleware
-builder.Services.AddMvp24HoursWebExceptions(options => { });
+/// error handling (RFC 7807 Problem Details)
+builder.Services.AddNativeProblemDetailsAll(builder.Environment);
 
 /// cors middleware
 builder.Services.AddMvp24HoursWebCors(options => { });
 ```
+
+### Error handling
+
+`AddNativeProblemDetailsAll` + `UseNativeProblemDetailsHandling` is the only recommended
+error handling path. It builds on the native ASP.NET Core `IProblemDetailsService`, so
+responses are RFC 7807 `application/problem+json` and integrate with `UseExceptionHandler`
+and `UseStatusCodePages`.
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddNativeProblemDetailsAll(builder.Environment, options =>
+{
+    options.ProblemTypeBaseUri = "https://api.example.com/errors";
+});
+
+var app = builder.Build();
+
+// Register early, before routing.
+app.UseNativeProblemDetailsHandling();
+```
+
+Two older mechanisms are deprecated and will be removed in v12:
+
+| Deprecated | Replacement | Why |
+| --- | --- | --- |
+| `AddMvp24HoursWebExceptions` + `UseMvp24HoursExceptionHandling` (`ExceptionMiddleware`) | `AddNativeProblemDetailsAll` + `UseNativeProblemDetailsHandling` | writes an `IBusinessResult` payload, not RFC 7807 |
+| `UseMvp24HoursProblemDetails` (`ProblemDetailsMiddleware`) | `UseNativeProblemDetailsHandling` | custom middleware duplicates what `IProblemDetailsService` already does |
+
+`AddMvp24HoursProblemDetails` / `AddMvp24HoursProblemDetailsAll` are **not** deprecated.
+Besides the exception mappers, they register the MVC filters `ModelStateValidationFilter`
+and `ProblemDetailsResultFilter`, which `AddNativeProblemDetails` does not register. Keep
+calling them alongside the native path when you rely on those filters:
+
+```csharp
+builder.Services.AddNativeProblemDetailsAll(builder.Environment);
+builder.Services.AddMvp24HoursModelStateValidation(); // ModelStateValidationFilter for MVC
+```
+
+Migration:
+
+```csharp
+// before
+builder.Services.AddMvp24HoursProblemDetails(o =>
+    o.IncludeExceptionDetails = builder.Environment.IsDevelopment());
+var app = builder.Build();
+app.UseMvp24HoursProblemDetails();
+
+// after
+builder.Services.AddNativeProblemDetailsAll(builder.Environment);
+var app = builder.Build();
+app.UseNativeProblemDetailsHandling();
+```
+
+> 📚 See [Problem Details](modernization/problem-details.md) for the full option reference.
 
 ### Native OpenAPI (.NET 9+)
 
@@ -238,8 +293,8 @@ app.MapPost("/api/payments", handler)
 
 var app = builder.Build();
 
-/// exception handlers
-app.UseMvp24HoursExceptionHandling();
+/// error handling (RFC 7807 Problem Details) — register first
+app.UseNativeProblemDetailsHandling();
 
 /// cors
 app.UseMvp24HoursCors();

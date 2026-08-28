@@ -86,8 +86,8 @@ builder.Services.AddMvp24HoursNativeOpenApi(opts =>
 });
 
 // ─── ProblemDetails (RFC 7807) ───────────────────────────────────────────────
-builder.Services.AddMvp24HoursProblemDetails(opts =>
-    opts.IncludeExceptionDetails = builder.Environment.IsDevelopment());
+// Native ASP.NET Core IProblemDetailsService — exception details only in Development.
+builder.Services.AddNativeProblemDetailsAll(builder.Environment);
 
 // ─── Health checks ───────────────────────────────────────────────────────────
 builder.Services.AddMvp24HoursHealthChecks();
@@ -98,7 +98,7 @@ builder.Services.AddSingleton<CustomerStore>();
 var app = builder.Build();
 
 // ─── Middleware pipeline ──────────────────────────────────────────────────────
-app.UseMvp24HoursProblemDetails();
+app.UseNativeProblemDetailsHandling();
 app.UseHttpsRedirection();
 
 // Native OpenAPI endpoints (Minimal API form; replaces Swashbuckle)

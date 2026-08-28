@@ -92,8 +92,10 @@ public class ExtensionsSmokeTest
     {
         IApplicationBuilder app = CreateAppBuilder();
 
+#pragma warning disable CS0618 // intentional: covers obsolete UseMvp24HoursProblemDetails until removal in v12
         IApplicationBuilder result = app
             .UseMvp24HoursProblemDetails()
+#pragma warning restore CS0618
             .UseMvp24HoursRateLimiting();
 
         result.Should().BeSameAs(app);

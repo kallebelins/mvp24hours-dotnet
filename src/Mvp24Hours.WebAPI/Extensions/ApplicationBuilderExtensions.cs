@@ -274,11 +274,16 @@ public static class ApplicationBuilderExtensions
     /// <remarks>
     /// <para>
     /// This middleware provides basic exception handling with customizable status code mapping.
-    /// For RFC 7807 compliant ProblemDetails responses, use <see cref="UseMvp24HoursProblemDetails"/> instead.
+    /// It writes an <c>IBusinessResult</c> payload, not RFC 7807 <c>application/problem+json</c>.
+    /// </para>
+    /// <para>
+    /// Deprecated: use <see cref="NativeProblemDetailsExtensions.AddNativeProblemDetailsAll"/> plus
+    /// <see cref="NativeProblemDetailsExtensions.UseNativeProblemDetailsHandling(IApplicationBuilder)"/> instead.
     /// </para>
     /// </remarks>
     /// <param name="builder">The application builder.</param>
     /// <returns>The application builder for chaining.</returns>
+    [Obsolete("Use AddNativeProblemDetails()/UseNativeProblemDetailsHandling() instead. Will be removed in v12.")]
     public static IApplicationBuilder UseMvp24HoursExceptionHandling(this IApplicationBuilder builder)
     {
         return builder.UseMiddleware<ExceptionMiddleware>();
@@ -305,6 +310,13 @@ public static class ApplicationBuilderExtensions
     /// <para>
     /// Requires prior registration via <see cref="M:Mvp24Hours.WebAPI.Extensions.ServiceCollectionExtensions.AddMvp24HoursProblemDetails(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Mvp24Hours.WebAPI.Configuration.MvpProblemDetailsOptions})"/>.
     /// </para>
+    /// <para>
+    /// Deprecated: use <see cref="NativeProblemDetailsExtensions.AddNativeProblemDetailsAll"/> plus
+    /// <see cref="NativeProblemDetailsExtensions.UseNativeProblemDetailsHandling(IApplicationBuilder)"/> instead.
+    /// The registration method <c>AddMvp24HoursProblemDetails</c> is <b>not</b> deprecated: it is the
+    /// shared registration for <c>ModelStateValidationFilter</c> and <c>ProblemDetailsResultFilter</c>,
+    /// which the native path does not register.
+    /// </para>
     /// </remarks>
     /// <example>
     /// <code>
@@ -320,6 +332,7 @@ public static class ApplicationBuilderExtensions
     /// </example>
     /// <param name="builder">The application builder.</param>
     /// <returns>The application builder for chaining.</returns>
+    [Obsolete("Use AddNativeProblemDetails()/UseNativeProblemDetailsHandling() instead. Will be removed in v12.")]
     public static IApplicationBuilder UseMvp24HoursProblemDetails(this IApplicationBuilder builder)
     {
         return builder.UseMiddleware<ProblemDetailsMiddleware>();

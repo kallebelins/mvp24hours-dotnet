@@ -480,6 +480,16 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Add configuration exception middleware
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Deprecated: <see cref="ExceptionOptions"/> is consumed exclusively by the legacy
+    /// <c>ExceptionMiddleware</c>, which writes an <c>IBusinessResult</c> payload instead of
+    /// RFC 7807 <c>application/problem+json</c>. Use
+    /// <see cref="NativeProblemDetailsExtensions.AddNativeProblemDetailsAll"/> plus
+    /// <c>UseNativeProblemDetailsHandling</c> instead.
+    /// </para>
+    /// </remarks>
+    [Obsolete("Use AddNativeProblemDetails()/UseNativeProblemDetailsHandling() instead. Will be removed in v12.")]
     public static IServiceCollection AddMvp24HoursWebExceptions(this IServiceCollection services, Action<ExceptionOptions>? options = null)
     {
         if (options != null)
@@ -507,8 +517,17 @@ public static class ServiceCollectionExtensions
     /// </list>
     /// </para>
     /// <para>
-    /// Use <see cref="ApplicationBuilderExtensions.UseMvp24HoursProblemDetails"/> to add
-    /// the middleware to the pipeline.
+    /// This method is <b>not</b> deprecated. It is the shared registration used by both error
+    /// handling paths: besides the exception mappers, it registers
+    /// <c>ModelStateValidationFilter</c> and <c>ProblemDetailsResultFilter</c>, which
+    /// <see cref="NativeProblemDetailsExtensions.AddNativeProblemDetails"/> does <b>not</b> register.
+    /// Keep calling it when you rely on those MVC filters.
+    /// </para>
+    /// <para>
+    /// The legacy middleware it was originally paired with
+    /// (<c>UseMvp24HoursProblemDetails</c>) <b>is</b> deprecated. For the exception handling
+    /// pipeline, use <see cref="NativeProblemDetailsExtensions.AddNativeProblemDetailsAll"/> plus
+    /// <c>UseNativeProblemDetailsHandling</c>.
     /// </para>
     /// </remarks>
     /// <example>

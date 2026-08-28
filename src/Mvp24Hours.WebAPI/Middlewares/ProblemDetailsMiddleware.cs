@@ -34,6 +34,7 @@ namespace Mvp24Hours.WebAPI.Middlewares;
 /// app.UseMvp24HoursProblemDetails();
 /// </code>
 /// </example>
+[Obsolete("Use AddNativeProblemDetails()/UseNativeProblemDetailsHandling() instead. Will be removed in v12.")]
 public class ProblemDetailsMiddleware
 {
     private readonly RequestDelegate _next;
