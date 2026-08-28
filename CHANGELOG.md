@@ -173,6 +173,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   interceptor writes a `string` into `DeletedBy`. See
   [Migration → Soft delete (EF Core)](docs/en-us/migration.md) and
   [EF Core Advanced → Interceptors and filters](docs/en-us/database/efcore-advanced.md).
+- **`TimeZoneHelper` and `AddMvp24HoursTimeZone` (`Mvp24Hours.Infrastructure`)** are now
+  `[Obsolete]`: *"Use `IClock` (`Mvp24Hours.Core.Contract.Infrastructure`) or `TimeProvider`. Will be
+  removed in v12."* **No behavior changed** — every call site inside Mvp24Hours still uses the helper,
+  with a local `CS0618` suppression and a TODO. The helper keeps process-wide mutable state
+  (`TimeZoneIds` is a public static list) and caches the resolved `TimeZoneInfo` on first use, so any
+  later change to the list is silently ignored and every host in the process shares one configuration.
+  `AddMvp24HoursTimeZone` is deprecated for the same reason: it registers nothing in the container, it
+  only mutates that static list — and because of the cache, calling it after the first
+  `GetTimeZoneNow()` has no effect.
+  **`IClock` is not a drop-in replacement.** `GetTimeZoneNow()` resolves the first system timezone
+  matching `TimeZoneIds` (South America by default) *regardless of the machine's local timezone*,
+  while `SystemClock`, `AddTimeProvider()`, and `AddSystemClock()` use `TimeZoneInfo.Local`. To keep
+  the current values, register the zone explicitly:
+  `services.AddTimeProvider(TimeProvider.System, TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo"))`.
+  Two tests document the relationship: `GetTimeZoneNow_MatchesIClockNow_WhenClockIsRegisteredWithTheSameTimeZone`
+  and `GetTimeZoneNow_DiffersFromDefaultIClockNow_ByTheLocalTimeZoneOffsetDelta`.
+  The remaining internal call sites are the legacy `IEntityDateLog` stamping path
+  (`Repository.Remove`, `RepositoryAsync.RemoveAsync`, `Mvp24HoursContext.ApplyLogRules`) and the
+  no-`IClock` fallback in the MongoDB `AuditInterceptor`/`SoftDeleteInterceptor` — where the fallback
+  returns South America local time while `IClock.UtcNow` returns UTC, so registering an `IClock`
+  changes which value is stamped. See
+  [Migration → Static helpers replaced by DI](docs/en-us/migration.md).
+- **`ConfigurationHelper` (`Mvp24Hours.Infrastructure`)** is now `[Obsolete]`: *"Bind options via
+  `IConfiguration`/`IOptions<T>` at the host. Will be removed in v12."* Nothing was removed and no
+  behavior changed. The helper is a process-wide service locator for configuration: it holds static
+  mutable state (host environment plus the built `IConfigurationRoot`) and, when nothing has been set,
+  `AppSettings` builds its own configuration from `appsettings.json` in
+  `Directory.GetCurrentDirectory()` — the process working directory, not necessarily the content root
+  — which bypasses every source the host already composed (environment variables, user secrets,
+  command line, secret stores) and cannot be isolated per test. It had **no production consumer** in
+  this repository; the only call sites are static test setups, which keep it with a local `CS0618`
+  suppression and a TODO. `SetEnvironment`/`SetConfiguration` have no replacement because they have no
+  purpose once the host owns configuration — inject `IHostEnvironment`/`IConfiguration`. See
+  [Configuration reference → Reading configuration outside the host](docs/en-us/configuration-reference.md).
+
+### Removed
+
+- **Legacy static telemetry facade (breaking)**: the four types that made up the pre-OpenTelemetry
+  telemetry mechanism were deleted. All of them had been `[Obsolete]` since 9.1.200, none had any
+  remaining consumer in production code, and none was ever referenced by `samples/` or `templates/`:
+  - `Mvp24Hours.Helpers.TelemetryHelper` (`Mvp24Hours.Core`) — a static class holding six mutable
+    dictionaries of handlers plus a global ignore list. Being static, it leaked registrations across
+    tests and across hosts in the same process, and it had no way to be scoped or replaced.
+  - `Mvp24Hours.Extensions.TelemetryExtensions` (`Mvp24Hours.Core`) — `AddMvp24HoursTelemetry`,
+    `AddMvp24HoursTelemetryFiltered`, and `AddMvp24HoursTelemetryIgnore`. These took an
+    `IServiceCollection` but registered nothing in it: every overload only pushed handlers into the
+    static helper, so the DI container was decorative.
+  - `Mvp24Hours.Core.Contract.Infrastructure.Logging.ITelemetryService` — the handler contract, whose
+    only consumer was the removed helper.
+  - `Mvp24Hours.Core.Enums.Infrastructure.TelemetryLevels` — the `[Flags]` level enum, used only as a
+    parameter type of the removed APIs.
+
+  **Migration**: use `ILogger<T>` for structured logging and the OpenTelemetry surface already shipped
+  in `Mvp24Hours.Core.Observability` (`Mvp24HoursActivitySources`, `Mvp24HoursMeters`,
+  `AddMvp24HoursObservability`, `AddMvp24HoursTracing`, `AddMvp24HoursMetrics`,
+  `AddMvp24HoursLogging`) for traces and metrics. Mapping:
+  `TelemetryHelper.Execute(TelemetryLevels.Information, "Evt", a, b)` →
+  `_logger.LogInformation("Evt: {A}, {B}", a, b)`; `AddMvp24HoursTelemetry(level, action)` →
+  `services.AddMvp24HoursLogging(...)` / `services.AddLogging(b => b.AddConsole())` or a custom
+  `ILoggerProvider`;
+  `AddMvp24HoursTelemetryFiltered`/`AddMvp24HoursTelemetryIgnore` → log-level filtering by category
+  (`Logging:LogLevel` in `appsettings.json` or `ILoggingBuilder.AddFilter`);
+  `ITelemetryService` → `ILoggerProvider`; `TelemetryLevels` →
+  `Microsoft.Extensions.Logging.LogLevel` (`Verbose` → `Debug`/`Trace`, the rest map by name).
+  See [Telemetry](docs/en-us/telemetry.md) and
+  [Observability → Migration](docs/en-us/observability/migration.md).
 
 ### Fixed
 

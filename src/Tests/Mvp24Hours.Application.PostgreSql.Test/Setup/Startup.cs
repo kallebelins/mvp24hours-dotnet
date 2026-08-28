@@ -58,6 +58,9 @@ public static class Startup
                 options
                     .UseInMemoryDatabase(StringHelper.GenerateKey(10)));
 #else
+        // TODO (task 4.2c): ConfigurationHelper is obsolete. This setup has no host to bind
+        // options from, so it keeps the static helper until the helper is removed in v12.
+#pragma warning disable CS0618 // intentional: no host available in this static test setup
             IServiceCollection services = new ServiceCollection()
                 .AddSingleton(ConfigurationHelper.AppSettings);
 
@@ -67,6 +70,7 @@ public static class Startup
                     .Format(StringHelper.GenerateKey(10)),
                 options => options.SetPostgresVersion(new Version(9, 6)))
             );
+#pragma warning restore CS0618
 #endif
             services.AddMvp24HoursDbContext<DataContext>();
             services.AddMvp24HoursRepository(options: options => options.MaxQtyByQueryPage = 100);

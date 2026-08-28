@@ -34,6 +34,17 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Add time zone 
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Deprecated.</b> This method registers nothing in the container: it only mutates the static
+    /// <c>TimeZoneHelper.TimeZoneIds</c> list, and <c>TimeZoneHelper</c> caches the resolved
+    /// <see cref="TimeZoneInfo"/> on first use — so calling it after the first
+    /// <c>GetTimeZoneNow()</c> has no effect. Register a clock with an explicit timezone instead:
+    /// <c>services.AddTimeProvider(TimeProvider.System, TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo"))</c>,
+    /// which registers both <c>IClock</c> and <c>TimeProvider</c>.
+    /// </para>
+    /// </remarks>
+    [Obsolete("Use IClock (Mvp24Hours.Core.Contract.Infrastructure) or TimeProvider. Will be removed in v12.")]
     public static IServiceCollection AddMvp24HoursTimeZone(this IServiceCollection services, bool clearList, params string[] args)
     {
         if (clearList)

@@ -106,8 +106,12 @@ public static class Startup
         string baseUrl = server.Url
             ?? throw new InvalidOperationException("WireMock server URL is not available.");
 
+        // TODO (task 4.2c): ConfigurationHelper is obsolete. This setup has no host to bind options
+        // from, so it keeps the static helper until the helper is removed in v12.
+#pragma warning disable CS0618 // intentional: no host available in this static test setup
         IServiceCollection services = new ServiceCollection()
                         .AddSingleton(ConfigurationHelper.AppSettings);
+#pragma warning restore CS0618
 
         services.AddHttpClient("jsonUrl", client => client.BaseAddress = new Uri(baseUrl));
 

@@ -38,6 +38,8 @@ public class ServiceCollectionExtensionsTest
     [Fact]
     public void AddMvp24HoursTimeZone_WithClearList_ShouldReplaceDefaults()
     {
+        // intentional: covers the obsolete TimeZoneHelper/AddMvp24HoursTimeZone until removal in v12
+#pragma warning disable CS0618
         List<string> originalIds = [.. TimeZoneHelper.TimeZoneIds];
 
         try
@@ -52,11 +54,14 @@ public class ServiceCollectionExtensionsTest
             TimeZoneHelper.TimeZoneIds.Clear();
             TimeZoneHelper.TimeZoneIds.AddRange(originalIds);
         }
+#pragma warning restore CS0618
     }
 
     [Fact]
     public void AddMvp24HoursTimeZone_WithoutClearList_ShouldAppendTimeZones()
     {
+        // intentional: covers the obsolete TimeZoneHelper/AddMvp24HoursTimeZone until removal in v12
+#pragma warning disable CS0618
         List<string> originalIds = [.. TimeZoneHelper.TimeZoneIds];
 
         try
@@ -72,11 +77,14 @@ public class ServiceCollectionExtensionsTest
             TimeZoneHelper.TimeZoneIds.Clear();
             TimeZoneHelper.TimeZoneIds.AddRange(originalIds);
         }
+#pragma warning restore CS0618
     }
 
     [Fact]
     public void AddMvp24HoursTimeZone_WithEmptyArgs_ShouldReturnServicesUnchanged()
     {
+        // intentional: covers the obsolete TimeZoneHelper/AddMvp24HoursTimeZone until removal in v12
+#pragma warning disable CS0618
         List<string> originalIds = [.. TimeZoneHelper.TimeZoneIds];
         var services = new ServiceCollection();
 
@@ -87,5 +95,6 @@ public class ServiceCollectionExtensionsTest
 
         TimeZoneHelper.TimeZoneIds.Clear();
         TimeZoneHelper.TimeZoneIds.AddRange(originalIds);
+#pragma warning restore CS0618
     }
 }

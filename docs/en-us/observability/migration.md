@@ -2,9 +2,12 @@
 
 This guide provides detailed instructions for migrating from the legacy telemetry system (`TelemetryHelper`, `TelemetryLevels`, `ITelemetryService`) to modern approaches using `ILogger<T>` and OpenTelemetry.
 
+> 🚫 **Removed in 10.8.0.** These types no longer ship in any package. Code referencing them does not
+> compile, so this migration is mandatory when upgrading from 9.1.x.
+
 ## Why Migrate?
 
-The legacy telemetry system (`TelemetryHelper`) has been marked as **obsolete** for the following reasons:
+The legacy telemetry system (`TelemetryHelper`) was **removed** for the following reasons:
 
 1. **Industry Standard**: `ILogger<T>` is the .NET standard for structured logging
 2. **Dependency Injection**: `ILogger` integrates seamlessly with .NET's DI system
@@ -13,13 +16,13 @@ The legacy telemetry system (`TelemetryHelper`) has been marked as **obsolete** 
 5. **OpenTelemetry**: CNCF standard for distributed observability (logs + traces + metrics)
 6. **Performance**: Source generators for high-performance logging
 
-## Deprecation Timeline
+## Removal Timeline
 
 | Version | Status |
 |---------|--------|
-| Current | Marked as `[Obsolete]` - compiler warnings |
-| Next Minor | Maintained for compatibility |
-| Next Major | **Completely removed** |
+| 9.1.200 | Marked as `[Obsolete]` — compiler warnings |
+| 9.1.x | Maintained for compatibility |
+| **10.8.0** | **Removed** — `TelemetryHelper`, `TelemetryExtensions` (`AddMvp24HoursTelemetry*`), `ITelemetryService`, `TelemetryLevels` deleted |
 
 ## API Mapping
 
@@ -56,7 +59,7 @@ The legacy telemetry system (`TelemetryHelper`) has been marked as **obsolete** 
 
 ### 1. Basic Configuration
 
-**Before (Deprecated):**
+**Before (removed in 10.8.0):**
 ```csharp
 // Startup.cs
 services.AddMvp24HoursTelemetry(TelemetryLevels.Information | TelemetryLevels.Verbose,
@@ -79,7 +82,7 @@ builder.Services.AddLogging(logging =>
 
 ### 2. Logging in Classes
 
-**Before (Deprecated):**
+**Before (removed in 10.8.0):**
 ```csharp
 public class OrderService
 {
@@ -135,7 +138,7 @@ public class OrderService
 
 ### 3. Filters and Categories
 
-**Before (Deprecated):**
+**Before (removed in 10.8.0):**
 ```csharp
 services.AddMvp24HoursTelemetryIgnore("rabbitmq-consumer-basic");
 
@@ -159,7 +162,7 @@ builder.Services.AddLogging(logging =>
 
 ### 4. Custom ITelemetryService
 
-**Before (Deprecated):**
+**Before (removed in 10.8.0):**
 ```csharp
 public class CustomTelemetryService : ITelemetryService
 {

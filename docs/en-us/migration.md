@@ -166,6 +166,57 @@ the interceptor writes a `string` into `DeletedBy`, so `ISoftDeletable<TUserId>`
 with a non-string `TUserId` needs its own handling. Entities that stay on
 `IEntityDateLog` are unaffected by either limitation.
 
+#### Static helpers replaced by DI
+
+Three static helpers that carried process-wide mutable state were retired. None of
+them was ever registered in or resolved from the container, so replacing them is a
+call-site change, not a wiring change.
+
+| Helper | 10.8.0 status | Replacement |
+| --- | --- | --- |
+| `TelemetryHelper` (`Mvp24Hours.Core`) | **Removed** | `ILogger<T>` plus the OpenTelemetry surface in `Mvp24Hours.Core.Observability` — see [Telemetry](telemetry.md) |
+| `TimeZoneHelper` (`Mvp24Hours.Infrastructure`) | `[Obsolete]`, removal in v12 | `IClock` (`Mvp24Hours.Core.Contract.Infrastructure`) or `TimeProvider` |
+| `ConfigurationHelper` (`Mvp24Hours.Infrastructure`) | `[Obsolete]`, removal in v12 | `IConfiguration` / `IOptions<T>` bound at the host — see [Configuration reference](configuration-reference.md) |
+
+`AddMvp24HoursTimeZone(clearList, ids)` is `[Obsolete]` for the same reason: it
+registers nothing in the container. It only mutates the static
+`TimeZoneHelper.TimeZoneIds` list, and the helper caches the resolved
+`TimeZoneInfo` on the first call — so calling it after the first
+`GetTimeZoneNow()` has no effect at all.
+
+**`IClock` is not a drop-in replacement for `TimeZoneHelper`.**
+`GetTimeZoneNow()` returns the first system timezone matching `TimeZoneIds`
+(`E. South America Standard Time`, `Brazil/East`, `America/Sao_Paulo` by default)
+regardless of the machine's local timezone. The default clock registrations
+(`SystemClock`, `AddTimeProvider()`, `AddSystemClock()`) use `TimeZoneInfo.Local`.
+The two agree only when both offsets happen to match, so register the timezone
+explicitly to preserve the current values:
+
+```csharp
+// Before
+services.AddMvp24HoursTimeZone(clearList: true, "America/Sao_Paulo");
+DateTime now = TimeZoneHelper.GetTimeZoneNow();
+
+// After — Program.cs
+TimeZoneInfo zone = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
+builder.Services.AddTimeProvider(TimeProvider.System, zone);   // registers IClock and TimeProvider
+
+// After — consumer
+public sealed class MyService(IClock clock)
+{
+    public DateTime Now => clock.Now;      // same zone as the helper
+    public DateTime UtcNow => clock.UtcNow;
+}
+```
+
+Prefer `clock.UtcNow` for persisted timestamps and convert on display. Inside
+Mvp24Hours, the remaining `TimeZoneHelper` calls all belong to the legacy
+`IEntityDateLog` stamping path (`Repository.Remove`, `RepositoryAsync.RemoveAsync`,
+`Mvp24HoursContext.ApplyLogRules`) plus the no-`IClock` fallback in the MongoDB
+`AuditInterceptor`/`SoftDeleteInterceptor`. They keep the current behavior and are
+suppressed locally; registering an `IClock` already takes over the two MongoDB
+interceptors.
+
 ### 5. Audit dependencies and build strictly
 
 ```bash
@@ -245,7 +296,9 @@ For Telemetry, HTTP/database resilience, cache, Pipeline, OpenAPI, time, and
 Options transitions, use the
 [.NET 9+ modernization guide](modernization/migration-guide.md). Detailed
 Telemetry steps remain in the
-[TelemetryHelper migration](observability/migration.md).
+[legacy telemetry migration](observability/migration.md) — `TelemetryHelper`,
+`AddMvp24HoursTelemetry*`, `ITelemetryService`, and `TelemetryLevels` were
+**removed** in 10.8.0, so that migration is now mandatory rather than optional.
 
 ## 8.x → 9.x
 

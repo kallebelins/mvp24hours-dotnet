@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
@@ -12,10 +13,16 @@ namespace Mvp24Hours.Application.Pipe.Test.Setup;
 
 public static class StartupAsync
 {
+    // TODO (task 4.2c): ConfigurationHelper is obsolete. This setup has no host to bind options
+    // from, so it keeps the static helper until the helper is removed in v12.
+#pragma warning disable CS0618 // intentional: no host available in this static test setup
+    private static IConfigurationRoot AppSettings => ConfigurationHelper.AppSettings;
+#pragma warning restore CS0618
+
     public static IServiceProvider SetupInjectionAsync()
     {
         IServiceCollection services = new ServiceCollection()
-                       .AddSingleton(ConfigurationHelper.AppSettings);
+                       .AddSingleton(AppSettings);
 
         services.AddMvp24HoursPipelineAsync(options => options.IsBreakOnFail = false);
 
@@ -25,7 +32,7 @@ public static class StartupAsync
     public static IServiceProvider SetupInjectionFactoryAsync()
     {
         IServiceCollection services = new ServiceCollection()
-                       .AddSingleton(ConfigurationHelper.AppSettings);
+                       .AddSingleton(AppSettings);
 
         services.AddMvp24HoursPipelineAsync(factory: (sp) =>
         {

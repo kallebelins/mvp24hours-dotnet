@@ -1,38 +1,15 @@
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Core.Contract.Infrastructure.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Domain.Specifications;
 using Mvp24Hours.Core.DTOs.Models;
 using Mvp24Hours.Core.Enums;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.ValueObjects.Logic;
 
 namespace Mvp24Hours.Core.Test.Extensions;
 
 [Trait("Category", "Unit")]
-[Collection("TelemetryHelper")]
 public class CoreExtensionsRemainingCoverageTest
 {
-#pragma warning disable CS0618
-    private sealed class CaptureTelemetryService : ITelemetryService
-    {
-        public List<string> Events { get; } = [];
-
-        public void Execute(string eventName, params object[] args)
-        {
-            Events.Add(eventName);
-        }
-    }
-#pragma warning restore CS0618
-
-    public CoreExtensionsRemainingCoverageTest()
-    {
-#pragma warning disable CS0618
-        TelemetryHelper.Clear();
-#pragma warning restore CS0618
-    }
-
     [Fact]
     public void BusinessPagingExtensions_ShouldBuildPagingResults()
     {
@@ -94,29 +71,6 @@ public class CoreExtensionsRemainingCoverageTest
 
         var fromPaging = paging.ToSpecification(e => e.Active);
         fromPaging.Should().NotBeNull();
-    }
-
-    [Fact]
-    public void TelemetryExtensions_ShouldRegisterHandlersInDi()
-    {
-#pragma warning disable CS0618
-        var services = new ServiceCollection();
-        var captured = new CaptureTelemetryService();
-
-        services.AddMvp24HoursTelemetry(TelemetryLevels.Information, name => captured.Events.Add(name));
-        services.AddMvp24HoursTelemetryFiltered("Filtered", captured);
-        services.AddMvp24HoursTelemetryIgnore("Ignored");
-
-        TelemetryHelper.Execute(TelemetryLevels.Information, "Ignored");
-        TelemetryHelper.Execute(TelemetryLevels.Information, "Visible");
-        TelemetryHelper.Execute(TelemetryLevels.Information, "Filtered");
-
-        captured.Events.Should().NotContain("Ignored");
-        captured.Events.Should().Contain("Visible");
-        captured.Events.Should().Contain("Filtered");
-
-        TelemetryHelper.Clear();
-#pragma warning restore CS0618
     }
 
     [Fact]

@@ -316,7 +316,12 @@ public class RepositoryAsync<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRep
             if (entity is IEntityDateLog dateLog)
             {
                 _logger?.LogDebug("Performing soft delete for entity in collection {CollectionName}", typeof(T).Name);
+                // TODO (task 4.2b): TimeZoneHelper is obsolete. Swapping it for IClock requires
+                // injecting the clock into the repository and would change the timezone of the
+                // stamped value (helper resolves South America; IClock.Now uses TimeZoneInfo.Local).
+#pragma warning disable CS0618 // intentional: legacy IEntityDateLog stamping until removal in v12
                 dateLog.Removed = TimeZoneHelper.GetTimeZoneNow();
+#pragma warning restore CS0618
                 if (EntityLogBy != null && EntityLogAccessor.HasEntityLog(entity))
                 {
                     EntityLogAccessor.TrySetPropertyValue(entity, "RemovedBy", EntityLogBy);

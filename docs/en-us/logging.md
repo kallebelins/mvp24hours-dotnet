@@ -11,6 +11,6 @@ builder.Logging.AddMvp24HoursDefaults();
 
 Use message templates rather than interpolation, and never place credentials, tokens or personal data in logs.
 
-Legacy `TelemetryHelper` and `ITelemetryService` are deprecated. Follow the [observability migration guide](observability/migration.md).
+Legacy `TelemetryHelper` and `ITelemetryService` were removed in 10.8.0. Follow the [observability migration guide](observability/migration.md).
 
 Related: [tracing](observability/tracing.md), [metrics](observability/metrics.md), [exporters](observability/exporters.md), and [.NET Aspire](modernization/aspire.md).

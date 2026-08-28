@@ -283,6 +283,39 @@ builder.Services.AddOptions<RabbitMQClientOptions>()
 
 That section belongs to the application. Document it locally and do not present it as an Mvp24Hours convention. See [Options validation](core/options-validation.md) for validation helpers.
 
+## Reading configuration outside the host: `ConfigurationHelper` is deprecated
+
+`Mvp24Hours.Helpers.ConfigurationHelper` (`Mvp24Hours.Infrastructure`) is `[Obsolete]` since 10.8.0 and will be removed in v12. It is a process-wide service locator for configuration:
+
+- it holds two pieces of static mutable state (the host environment and the built `IConfigurationRoot`), shared by every host in the process and impossible to isolate per test;
+- when nothing has been set, `AppSettings` builds its own configuration by reading `appsettings.json` from `Directory.GetCurrentDirectory()` — the process working directory, not necessarily the content root;
+- that self-built configuration ignores every source the host already composed: environment variables, user secrets, command line, and secret stores.
+
+Bind at the host and inject instead:
+
+```csharp
+// Before (deprecated)
+string? cs = ConfigurationHelper.AppSettings.GetConnectionString("DataContext");
+MySettings? settings = ConfigurationHelper.GetSettings<MySettings>("MyApplication:MySection");
+IConfigurationSection? section = ConfigurationHelper.GetSection("MyApplication:MySection");
+
+// After — Program.cs
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DataContext")));
+
+builder.Services.AddOptions<MySettings>()
+    .Bind(builder.Configuration.GetSection("MyApplication:MySection"))
+    .ValidateOnStart();
+
+// After — consumer
+public sealed class MyService(IOptions<MySettings> options, IConfiguration configuration)
+{
+    private readonly MySettings _settings = options.Value;
+}
+```
+
+`SetEnvironment(IHostEnvironment)` and `SetConfiguration(IConfiguration)` have no replacement because they have no purpose once the host owns configuration: inject `IHostEnvironment` and `IConfiguration` where you need them.
+
 ## Related
 
 - [Getting Started](getting-started.md)
