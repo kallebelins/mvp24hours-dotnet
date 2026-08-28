@@ -50,7 +50,9 @@ public abstract class Mvp24HoursContext : DbContext
     /// </summary>
     public override int SaveChanges()
     {
+#pragma warning disable CS0618 // intentional: legacy IEntityDateLog path kept until removal in v12
         ApplyLogRules();
+#pragma warning restore CS0618
         return base.SaveChanges();
     }
     /// <summary>
@@ -58,7 +60,9 @@ public abstract class Mvp24HoursContext : DbContext
     /// </summary>
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+#pragma warning disable CS0618 // intentional: legacy IEntityDateLog path kept until removal in v12
         ApplyLogRules();
+#pragma warning restore CS0618
         return base.SaveChangesAsync(cancellationToken);
     }
     /// <summary>
@@ -66,12 +70,32 @@ public abstract class Mvp24HoursContext : DbContext
     /// </summary>
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
+#pragma warning disable CS0618 // intentional: legacy IEntityDateLog path kept until removal in v12
         ApplyLogRules();
+#pragma warning restore CS0618
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
     /// <summary>
     /// Apply log rules
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Stamps <c>Created</c>/<c>Modified</c> (and <c>CreatedBy</c>/<c>ModifiedBy</c> for
+    /// <c>IEntityLog&lt;T&gt;</c>) on entities implementing
+    /// <see cref="IEntityDateLog"/>, gated by <see cref="CanApplyEntityLog"/>. It takes no action on
+    /// <c>EntityState.Deleted</c>: the legacy soft delete is performed by <c>Repository.Remove</c>,
+    /// which sets <c>Removed</c> and calls <c>Modify</c>.
+    /// </para>
+    /// <para>
+    /// The recommended replacement is <c>SoftDeleteInterceptor</c> (registered with
+    /// <c>AddMvp24HoursEFCoreSoftDeleteInterceptor</c>) together with <c>AuditSaveChangesInterceptor</c>,
+    /// which use <c>ISoftDeletable</c>/<c>IAuditableEntity</c>, <c>ICurrentUserProvider</c> and
+    /// <c>IClock</c> instead of <see cref="EntityLogBy"/> and <c>TimeZoneHelper</c>. The two mechanisms
+    /// target different interfaces and are not interchangeable — see the "Soft delete (EF Core)" section
+    /// of the migration guide for the entity migration path.
+    /// </para>
+    /// </remarks>
+    [Obsolete("Use SoftDeleteInterceptor + AuditInterceptor (see AddMvp24HoursEFCoreSoftDeleteInterceptor). Will be removed in v12.")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S3776:Cognitive Complexity of methods should not be too high", Justification = "Low complexity")]
     protected void ApplyLogRules()
     {

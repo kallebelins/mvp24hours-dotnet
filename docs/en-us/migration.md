@@ -109,6 +109,63 @@ ciphertext as a consumer verification step before rollout:
 3. encrypt new values with 10.8.0 and verify round trips;
 4. retain a tested rollback and key-recovery procedure.
 
+#### Soft delete (EF Core)
+
+`Mvp24HoursContext.ApplyLogRules` is deprecated in 10.8.0 and will be removed in
+v12. Nothing changes at runtime: `SaveChanges` still calls it, and
+`CanApplyEntityLog` still gates it, so the legacy path keeps working until the
+removal. The deprecation exists because the EF Core module carries two
+independent soft-delete mechanisms that target different interfaces and never
+interact.
+
+| Aspect | `ApplyLogRules` (legacy) | `SoftDeleteInterceptor` (recommended) |
+| --- | --- | --- |
+| Interface | `IEntityDateLog` / `IEntityLog<T>` / `EntityBaseLog<,>` | `ISoftDeletable` / `ISoftDeletable<T>` |
+| Fields | `Created`, `Modified`, `Removed` (plus `CreatedBy`, `ModifiedBy`, `RemovedBy`) | `IsDeleted`, `DeletedAt`, `DeletedBy` |
+| Converts `Deleted` to soft delete? | No. `ApplyLogRules` takes no action on `EntityState.Deleted`; `Repository.Remove` performs the conversion by setting `Removed` and calling `Modify` | Yes, in `SavingChanges`/`SavingChangesAsync` |
+| Read filter | `ApplyGlobalFilters<IEntityDateLog>(e => e.Removed == null)`, applied automatically by `Mvp24HoursContext.OnModelCreating` when `CanApplyEntityLog` is true | `ApplySoftDeleteGlobalFilter()`, which you call yourself in `OnModelCreating`. It covers the non-generic `ISoftDeletable` only |
+| User source | `EntityLogBy` (override on the context) | `ICurrentUserProvider` (DI, optional) |
+| Time source | `TimeZoneHelper.GetTimeZoneNow()` (configured time zone) | `IClock` (DI, optional), falling back to `DateTime.UtcNow` |
+
+Because the two mechanisms read different properties, deprecating one does not
+migrate your entities. Migrating means changing the entity contract and the
+stored data, so plan it per aggregate:
+
+1. register the interceptor and wire it into the context:
+
+```csharp
+builder.Services.AddMvp24HoursEFCoreSoftDeleteInterceptor();
+
+builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+    options.UseSqlServer(connectionString)
+        .AddInterceptors(serviceProvider.GetRequiredService<SoftDeleteInterceptor>()));
+```
+
+2. apply the read filter in the context, otherwise soft-deleted rows keep
+   showing up in queries:
+
+```csharp
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    base.OnModelCreating(modelBuilder);
+    modelBuilder.ApplySoftDeleteGlobalFilter();
+}
+```
+
+3. change the entity from `IEntityDateLog`/`IEntityLog<T>` to `ISoftDeletable`,
+   add a migration for `IsDeleted`/`DeletedAt`/`DeletedBy`, and backfill
+   `IsDeleted = Removed IS NOT NULL` before dropping the legacy columns;
+4. audit-field stamping (`Created`/`Modified`) is not part of
+   `SoftDeleteInterceptor`. Pair it with `AuditSaveChangesInterceptor` and
+   `IAuditableEntity` (`CreatedAt`, `CreatedBy`, `ModifiedAt`, `ModifiedBy`).
+
+Two limitations are worth knowing before you commit to the interceptor:
+`ApplySoftDeleteGlobalFilter()` skips entities that implement only
+`ISoftDeletable<TUserId>` (that interface does not inherit `ISoftDeletable`), and
+the interceptor writes a `string` into `DeletedBy`, so `ISoftDeletable<TUserId>`
+with a non-string `TUserId` needs its own handling. Entities that stay on
+`IEntityDateLog` are unaffected by either limitation.
+
 ### 5. Audit dependencies and build strictly
 
 ```bash

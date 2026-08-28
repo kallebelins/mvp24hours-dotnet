@@ -144,6 +144,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `IPipelineMessage` directly must keep implementing the member until v12; annotate it with the same
   `[Obsolete]` attribute or suppress `CS0618` locally. See
   [Pipeline → Message contents](docs/en-us/pipeline.md).
+- **`Mvp24HoursContext.ApplyLogRules`** (`Mvp24Hours.Infrastructure.Data.EFCore`) is now
+  `[Obsolete]`: *"Use `SoftDeleteInterceptor` + `AuditInterceptor` (see
+  `AddMvp24HoursEFCoreSoftDeleteInterceptor`). Will be removed in v12."* **No behavior changed**:
+  the three `SaveChanges`/`SaveChangesAsync` overrides still call it (with a local `CS0618`
+  suppression) and `CanApplyEntityLog` still gates it, so consumers that do nothing keep the
+  current stamping of `Created`/`Modified`/`CreatedBy`/`ModifiedBy`.
+  The EF Core module carries two independent soft-delete mechanisms that never interact:
+  `ApplyLogRules` + `Repository.Remove` operate on `IEntityDateLog`/`IEntityLog<T>`
+  (`Created`/`Modified`/`Removed`, `EntityLogBy`, `TimeZoneHelper`), while `SoftDeleteInterceptor`
+  operates on `ISoftDeletable`/`ISoftDeletable<T>` (`IsDeleted`/`DeletedAt`/`DeletedBy`,
+  `ICurrentUserProvider`, `IClock`). Deprecating one therefore does **not** migrate entities —
+  moving an aggregate across requires changing its interface, adding a migration for the new
+  columns, and backfilling `IsDeleted` from `Removed`. Two known limitations of the recommended
+  path: `ApplySoftDeleteGlobalFilter()` only matches the non-generic `ISoftDeletable`, and the
+  interceptor writes a `string` into `DeletedBy`. See
+  [Migration → Soft delete (EF Core)](docs/en-us/migration.md) and
+  [EF Core Advanced → Interceptors and filters](docs/en-us/database/efcore-advanced.md).
 
 ### Fixed
 
@@ -247,6 +264,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
     `repositoryAsync` type is supplied, the typed contract is intentionally left unregistered, because a
     one-parameter implementation has no two-parameter counterpart and defaulting would silently bypass
     the customization.
+- **EF Core soft-delete interceptor registration**: new `AddMvp24HoursEFCoreSoftDeleteInterceptor(
+  defaultUser = "System")` in `Mvp24Hours.Extensions` (`EFCoreInterceptorExtensions`), mirroring
+  `AddMongoDbSoftDeleteInterceptor`. It registers `SoftDeleteInterceptor` as scoped and resolves the
+  optional `ICurrentUserProvider` and `IClock` with `GetService`, falling back to `defaultUser` and
+  `DateTime.UtcNow`. EF Core does not discover interceptors from the application container, so the
+  two follow-up steps are still required and are documented on the method: resolve it inside
+  `AddDbContext` via `AddInterceptors(...)`, and call `ApplySoftDeleteGlobalFilter()` in
+  `OnModelCreating` — the interceptor changes writes only.
 
 ### Changed (incremental updates)
 

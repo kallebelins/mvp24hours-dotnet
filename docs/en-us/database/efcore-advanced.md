@@ -431,7 +431,7 @@ The module includes `AuditSaveChangesInterceptor`, `SoftDeleteInterceptor`, `Ten
 
 ```csharp
 builder.Services.AddScoped<AuditSaveChangesInterceptor>();
-builder.Services.AddScoped<SoftDeleteInterceptor>();
+builder.Services.AddMvp24HoursEFCoreSoftDeleteInterceptor();
 
 builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
     options.UseSqlServer(connectionString)
@@ -440,7 +440,13 @@ builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
             serviceProvider.GetRequiredService<SoftDeleteInterceptor>()));
 ```
 
-Apply `ApplySoftDeleteGlobalFilter()` and `ApplyTenantQueryFilters(...)` in `OnModelCreating`; interceptors modify writes, while filters isolate reads.
+`AddMvp24HoursEFCoreSoftDeleteInterceptor(defaultUser)` registers `SoftDeleteInterceptor` as scoped and wires the optional `ICurrentUserProvider` and `IClock`; without them it falls back to `defaultUser` (`"System"`) and `DateTime.UtcNow`. A plain `AddScoped<SoftDeleteInterceptor>()` also works, since every constructor parameter is optional. EF Core does not discover interceptors from the application container, so the `AddInterceptors(...)` call is still required.
+
+Apply `ApplySoftDeleteGlobalFilter()` and `ApplyTenantQueryFilters(...)` in `OnModelCreating`; interceptors modify writes, while filters isolate reads. Note that `ApplySoftDeleteGlobalFilter()` only matches the non-generic `ISoftDeletable`.
+
+### Soft delete: two mechanisms
+
+`SoftDeleteInterceptor` (`ISoftDeletable`) and the deprecated `Mvp24HoursContext.ApplyLogRules` (`IEntityDateLog`/`IEntityLog<T>`) are independent: they read different properties and never interact. `ApplyLogRules` is marked obsolete in 10.8.0 and will be removed in v12, with no behavior change in the meantime — `SaveChanges` still calls it and `CanApplyEntityLog` still gates it. See "Soft delete (EF Core)" in the [migration guide](../migration.md) for the comparison table and the per-entity migration path.
 
 ## Field encryption
 
