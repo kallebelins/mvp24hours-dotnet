@@ -239,6 +239,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `Microsoft.Extensions.Logging.LogLevel` (`Verbose` → `Debug`/`Trace`, the rest map by name).
   See [Telemetry](docs/en-us/telemetry.md) and
   [Observability → Migration](docs/en-us/observability/migration.md).
+- **Swashbuckle-based Swagger/ReDoc APIs removed from `Mvp24Hours.WebAPI` (breaking)**: the
+  Swashbuckle-only registration/middleware surface — already `[Obsolete]` on the `Add*` side since
+  a previous release — was deleted, along with the `Use*` counterparts that had never been marked
+  obsolete:
+  - `IServiceCollection` extensions: `AddMvp24HoursWebSwagger`, `AddMvp24HoursSwaggerWithVersioning`.
+  - `IApplicationBuilder` extensions: `UseMvp24HoursSwagger`, `UseMvp24HoursSwaggerWithVersioning`,
+    `UseMvp24HoursReDoc`.
+  - Supporting types used only by the above: `Filters/Swagger/{AuthResponsesOperationFilter,
+    CustomSwaggerFilter, DeprecationOperationFilter, ExamplesOperationFilter,
+    VersionedSwaggerDocumentFilter}.cs`, `Configuration/ConfigureSwaggerGenOptions.cs`,
+    `Configuration/SwaggerOptions.cs` (and the nested `SwaggerVersionInfo`, `SwaggerContact`,
+    `SwaggerLicense`), `Models/SwaggerAuthorizationScheme.cs`.
+  - The `Swashbuckle.AspNetCore.Filters` package reference was removed from
+    `Mvp24Hours.WebAPI.csproj` and from `src/Directory.Packages.props` (it was only used by
+    `c.ExampleFilters()`/`AddSwaggerExamplesFromAssemblies`, both part of the removed APIs).
+  - `Swashbuckle.AspNetCore` (the umbrella package) **is kept** — the native OpenAPI path
+    (`AddMvp24HoursNativeOpenApi*`/`UseMvp24HoursNativeOpenApi`/`MapMvp24HoursNativeOpenApi`) still
+    serves its interactive UI via `Swashbuckle.AspNetCore.SwaggerUI` (`app.UseSwaggerUI(...)`,
+    `DocExpansion.List`); only the document-generation side of Swashbuckle (`.SwaggerGen`) and the
+    example filters (`.Filters`) are gone.
+  - No `[Obsolete]` shim was introduced: none of the removed APIs had a known consumer in
+    `samples/`, `templates/`, or outside test code that specifically existed to exercise them.
+  - **Migration**: replace `AddMvp24HoursWebSwagger`/`AddMvp24HoursSwaggerWithVersioning` with
+    `AddMvp24HoursNativeOpenApi`/`AddMvp24HoursNativeOpenApiWithVersions`, and replace
+    `UseMvp24HoursSwagger`/`UseMvp24HoursSwaggerWithVersioning`/`UseMvp24HoursReDoc` with
+    `UseMvp24HoursNativeOpenApi`/`MapMvp24HoursNativeOpenApi`. See
+    [Migration guide → Swashbuckle-based Swagger APIs removed](docs/en-us/migration.md).
 
 ### Fixed
 

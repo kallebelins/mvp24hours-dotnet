@@ -5,7 +5,6 @@
 //=====================================================================================
 using System.IO.Compression;
 using System.Net;
-using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,20 +20,15 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.WebAPI.Binders;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.Exceptions;
 using Mvp24Hours.WebAPI.Filters;
-using Mvp24Hours.WebAPI.Filters.Swagger;
 using Mvp24Hours.WebAPI.Http;
-using Mvp24Hours.WebAPI.Models;
 using Mvp24Hours.WebAPI.Services;
 using Newtonsoft.Json;
-using Swashbuckle.AspNetCore.Filters;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using MvpApiVersioningOptions = Mvp24Hours.WebAPI.Configuration.ApiVersioningOptions;
 using MvpProblemDetailsOptions = Mvp24Hours.WebAPI.Configuration.MvpProblemDetailsOptions;
 using MvpResponseCachingOptions = Mvp24Hours.WebAPI.Configuration.ResponseCachingOptions;
@@ -151,65 +145,6 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Add configuration for Swagger
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <b>DEPRECATED:</b> Use <c>AddMvp24HoursNativeOpenApi()</c> instead for .NET 9+ native OpenAPI support.
-    /// This method uses Swashbuckle which is still supported but the native OpenAPI is preferred.
-    /// </para>
-    /// </remarks>
-    [Obsolete("Use AddMvp24HoursNativeOpenApi() for .NET 9+ native OpenAPI support. Swashbuckle is still supported but native OpenAPI is preferred. Will be removed in a future major version.")]
-    public static IServiceCollection AddMvp24HoursWebSwagger(this IServiceCollection services,
-        string title, string version = "v1", string? xmlCommentsFileName = null,
-        bool enableExample = false, SwaggerAuthorizationScheme oAuthScheme = SwaggerAuthorizationScheme.None,
-        IEnumerable<Type>? authTypes = null)
-    {
-        services.AddSwaggerGen(c =>
-        {
-            c.SwaggerDoc(version, new OpenApiInfo { Title = title, Version = version });
-
-            if (enableExample)
-            {
-                c.ExampleFilters();
-            }
-
-            c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
-
-            if (oAuthScheme == SwaggerAuthorizationScheme.Bearer)
-            {
-                BearerBuilder(authTypes, c);
-            }
-            else if (oAuthScheme == SwaggerAuthorizationScheme.Basic)
-            {
-                BasicBuilder(authTypes, c);
-            }
-
-            if (oAuthScheme != SwaggerAuthorizationScheme.None && authTypes != null)
-            {
-                c.OperationFilter<AuthResponsesOperationFilter>(authTypes);
-            }
-
-            // Set the comments path for the Swagger JSON and UI.
-            if (!string.IsNullOrEmpty(xmlCommentsFileName))
-            {
-                string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFileName);
-                if (File.Exists(xmlPath))
-                {
-                    c.IncludeXmlComments(xmlPath);
-                }
-            }
-        });
-
-        if (enableExample)
-        {
-            services.AddSwaggerExamplesFromAssemblies(Assembly.GetEntryAssembly());
-        }
-
-        return services;
-    }
-
-    /// <summary>
     /// Adds API versioning support with multiple strategies (URL, Header, Query String).
     /// </summary>
     /// <remarks>
@@ -289,176 +224,6 @@ public static class ServiceCollectionExtensions
         });
 
         return services;
-    }
-
-    /// <summary>
-    /// Adds Swagger/OpenAPI documentation with support for multiple API versions and OpenAPI 3.1.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This method configures Swagger/OpenAPI with:
-    /// <list type="bullet">
-    /// <item>OpenAPI 3.1 specification</item>
-    /// <item>Multiple API versions support</item>
-    /// <item>Automatic examples from XML comments</item>
-    /// <item>Deprecation warnings</item>
-    /// <item>ReDoc integration (optional)</item>
-    /// </list>
-    /// </para>
-    /// <para>
-    /// Requires prior call to <see cref="AddMvp24HoursApiVersioning"/> for versioning support.
-    /// </para>
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// // Basic usage
-    /// services.AddMvp24HoursApiVersioning();
-    /// services.AddMvp24HoursSwaggerWithVersioning(options =>
-    /// {
-    ///     options.Title = "My API";
-    ///     options.Description = "API Description";
-    ///     options.Versions.Add(new SwaggerVersionInfo
-    ///     {
-    ///         Version = "v1",
-    ///         Title = "API v1",
-    ///         Description = "Version 1 of the API"
-    ///     });
-    ///     options.Versions.Add(new SwaggerVersionInfo
-    ///     {
-    ///         Version = "v2",
-    ///         Title = "API v2",
-    ///         Description = "Version 2 of the API",
-    ///         IsDeprecated = false
-    ///     });
-    ///     options.EnableReDoc = true;
-    ///     options.EnableExamples = true;
-    /// });
-    /// </code>
-    /// </example>
-    /// <param name="services">The service collection.</param>
-    /// <param name="configureOptions">Action to configure Swagger options.</param>
-    /// <returns>The service collection for chaining.</returns>
-    /// <remarks>
-    /// <para>
-    /// <b>DEPRECATED:</b> Use <c>AddMvp24HoursNativeOpenApiWithVersions()</c> instead for .NET 9+ native OpenAPI support.
-    /// This method uses Swashbuckle which is still supported but the native OpenAPI is preferred.
-    /// </para>
-    /// </remarks>
-    [Obsolete("Use AddMvp24HoursNativeOpenApiWithVersions() for .NET 9+ native OpenAPI support. Swashbuckle is still supported but native OpenAPI is preferred. Will be removed in a future major version.")]
-    public static IServiceCollection AddMvp24HoursSwaggerWithVersioning(
-        this IServiceCollection services,
-        Action<SwaggerOptions> configureOptions)
-    {
-        var options = new SwaggerOptions();
-        configureOptions(options);
-
-        // Store options for later use
-        services.AddSingleton(options);
-        services.Configure<SwaggerOptions>(opt =>
-        {
-            opt.Title = options.Title;
-            opt.Description = options.Description;
-            opt.Versions = options.Versions;
-            opt.Contact = options.Contact;
-            opt.License = options.License;
-        });
-
-        // Register the configuration that will run when Swagger is generated
-        services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerGenOptions>();
-
-        services.AddSwaggerGen(c =>
-        {
-            // Configure OpenAPI 3.1
-            c.SwaggerGeneratorOptions.SwaggerDocs.Clear();
-
-            // Add operation filters
-            c.OperationFilter<DeprecationOperationFilter>();
-
-            if (options.EnableExamples)
-            {
-                c.OperationFilter<ExamplesOperationFilter>();
-                c.ExampleFilters();
-            }
-
-            // Add authorization
-            if (options.AuthorizationScheme == SwaggerAuthorizationScheme.Bearer)
-            {
-                BearerBuilder(options.AuthorizationTypes, c);
-            }
-            else if (options.AuthorizationScheme == SwaggerAuthorizationScheme.Basic)
-            {
-                BasicBuilder(options.AuthorizationTypes, c);
-            }
-
-            if (options.AuthorizationScheme != SwaggerAuthorizationScheme.None && options.AuthorizationTypes != null)
-            {
-                c.OperationFilter<AuthResponsesOperationFilter>(options.AuthorizationTypes);
-            }
-
-            // Include XML comments
-            if (!string.IsNullOrEmpty(options.XmlCommentsFileName))
-            {
-                string xmlPath = Path.Combine(AppContext.BaseDirectory, options.XmlCommentsFileName);
-                if (File.Exists(xmlPath))
-                {
-                    c.IncludeXmlComments(xmlPath);
-                }
-            }
-
-            // Resolve conflicting actions
-            c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
-        });
-
-        if (options.EnableExamples)
-        {
-            services.AddSwaggerExamplesFromAssemblies(Assembly.GetEntryAssembly());
-        }
-
-        return services;
-    }
-
-    private static void BasicBuilder(IEnumerable<Type>? authTypes, SwaggerGenOptions c)
-    {
-        c.AddSecurityDefinition("Basic", new OpenApiSecurityScheme
-        {
-            Description = @"Authorization header using the Basic scheme. \r\n\r\n 
-                          Enter 'Basic' [space] and then your token in the text input below.
-                          \r\n\r\nExample: 'Basic 12345abcdef'",
-            Name = "Authorization",
-            In = ParameterLocation.Header,
-            Type = SecuritySchemeType.Http,
-            Scheme = "Basic"
-        });
-
-        if (authTypes == null)
-        {
-            c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-            {
-                [new OpenApiSecuritySchemeReference("Basic", document)] = []
-            });
-        }
-    }
-
-    private static void BearerBuilder(IEnumerable<Type>? authTypes, SwaggerGenOptions c)
-    {
-        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-        {
-            Description = @"JWT Authorization header using the Bearer scheme. \r\n\r\n 
-                          Enter 'Bearer' [space] and then your token in the text input below.
-                          \r\n\r\nExample: 'Bearer 12345abcdef'",
-            Name = "Authorization",
-            In = ParameterLocation.Header,
-            Type = SecuritySchemeType.ApiKey,
-            Scheme = "Bearer"
-        });
-
-        if (authTypes == null)
-        {
-            c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-            {
-                [new OpenApiSecuritySchemeReference("Bearer", document)] = []
-            });
-        }
     }
 
     /// <summary>

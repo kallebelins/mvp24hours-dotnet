@@ -17,11 +17,11 @@ namespace Mvp24Hours.WebAPI.Extensions;
 /// <remarks>
 /// <para>
 /// These extensions provide integration with Microsoft.AspNetCore.OpenApi, the native OpenAPI
-/// support introduced in .NET 9. This is a lightweight alternative to Swashbuckle that is
-/// fully AOT-compatible and provides core OpenAPI functionality.
+/// support introduced in .NET 9. This is a lightweight, first-party alternative to third-party
+/// OpenAPI generators that is fully AOT-compatible and provides core OpenAPI functionality.
 /// </para>
 /// <para>
-/// <b>Benefits over Swashbuckle:</b>
+/// <b>Benefits over third-party OpenAPI generators:</b>
 /// <list type="bullet">
 /// <item>Native .NET integration</item>
 /// <item>AOT-compatible</item>
@@ -60,7 +60,7 @@ public static class NativeOpenApiServiceExtensions
     /// <remarks>
     /// <para>
     /// This method configures the native OpenAPI document generation introduced in .NET 9.
-    /// It uses the Microsoft.AspNetCore.OpenApi package instead of Swashbuckle.
+    /// It uses the Microsoft.AspNetCore.OpenApi package instead of a third-party generator.
     /// </para>
     /// </remarks>
     /// <example>

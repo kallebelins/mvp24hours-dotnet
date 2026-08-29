@@ -299,10 +299,10 @@ app.UseNativeProblemDetailsHandling();
 /// cors
 app.UseMvp24HoursCors();
 
-/// swagger (if using Swashbuckle)
+/// native OpenAPI (see "Native OpenAPI (.NET 9+)" below)
 if (!app.Environment.IsProduction())
 {
-    app.UseMvp24HoursSwagger();
+    app.UseMvp24HoursNativeOpenApi();
 }
 
 /// correlation-id

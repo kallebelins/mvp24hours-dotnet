@@ -198,20 +198,6 @@ public class ApplicationBuilderExtensionsTest
     }
 
     [Fact]
-    public void UseMvp24HoursSwagger_ShouldReturnBuilder()
-    {
-        WebApplication app = CreateWebApplication(services =>
-        {
-            services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
-        });
-
-        IApplicationBuilder result = app.UseMvp24HoursSwagger("Test API");
-
-        result.Should().BeSameAs(app);
-    }
-
-    [Fact]
     public void UseMvp24HoursRateLimiting_Enabled_ShouldReturnSameBuilder()
     {
         IApplicationBuilder app = CreateAppBuilder();

@@ -217,6 +217,52 @@ Mvp24Hours, the remaining `TimeZoneHelper` calls all belong to the legacy
 suppressed locally; registering an `IClock` already takes over the two MongoDB
 interceptors.
 
+#### Swashbuckle-based Swagger APIs removed
+
+The Swashbuckle-only registration/middleware surface in `Mvp24Hours.WebAPI` was
+removed. The `Add*` side had already been `[Obsolete]`; the `Use*` side had not,
+but had zero known consumers in `samples/`, `templates/`, or outside dedicated test
+coverage, so no `[Obsolete]` shim was introduced — the removal is direct.
+
+| Removed | Replacement |
+| --- | --- |
+| `AddMvp24HoursWebSwagger(...)` | `AddMvp24HoursNativeOpenApi(...)` |
+| `AddMvp24HoursSwaggerWithVersioning(...)` | `AddMvp24HoursNativeOpenApiWithVersions(...)` |
+| `UseMvp24HoursSwagger(...)` | `UseMvp24HoursNativeOpenApi(...)` (or `app.MapMvp24HoursNativeOpenApi()` for Minimal APIs) |
+| `UseMvp24HoursSwaggerWithVersioning(...)` | `UseMvp24HoursNativeOpenApi(...)` / `MapMvp24HoursNativeOpenApi(...)` |
+| `UseMvp24HoursReDoc(...)` | `NativeOpenApiOptions.EnableReDoc = true` (served by `MapMvp24HoursNativeOpenApi`) |
+| `SwaggerOptions`, `SwaggerVersionInfo`, `SwaggerContact`, `SwaggerLicense` | `NativeOpenApiOptions`, `OpenApiVersionConfig` |
+| `SwaggerAuthorizationScheme` | `OpenApiAuthenticationScheme` |
+| `Filters/Swagger/*` (`AuthResponsesOperationFilter`, `CustomSwaggerFilter`, `DeprecationOperationFilter`, `ExamplesOperationFilter`, `VersionedSwaggerDocumentFilter`) | document transformers under `Mvp24Hours.WebAPI.OpenApi` (see [Native OpenAPI](modernization/native-openapi.md)) |
+
+```csharp
+// Before (removed)
+services.AddMvp24HoursWebSwagger(
+    "My API",
+    version: "v1",
+    oAuthScheme: SwaggerAuthorizationScheme.Bearer);
+// ...
+app.UseMvp24HoursSwagger("My API");
+
+// After
+services.AddMvp24HoursNativeOpenApi(options =>
+{
+    options.Title = "My API";
+    options.Version = "1.0.0";
+    options.EnableSwaggerUI = true;
+    options.AuthenticationScheme = OpenApiAuthenticationScheme.Bearer;
+});
+// ...
+app.MapMvp24HoursNativeOpenApi();
+```
+
+`Swashbuckle.AspNetCore.Filters` was removed from `Mvp24Hours.WebAPI`'s dependencies.
+`Swashbuckle.AspNetCore` (the umbrella package) is still referenced — the native
+OpenAPI path serves its interactive UI via `Swashbuckle.AspNetCore.SwaggerUI`
+(`app.UseSwaggerUI(...)`); only the document-generation package (`.SwaggerGen`) and
+the example filters (`.Filters`) are gone. See
+[Native OpenAPI Documentation](modernization/native-openapi.md) for the full guide.
+
 ### 5. Audit dependencies and build strictly
 
 ```bash

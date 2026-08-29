@@ -80,8 +80,7 @@ app.UseNativeProblemDetailsHandling();
 | Request telemetry | `RequestTelemetryOptions` | traces/metrics on; exception details off | Exclude health/metrics routes and avoid sensitive header enrichment. |
 | Request body tracing | `RequestBodyTracingOptions` | disabled; POST/PUT/PATCH; 16 KiB max | Enable only where needed and always keep redaction lists updated. |
 | IP filtering | `IpFilteringOptions` | disabled; localhost allowed | Configure trusted proxies before forwarded headers. |
-| Swashbuckle | `SwaggerOptions` | title `API`; OpenAPI 3.1; UI at `swagger` | Restrict UI exposure in production. |
-| Native OpenAPI | `NativeOpenApiOptions` | document `v1`; UI on; ReDoc off | Prefer this .NET 10 path for new APIs when its feature set is sufficient. |
+| Native OpenAPI | `NativeOpenApiOptions` | document `v1`; UI on; ReDoc off | The only supported OpenAPI path; the Swashbuckle-based `SwaggerOptions`/`AddMvp24HoursWebSwagger`/`AddMvp24HoursSwaggerWithVersioning` APIs were removed. |
 | Anti-forgery | `AntiForgeryOptions` | enabled for unsafe methods | Use for cookie-authenticated browser clients. |
 | Request context | `RequestContextOptions` | response/outgoing propagation on; W3C flag off | Enable W3C mode when integrating with distributed tracing. |
 | Request logging | `RequestLoggingOptions` | basic; bodies/headers off; 3 s slow threshold | Keep bodies off by default and extend sensitive-field lists. |
@@ -196,26 +195,22 @@ builder.Services.AddMvp24HoursApiVersioning(options =>
     options.DeprecatedApiVersions.Add(new ApiVersion(1, 0));
 });
 
-builder.Services.AddMvp24HoursSwaggerWithVersioning(options =>
+builder.Services.AddMvp24HoursNativeOpenApiWithVersions(options =>
 {
     options.Title = "Orders API";
-    options.ShowDeprecationWarnings = true;
-    options.Versions.Add(new SwaggerVersionInfo
+    options.Version = "v1";
+    options.AdditionalVersions.Add(new OpenApiVersionConfig
     {
-        Version = "v1",
-        Title = "Orders API v1",
-        IsDeprecated = true,
-        DeprecationMessage = "Use v2. Removal planned for 2027-01-01."
-    });
-    options.Versions.Add(new SwaggerVersionInfo
-    {
-        Version = "v2",
-        Title = "Orders API v2"
+        DocumentName = "v2",
+        Version = "v2"
     });
 });
 ```
 
-Mark controllers with `[ApiVersion("1.0")]` and route templates such as `api/v{version:apiVersion}/[controller]`. For Native OpenAPI, configure deprecation on `NativeOpenApiOptions` version entries and see [Native OpenAPI](modernization/native-openapi.md).
+Mark controllers with `[ApiVersion("1.0")]` and route templates such as `api/v{version:apiVersion}/[controller]`. Configure deprecation on `NativeOpenApiOptions` version entries — see [Native OpenAPI](modernization/native-openapi.md) for the complete guide, including `IsDeprecated`/deprecation messaging per version.
+
+> **Note:** `AddMvp24HoursSwaggerWithVersioning`/`UseMvp24HoursSwaggerWithVersioning` (Swashbuckle-based)
+> were removed. See [Migration guide → Swashbuckle-based Swagger APIs removed](migration.md).
 
 ## Authentication methods
 
