@@ -308,6 +308,138 @@ public class ExtensibilityTests
         Assert.Equal("Command failed", exception.Message);
     }
 
+    [Fact]
+    public async Task ExceptionHandler_GlobalHandler_ShouldHandleWhenNoTypeSpecificHandlerRegistered()
+    {
+        // Arrange - only the global handler is registered, no type-specific handler for FailingCommand
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvpMediator(options =>
+        {
+            options.RegisterHandlersFromAssemblyContaining<ExtensibilityTests>();
+            options.WithExceptionHandlers();
+        });
+        services.AddGlobalExceptionHandler<InvalidOperationException, GlobalInvalidOperationExceptionHandler>();
+
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
+
+        // Act
+        string result = await mediator.SendAsync(new FailingCommand("test"));
+
+        // Assert
+        Assert.Equal("Global Handled: Command failed", result);
+    }
+
+    public sealed class DerivedException(string message) : InvalidOperationException(message);
+
+    public record DerivedFailingCommand(string Value) : IMediatorCommand<string>;
+
+    [Trait("Category", "Unit")]
+    public class DerivedFailingCommandHandler : IMediatorCommandHandler<DerivedFailingCommand, string>
+    {
+        public Task<string> Handle(DerivedFailingCommand request, CancellationToken cancellationToken)
+        {
+            throw new DerivedException("Derived failure");
+        }
+    }
+
+    [Trait("Category", "Unit")]
+    public class BaseTypeExceptionHandler
+        : IExceptionHandler<DerivedFailingCommand, string, InvalidOperationException>
+    {
+        public Task<ExceptionHandlingResult<string>> HandleAsync(
+            DerivedFailingCommand request,
+            InvalidOperationException exception,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(
+                ExceptionHandlingResult<string>.Handled($"BaseTypeHandled: {exception.Message}"));
+        }
+    }
+
+    [Fact]
+    public async Task ExceptionHandler_RegisteredForBaseType_ShouldHandleDerivedException()
+    {
+        // Arrange - handler is registered for InvalidOperationException, thrown exception is
+        // the more derived DerivedException; this exercises the currentType.BaseType walk-up loop.
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvpMediator(options =>
+        {
+            options.RegisterHandlersFromAssemblyContaining<ExtensibilityTests>();
+            options.WithExceptionHandlers();
+        });
+        services.AddExceptionHandler<DerivedFailingCommand, string, InvalidOperationException, BaseTypeExceptionHandler>();
+
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
+
+        // Act
+        string result = await mediator.SendAsync(new DerivedFailingCommand("test"));
+
+        // Assert
+        Assert.Equal("BaseTypeHandled: Derived failure", result);
+    }
+
+    [Trait("Category", "Unit")]
+    public class ThrowingExceptionHandler
+        : IExceptionHandler<FailingCommand, string, InvalidOperationException>
+    {
+        public Task<ExceptionHandlingResult<string>> HandleAsync(
+            FailingCommand request,
+            InvalidOperationException exception,
+            CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException("Handler itself failed");
+        }
+    }
+
+    [Fact]
+    public async Task ExceptionHandler_WhenHandlerThrows_ShouldContinueToNextHandlerAndEventuallyHandle()
+    {
+        // Arrange - the first registered handler throws; the second one should still be
+        // tried and successfully handle the exception (catch (Exception handlerEx) branch).
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvpMediator(options =>
+        {
+            options.RegisterHandlersFromAssemblyContaining<ExtensibilityTests>();
+            options.WithExceptionHandlers();
+        });
+        services.AddExceptionHandler<FailingCommand, string, InvalidOperationException, ThrowingExceptionHandler>();
+        services.AddExceptionHandler<FailingCommand, string, InvalidOperationException, InvalidOperationExceptionHandler>();
+
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
+
+        // Act
+        string result = await mediator.SendAsync(new FailingCommand("test"));
+
+        // Assert
+        Assert.Equal("Handled: Command failed", result);
+    }
+
+    [Fact]
+    public async Task ExceptionHandler_WhenAllHandlersThrow_ShouldPropagateOriginalException()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvpMediator(options =>
+        {
+            options.RegisterHandlersFromAssemblyContaining<ExtensibilityTests>();
+            options.WithExceptionHandlers();
+        });
+        services.AddExceptionHandler<FailingCommand, string, InvalidOperationException, ThrowingExceptionHandler>();
+
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
+
+        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            mediator.SendAsync(new FailingCommand("test")));
+        Assert.Equal("Command failed", exception.Message);
+    }
+
     #endregion
 
     #region [ Pipeline Hook Tests ]
