@@ -292,6 +292,40 @@ public class ConvertExtensionsTest
         result.Should().Be(defaultDate);
     }
 
+    [Fact]
+    public void ToDateTime_WithPtBrCulture_ParsesDayMonthYearOrder()
+    {
+        // Arrange - 05/03/2025 in pt-BR (dd/MM/yyyy) means March 5th, 2025
+        string input = "05/03/2025";
+        var ptBr = new System.Globalization.CultureInfo("pt-BR");
+
+        // Act
+        var result = input.ToDateTime(info: ptBr);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Value.Day.Should().Be(5);
+        result.Value.Month.Should().Be(3);
+        result.Value.Year.Should().Be(2025);
+    }
+
+    [Fact]
+    public void ToDateTime_WithEnUsCulture_ParsesMonthDayYearOrder()
+    {
+        // Arrange - 05/03/2025 in en-US (MM/dd/yyyy) means May 3rd, 2025
+        string input = "05/03/2025";
+        var enUs = new System.Globalization.CultureInfo("en-US");
+
+        // Act
+        var result = input.ToDateTime(info: enUs);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Value.Month.Should().Be(5);
+        result.Value.Day.Should().Be(3);
+        result.Value.Year.Should().Be(2025);
+    }
+
     #endregion
 
     #region [ NullSafe Tests ]
@@ -488,6 +522,22 @@ public class ConvertExtensionsTest
         // Assert
         hash1.Should().NotBe(hash2);
     }
+
+#pragma warning disable CS0618 // Testing the obsolete shim intentionally for coverage
+    [Fact]
+    public void GetHash_ObsoleteShim_DelegatesToGetSHA512Hash()
+    {
+        // Arrange
+        string input = "test string";
+
+        // Act
+        string obsoleteHash = ConvertExtensions.GetHash(input);
+        string sha512Hash = input.GetSHA512Hash();
+
+        // Assert
+        obsoleteHash.Should().Be(sha512Hash);
+    }
+#pragma warning restore CS0618
 
     #endregion
 
