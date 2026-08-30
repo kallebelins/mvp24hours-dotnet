@@ -134,4 +134,31 @@ public class QueryServiceBaseAsyncTest
 
         result.Data!.Name.Should().Be("First");
     }
+
+    [Fact]
+    public async Task CountBySpecificationAsync_WithoutReadOnlyRepository_ShouldFallbackToGetByCountAsync()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        repo.Setup(r => r.GetByCountAsync(It.IsAny<Expression<Func<AppTestEntity, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(5);
+        var service = new TestQueryService(uow.Object);
+
+        IBusinessResult<int> result = await service.CountBySpecificationAsync(new ActiveAppTestEntitySpec());
+
+        result.Data.Should().Be(5);
+        repo.Verify(r => r.GetByCountAsync(It.IsAny<Expression<Func<AppTestEntity, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetBySpecificationAsync_WithoutReadOnlyRepository_ShouldFallbackToGetByAsync()
+    {
+        var items = new List<AppTestEntity> { new() { Id = 1, Name = "Only", Active = true } };
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        ApplicationTestHelpers.SetupGetByAnyExpression(repo, items);
+        var service = new TestQueryService(uow.Object);
+
+        IBusinessResult<IList<AppTestEntity>> result = await service.GetBySpecificationAsync(new ActiveAppTestEntitySpec());
+
+        result.Data.Should().ContainSingle().Which.Name.Should().Be("Only");
+    }
 }
