@@ -296,6 +296,66 @@ public class RepositoryAsyncTest : IDisposable
         return services.BuildServiceProvider();
     }
 
+    [Fact]
+    public async Task ForceRemoveAsync_ShouldHardDeleteRegardlessOfEntityLogSupport()
+    {
+        TestEntity entity = (await SeedTestEntitiesAsync(1)).Single();
+
+        using IServiceScope scope = _provider.CreateScope();
+        var repository = (RepositoryAsync<TestEntity>)scope.ServiceProvider.GetRequiredService<IRepositoryAsync<TestEntity>>();
+        IUnitOfWorkAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+
+        await repository.ForceRemoveAsync(entity);
+        await unitOfWork.SaveChangesAsync();
+
+        (await repository.ListCountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ForceRemoveAsync_WithNullEntity_ShouldNotThrow()
+    {
+        using IServiceScope scope = _provider.CreateScope();
+        var repository = (RepositoryAsync<TestEntity>)scope.ServiceProvider.GetRequiredService<IRepositoryAsync<TestEntity>>();
+
+        Func<Task> act = () => repository.ForceRemoveAsync(null!);
+
+        await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task ForceRemoveAsync_WithCancelledToken_ShouldNotRemoveEntity()
+    {
+        TestEntity entity = (await SeedTestEntitiesAsync(1)).Single();
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        using IServiceScope scope = _provider.CreateScope();
+        var repository = (RepositoryAsync<TestEntity>)scope.ServiceProvider.GetRequiredService<IRepositoryAsync<TestEntity>>();
+
+        await repository.ForceRemoveAsync(entity, cts.Token);
+
+        (await repository.ListCountAsync()).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ForceRemoveAsync_WhenEntryAlreadyDeleted_ShouldAttachAndRemove()
+    {
+        TestEntity entity = (await SeedTestEntitiesAsync(1)).Single();
+
+        using IServiceScope scope = _provider.CreateScope();
+        var repository = (RepositoryAsync<TestEntity>)scope.ServiceProvider.GetRequiredService<IRepositoryAsync<TestEntity>>();
+        TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
+        IUnitOfWorkAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+
+        var detachedCopy = new TestEntity { Id = entity.Id, Name = entity.Name };
+        context.Entry(detachedCopy).State = Microsoft.EntityFrameworkCore.EntityState.Deleted;
+
+        await repository.ForceRemoveAsync(detachedCopy);
+        await unitOfWork.SaveChangesAsync();
+
+        (await repository.ListCountAsync()).Should().Be(0);
+    }
+
     private async Task<List<TestEntity>> SeedTestEntitiesAsync(int count)
     {
         using IServiceScope scope = _provider.CreateScope();

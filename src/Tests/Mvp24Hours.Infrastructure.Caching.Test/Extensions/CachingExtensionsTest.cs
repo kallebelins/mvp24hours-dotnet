@@ -2,6 +2,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Moq;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Caching.Extensions;
@@ -199,6 +200,32 @@ public class MvpCachingExtensionsTest
 #pragma warning restore CS0618
 #pragma warning disable CS0618
         provider.GetRequiredService<ICacheProvider>().Should().BeAssignableTo<IMultiLevelCache>();
+#pragma warning restore CS0618
+    }
+
+    [Fact]
+    public void AddMvpCaching_UseMultiLevelWithMultiLevelOptions_ShouldPassThroughSynchronizationSettings()
+    {
+        var services = new ServiceCollection();
+        services.AddMemoryCache();
+        services.AddDistributedMemoryCache();
+        var customSynchronizer = new Mock<ICacheSynchronizer>().Object;
+#pragma warning disable CS0618
+        services.AddMvpCaching(options =>
+        {
+            options.CacheType = CacheType.MultiLevel;
+            options.MultiLevelOptions = new MultiLevelCacheOptions
+            {
+                EnableSynchronization = true,
+                Synchronizer = customSynchronizer
+            };
+        });
+#pragma warning restore CS0618
+        ServiceProvider provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<ICacheSynchronizer>().Should().BeSameAs(customSynchronizer);
+#pragma warning disable CS0618
+        provider.GetRequiredService<IMultiLevelCache>().Should().NotBeNull();
 #pragma warning restore CS0618
     }
 }

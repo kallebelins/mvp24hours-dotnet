@@ -145,6 +145,66 @@ public class RepositoryBaseTest
         scope.Should().NotBeNull();
     }
 
+    [Fact]
+    public void GetKeyInfo_WhenEntityHasNoKeyAttribute_ShouldThrow()
+    {
+        DbContextOptions<NoKeyDbContext> options = new DbContextOptionsBuilder<NoKeyDbContext>()
+            .UseInMemoryDatabase($"NoKey_{Guid.NewGuid():N}")
+            .Options;
+        using var context = new NoKeyDbContext(options);
+        var repository = new TestableNoKeyRepositoryBase(context, EfCoreTestHelpers.CreateRepositoryOptions());
+
+        Action act = () => repository.GetKeyInfo();
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("Key property not found.");
+    }
+
+    [Fact]
+    public void SortByKey_WhenKeyTypeIsUnsortable_ShouldReturnUnsortedQueryInstead()
+    {
+        using TestDbContext context = SeedEntities(3);
+        var repository = new TestableRepositoryBase(context, EfCoreTestHelpers.CreateRepositoryOptions());
+        // A PropertyInfo from an unrelated type is not a member of TestEntity, so the
+        // Expression.Property(param, key) call inside SortByKey throws, and the catch
+        // fallback must return the original unsorted query instead of propagating.
+        PropertyInfo unrelatedKey = typeof(UnrelatedKeyHolder).GetProperty(nameof(UnrelatedKeyHolder.Value))!;
+
+        IQueryable<TestEntity> result = repository.SortByKeyPublic(context.Entities.AsQueryable(), unrelatedKey);
+
+        Action act = () => result.ToList();
+        act.Should().NotThrow();
+    }
+
+    private sealed class UnrelatedKeyHolder
+    {
+        public string Value { get; set; } = string.Empty;
+    }
+
+    private sealed class NoKeyDbContext(DbContextOptions<NoKeyDbContext> options) : DbContext(options)
+    {
+        public DbSet<TestNoKeyEntity> NoKeyEntities => Set<TestNoKeyEntity>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<TestNoKeyEntity>(b =>
+            {
+                b.HasNoKey();
+                b.Property(e => e.Identifier);
+            });
+        }
+    }
+
+    private sealed class TestableNoKeyRepositoryBase(DbContext dbContext, IOptions<EFCoreRepositoryOptions> options) : RepositoryBase<TestNoKeyEntity>(dbContext, options)
+    {
+        protected override object? EntityLogBy => null;
+
+        public new PropertyInfo GetKeyInfo()
+        {
+            return base.GetKeyInfo();
+        }
+    }
+
     private static TestDbContext SeedEntities(int count)
     {
         TestDbContext context = EfCoreTestHelpers.CreateContext();
@@ -177,6 +237,11 @@ public class RepositoryBaseTest
         public new TransactionScope? CreateTransactionScope(bool isAggregate = false)
         {
             return base.CreateTransactionScope(isAggregate);
+        }
+
+        public IQueryable<TestEntity> SortByKeyPublic(IQueryable<TestEntity> query, PropertyInfo key)
+        {
+            return SortByKey(query, key);
         }
     }
 }

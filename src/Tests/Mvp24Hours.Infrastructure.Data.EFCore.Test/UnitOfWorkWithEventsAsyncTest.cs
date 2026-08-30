@@ -85,6 +85,29 @@ public class UnitOfWorkWithEventsAsyncTest : IDisposable
         entity.DomainEvents.Should().HaveCount(1);
     }
 
+    [Fact]
+    public async Task SaveChangesWithEventsAsync_WithoutRegisteredDispatcher_ShouldClearEventsWithoutDispatching()
+    {
+        string databaseName = $"UowEventsAsyncNoDispatcher_{Guid.NewGuid():N}";
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvp24HoursInMemoryDbContext<TestDbContext>(databaseName);
+        services.AddMvp24HoursRepositoryWithEvents(o => o.MaxQtyByQueryPage = 100);
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        using IServiceScope scope = provider.CreateScope();
+        IUnitOfWorkWithEventsAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkWithEventsAsync>();
+        IRepositoryAsync<TestDomainEventEntity> repository = unitOfWork.GetRepository<TestDomainEventEntity>();
+
+        TestDomainEventEntity entity = CreateEntityWithEvent("NoDispatcherAsync");
+        await repository.AddAsync(entity);
+
+        int rowsAffected = await unitOfWork.SaveChangesWithEventsAsync();
+
+        rowsAffected.Should().BeGreaterThan(0);
+        entity.DomainEvents.Should().BeEmpty();
+    }
+
     private static TestDomainEventEntity CreateEntityWithEvent(string message)
     {
         var entity = new TestDomainEventEntity { Name = "EventEntity" };

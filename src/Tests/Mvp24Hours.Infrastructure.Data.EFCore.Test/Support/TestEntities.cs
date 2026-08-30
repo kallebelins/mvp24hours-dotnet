@@ -82,6 +82,20 @@ public class TestVersionedEntity : EntityBase<int>, IVersionedEntityWithCounter
     public long Version { get; set; }
 }
 
+public class TestRowVersionEntity : EntityBase<int>, IVersionedEntity
+{
+    public string Name { get; set; } = string.Empty;
+    public byte[] RowVersion { get; set; } = [];
+}
+
+public class TestNoKeyEntity : IEntityBase
+{
+    public int Identifier { get; set; }
+    public string Name { get; set; } = string.Empty;
+
+    public object? EntityKey => Identifier;
+}
+
 public class TestDomainEventEntity : EntityBase<int>, IHasDomainEvents
 {
     private readonly List<IDomainEvent> _domainEvents = [];
