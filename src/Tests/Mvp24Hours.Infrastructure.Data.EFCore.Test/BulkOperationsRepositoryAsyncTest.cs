@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
@@ -259,5 +261,89 @@ public class BulkOperationsRepositoryAsyncTest : IDisposable
         int rowsAffected = await repository.ExecuteDeleteAsync(e => !e.Active);
 
         rowsAffected.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task ExecuteUpdateAsync_WithNullSetPropertyCalls_ShouldThrow()
+    {
+        using IServiceScope scope = _provider.CreateScope();
+        IBulkOperationsRepositoryAsync<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<TestEntity>>();
+
+        Func<Task> act = () => repository.ExecuteUpdateAsync(
+            e => e.Active,
+            (Expression<Func<SetPropertyCalls<TestEntity>, SetPropertyCalls<TestEntity>>>)null!);
+
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+    [Fact]
+    public async Task ExecuteUpdateAsync_MultiProperty_WithNullPredicate_ShouldThrow()
+    {
+        using IServiceScope scope = _provider.CreateScope();
+        IBulkOperationsRepositoryAsync<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<TestEntity>>();
+
+        Func<Task> act = () => repository.ExecuteUpdateAsync(
+            null!,
+            setters => setters.SetProperty(e => e.Score, 1));
+
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+    [Fact]
+    public async Task ExecuteUpdateAsync_MultiProperty_WithNoSetters_ShouldReturnZeroWithoutQuerying()
+    {
+        using IServiceScope scope = _provider.CreateScope();
+        IBulkOperationsRepositoryAsync<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<TestEntity>>();
+
+        int rowsAffected = await repository.ExecuteUpdateAsync(
+            e => e.Active,
+            setters => setters);
+
+        rowsAffected.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ExecuteUpdateAsync_MultiProperty_WithConstantAndExpressionSetters_ShouldUpdateOnRealProvider()
+    {
+        // EF Core's InMemory provider does not translate ExecuteUpdate; a real relational
+        // provider (Sqlite, in-process) is required to exercise the SetPropertyCalls ->
+        // EF Core UpdateSettersBuilder reflection bridge end-to-end.
+        string connectionString = $"Data Source=file:bulk_multi_{Guid.NewGuid():N}?mode=memory&cache=shared";
+        var keepAlive = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
+        keepAlive.Open();
+        try
+        {
+            DbContextOptions<TestDbContext> dbOptions = new DbContextOptionsBuilder<TestDbContext>()
+                .UseSqlite(keepAlive)
+                .Options;
+            await using var context = new TestDbContext(dbOptions);
+            await context.Database.EnsureCreatedAsync();
+
+            context.Entities.AddRange(EfCoreTestHelpers.CreateEntities(3, "SqliteMulti").Select(e =>
+            {
+                e.Active = true;
+                return e;
+            }));
+            await context.SaveChangesAsync();
+
+            var repository = new BulkOperationsRepositoryAsync<TestEntity>(
+                context,
+                EfCoreTestHelpers.CreateRepositoryOptions(),
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<BulkOperationsRepositoryAsync<TestEntity>>.Instance);
+
+            int rowsAffected = await repository.ExecuteUpdateAsync(
+                e => e.Active,
+                setters => setters
+                    .SetProperty(e => e.Score, 42)
+                    .SetProperty(e => e.Name, e => e.Name + "-Updated"));
+
+            rowsAffected.Should().Be(3);
+            List<TestEntity> updated = await context.Entities.AsNoTracking().ToListAsync();
+            updated.Should().OnlyContain(e => e.Score == 42 && e.Name.EndsWith("-Updated"));
+        }
+        finally
+        {
+            keepAlive.Close();
+        }
     }
 }

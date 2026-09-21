@@ -22,7 +22,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Observability.Extensions;
 /// <list type="bullet">
 /// <item>OpenTelemetry tracing integration</item>
 /// <item>Prometheus-compatible metrics</item>
-/// <item>Structured logging with ITelemetryService integration</item>
+/// <item>Structured logging on top of <c>ILogger&lt;T&gt;</c></item>
 /// <item>Observer pattern for consume/publish lifecycle</item>
 /// <item>Diagnostics and health monitoring</item>
 /// </list>
@@ -197,7 +197,7 @@ public static class ObservabilityServiceExtensions
     }
 
     /// <summary>
-    /// Adds enhanced structured logging with ITelemetryService integration.
+    /// Adds enhanced structured logging on top of <c>ILogger&lt;T&gt;</c>.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="options">Optional logging configuration.</param>

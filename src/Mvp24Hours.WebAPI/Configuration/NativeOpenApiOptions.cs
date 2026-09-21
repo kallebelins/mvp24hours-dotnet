@@ -11,7 +11,7 @@ namespace Mvp24Hours.WebAPI.Configuration;
 /// <remarks>
 /// <para>
 /// This class configures the native OpenAPI support introduced in .NET 9 via Microsoft.AspNetCore.OpenApi.
-/// It provides a simplified alternative to Swashbuckle for basic OpenAPI documentation.
+/// It provides a simplified, first-party alternative to third-party OpenAPI generators for basic OpenAPI documentation.
 /// </para>
 /// <para>
 /// <b>Key Features:</b>

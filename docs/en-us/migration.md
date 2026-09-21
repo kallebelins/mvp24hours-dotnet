@@ -6,12 +6,6 @@ APIs live in the [.NET 9+ modernization guide](modernization/migration-guide.md)
 
 ## 9.1.x → 10.8.0
 
-> **Package availability:** the repository and changelog describe 10.8.0, but
-> production package metadata remains at `9.1.21` and the public
-> `Mvp24Hours.Core` feed has no 10.8.0 package. Complete the preparation and
-> validation steps below, but do not request 10.8.0 until publication is
-> confirmed.
-
 ### 1. Prepare the toolchain
 
 1. Install the .NET 10 SDK.
@@ -109,6 +103,160 @@ ciphertext as a consumer verification step before rollout:
 3. encrypt new values with 10.8.0 and verify round trips;
 4. retain a tested rollback and key-recovery procedure.
 
+#### Soft delete (EF Core)
+
+`Mvp24HoursContext.ApplyLogRules` is deprecated in 10.8.0 and will be removed in
+v12. Nothing changes at runtime: `SaveChanges` still calls it, and
+`CanApplyEntityLog` still gates it, so the legacy path keeps working until the
+removal. The deprecation exists because the EF Core module carries two
+independent soft-delete mechanisms that target different interfaces and never
+interact.
+
+| Aspect | `ApplyLogRules` (legacy) | `SoftDeleteInterceptor` (recommended) |
+| --- | --- | --- |
+| Interface | `IEntityDateLog` / `IEntityLog<T>` / `EntityBaseLog<,>` | `ISoftDeletable` / `ISoftDeletable<T>` |
+| Fields | `Created`, `Modified`, `Removed` (plus `CreatedBy`, `ModifiedBy`, `RemovedBy`) | `IsDeleted`, `DeletedAt`, `DeletedBy` |
+| Converts `Deleted` to soft delete? | No. `ApplyLogRules` takes no action on `EntityState.Deleted`; `Repository.Remove` performs the conversion by setting `Removed` and calling `Modify` | Yes, in `SavingChanges`/`SavingChangesAsync` |
+| Read filter | `ApplyGlobalFilters<IEntityDateLog>(e => e.Removed == null)`, applied automatically by `Mvp24HoursContext.OnModelCreating` when `CanApplyEntityLog` is true | `ApplySoftDeleteGlobalFilter()`, which you call yourself in `OnModelCreating`. It covers the non-generic `ISoftDeletable` only |
+| User source | `EntityLogBy` (override on the context) | `ICurrentUserProvider` (DI, optional) |
+| Time source | `TimeZoneHelper.GetTimeZoneNow()` (configured time zone) | `IClock` (DI, optional), falling back to `DateTime.UtcNow` |
+
+Because the two mechanisms read different properties, deprecating one does not
+migrate your entities. Migrating means changing the entity contract and the
+stored data, so plan it per aggregate:
+
+1. register the interceptor and wire it into the context:
+
+```csharp
+builder.Services.AddMvp24HoursEFCoreSoftDeleteInterceptor();
+
+builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+    options.UseSqlServer(connectionString)
+        .AddInterceptors(serviceProvider.GetRequiredService<SoftDeleteInterceptor>()));
+```
+
+2. apply the read filter in the context, otherwise soft-deleted rows keep
+   showing up in queries:
+
+```csharp
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    base.OnModelCreating(modelBuilder);
+    modelBuilder.ApplySoftDeleteGlobalFilter();
+}
+```
+
+3. change the entity from `IEntityDateLog`/`IEntityLog<T>` to `ISoftDeletable`,
+   add a migration for `IsDeleted`/`DeletedAt`/`DeletedBy`, and backfill
+   `IsDeleted = Removed IS NOT NULL` before dropping the legacy columns;
+4. audit-field stamping (`Created`/`Modified`) is not part of
+   `SoftDeleteInterceptor`. Pair it with `AuditSaveChangesInterceptor` and
+   `IAuditableEntity` (`CreatedAt`, `CreatedBy`, `ModifiedAt`, `ModifiedBy`).
+
+Two limitations are worth knowing before you commit to the interceptor:
+`ApplySoftDeleteGlobalFilter()` skips entities that implement only
+`ISoftDeletable<TUserId>` (that interface does not inherit `ISoftDeletable`), and
+the interceptor writes a `string` into `DeletedBy`, so `ISoftDeletable<TUserId>`
+with a non-string `TUserId` needs its own handling. Entities that stay on
+`IEntityDateLog` are unaffected by either limitation.
+
+#### Static helpers replaced by DI
+
+Three static helpers that carried process-wide mutable state were retired. None of
+them was ever registered in or resolved from the container, so replacing them is a
+call-site change, not a wiring change.
+
+| Helper | 10.8.0 status | Replacement |
+| --- | --- | --- |
+| `TelemetryHelper` (`Mvp24Hours.Core`) | **Removed** | `ILogger<T>` plus the OpenTelemetry surface in `Mvp24Hours.Core.Observability` — see [Telemetry](telemetry.md) |
+| `TimeZoneHelper` (`Mvp24Hours.Infrastructure`) | `[Obsolete]`, removal in v12 | `IClock` (`Mvp24Hours.Core.Contract.Infrastructure`) or `TimeProvider` |
+| `ConfigurationHelper` (`Mvp24Hours.Infrastructure`) | `[Obsolete]`, removal in v12 | `IConfiguration` / `IOptions<T>` bound at the host — see [Configuration reference](configuration-reference.md) |
+
+`AddMvp24HoursTimeZone(clearList, ids)` is `[Obsolete]` for the same reason: it
+registers nothing in the container. It only mutates the static
+`TimeZoneHelper.TimeZoneIds` list, and the helper caches the resolved
+`TimeZoneInfo` on the first call — so calling it after the first
+`GetTimeZoneNow()` has no effect at all.
+
+**`IClock` is not a drop-in replacement for `TimeZoneHelper`.**
+`GetTimeZoneNow()` returns the first system timezone matching `TimeZoneIds`
+(`E. South America Standard Time`, `Brazil/East`, `America/Sao_Paulo` by default)
+regardless of the machine's local timezone. The default clock registrations
+(`SystemClock`, `AddTimeProvider()`, `AddSystemClock()`) use `TimeZoneInfo.Local`.
+The two agree only when both offsets happen to match, so register the timezone
+explicitly to preserve the current values:
+
+```csharp
+// Before
+services.AddMvp24HoursTimeZone(clearList: true, "America/Sao_Paulo");
+DateTime now = TimeZoneHelper.GetTimeZoneNow();
+
+// After — Program.cs
+TimeZoneInfo zone = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
+builder.Services.AddTimeProvider(TimeProvider.System, zone);   // registers IClock and TimeProvider
+
+// After — consumer
+public sealed class MyService(IClock clock)
+{
+    public DateTime Now => clock.Now;      // same zone as the helper
+    public DateTime UtcNow => clock.UtcNow;
+}
+```
+
+Prefer `clock.UtcNow` for persisted timestamps and convert on display. Inside
+Mvp24Hours, the remaining `TimeZoneHelper` calls all belong to the legacy
+`IEntityDateLog` stamping path (`Repository.Remove`, `RepositoryAsync.RemoveAsync`,
+`Mvp24HoursContext.ApplyLogRules`) plus the no-`IClock` fallback in the MongoDB
+`AuditInterceptor`/`SoftDeleteInterceptor`. They keep the current behavior and are
+suppressed locally; registering an `IClock` already takes over the two MongoDB
+interceptors.
+
+#### Swashbuckle-based Swagger APIs removed
+
+The Swashbuckle-only registration/middleware surface in `Mvp24Hours.WebAPI` was
+removed. The `Add*` side had already been `[Obsolete]`; the `Use*` side had not,
+but had zero known consumers in `samples/`, `templates/`, or outside dedicated test
+coverage, so no `[Obsolete]` shim was introduced — the removal is direct.
+
+| Removed | Replacement |
+| --- | --- |
+| `AddMvp24HoursWebSwagger(...)` | `AddMvp24HoursNativeOpenApi(...)` |
+| `AddMvp24HoursSwaggerWithVersioning(...)` | `AddMvp24HoursNativeOpenApiWithVersions(...)` |
+| `UseMvp24HoursSwagger(...)` | `UseMvp24HoursNativeOpenApi(...)` (or `app.MapMvp24HoursNativeOpenApi()` for Minimal APIs) |
+| `UseMvp24HoursSwaggerWithVersioning(...)` | `UseMvp24HoursNativeOpenApi(...)` / `MapMvp24HoursNativeOpenApi(...)` |
+| `UseMvp24HoursReDoc(...)` | `NativeOpenApiOptions.EnableReDoc = true` (served by `MapMvp24HoursNativeOpenApi`) |
+| `SwaggerOptions`, `SwaggerVersionInfo`, `SwaggerContact`, `SwaggerLicense` | `NativeOpenApiOptions`, `OpenApiVersionConfig` |
+| `SwaggerAuthorizationScheme` | `OpenApiAuthenticationScheme` |
+| `Filters/Swagger/*` (`AuthResponsesOperationFilter`, `CustomSwaggerFilter`, `DeprecationOperationFilter`, `ExamplesOperationFilter`, `VersionedSwaggerDocumentFilter`) | document transformers under `Mvp24Hours.WebAPI.OpenApi` (see [Native OpenAPI](modernization/native-openapi.md)) |
+
+```csharp
+// Before (removed)
+services.AddMvp24HoursWebSwagger(
+    "My API",
+    version: "v1",
+    oAuthScheme: SwaggerAuthorizationScheme.Bearer);
+// ...
+app.UseMvp24HoursSwagger("My API");
+
+// After
+services.AddMvp24HoursNativeOpenApi(options =>
+{
+    options.Title = "My API";
+    options.Version = "1.0.0";
+    options.EnableSwaggerUI = true;
+    options.AuthenticationScheme = OpenApiAuthenticationScheme.Bearer;
+});
+// ...
+app.MapMvp24HoursNativeOpenApi();
+```
+
+`Swashbuckle.AspNetCore.Filters` was removed from `Mvp24Hours.WebAPI`'s dependencies.
+`Swashbuckle.AspNetCore` (the umbrella package) is still referenced — the native
+OpenAPI path serves its interactive UI via `Swashbuckle.AspNetCore.SwaggerUI`
+(`app.UseSwaggerUI(...)`); only the document-generation package (`.SwaggerGen`) and
+the example filters (`.Filters`) are gone. See
+[Native OpenAPI Documentation](modernization/native-openapi.md) for the full guide.
+
 ### 5. Audit dependencies and build strictly
 
 ```bash
@@ -188,7 +336,9 @@ For Telemetry, HTTP/database resilience, cache, Pipeline, OpenAPI, time, and
 Options transitions, use the
 [.NET 9+ modernization guide](modernization/migration-guide.md). Detailed
 Telemetry steps remain in the
-[TelemetryHelper migration](observability/migration.md).
+[legacy telemetry migration](observability/migration.md) — `TelemetryHelper`,
+`AddMvp24HoursTelemetry*`, `ITelemetryService`, and `TelemetryLevels` were
+**removed** in 10.8.0, so that migration is now mandatory rather than optional.
 
 ## 8.x → 9.x
 

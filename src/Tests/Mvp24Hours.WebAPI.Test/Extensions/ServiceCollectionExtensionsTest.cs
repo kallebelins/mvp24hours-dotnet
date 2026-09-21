@@ -328,7 +328,9 @@ public class ServiceCollectionExtensionsTest
     {
         var services = new ServiceCollection();
 
+#pragma warning disable CS0618 // intentional: covers obsolete AddMvp24HoursWebExceptions until removal in v12
         services.AddMvp24HoursWebExceptions(options => options.TraceMiddleware = true);
+#pragma warning restore CS0618
 
         services.BuildServiceProvider()
             .GetRequiredService<IOptions<ExceptionOptions>>().Value.TraceMiddleware

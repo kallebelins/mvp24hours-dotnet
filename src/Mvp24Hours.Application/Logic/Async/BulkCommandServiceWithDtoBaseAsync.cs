@@ -7,7 +7,6 @@ using System.Diagnostics;
 using AutoMapper;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
@@ -75,14 +74,16 @@ namespace Mvp24Hours.Application.Logic;
 /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
 /// <param name="dtoValidator">The validator for DTO validation.</param>
 /// <param name="entityValidator">The validator for entity validation.</param>
+/// <param name="logger">The logger for logging operations. When omitted, logging is disabled via <c>NullLogger.Instance</c>.</param>
 /// <exception cref="ArgumentNullException">Thrown when unitOfWork, bulkOperations, or mapper is null.</exception>
 public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
     TUoW unitOfWork,
     IBulkOperationsAsync<TEntity> bulkOperations,
     IMapper mapper,
     IValidator<TDto>? dtoValidator,
-    IValidator<TEntity>? entityValidator)
-    : BulkCommandServiceBaseAsync<TEntity, TUoW>(unitOfWork, bulkOperations, entityValidator), IBulkCommandServiceWithDtoAsync<TDto>
+    IValidator<TEntity>? entityValidator,
+    ILogger? logger = null)
+    : BulkCommandServiceBaseAsync<TEntity, TUoW>(unitOfWork, bulkOperations, entityValidator, logger), IBulkCommandServiceWithDtoAsync<TDto>
     where TEntity : class, IEntityBase
     where TDto : class
     where TUoW : class, IUnitOfWorkAsync
@@ -90,7 +91,6 @@ public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
     #region [ Properties / Fields ]
 
     private readonly IValidator<TEntity>? _entityValidator = entityValidator;
-    private readonly ILogger _logger = NullLogger.Instance;
 
     /// <summary>
     /// Gets the AutoMapper instance for Entity/DTO mapping.
@@ -149,7 +149,7 @@ public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
         BulkOperationOptions options,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-bulkcommandservicedtoasync-bulkaddasync-start Count={Count} BatchSize={BatchSize}",
+        Logger.LogDebug("application-bulkcommandservicedtoasync-bulkaddasync-start Count={Count} BatchSize={BatchSize}",
             dtos?.Count ?? 0, options.BatchSize);
 
         var stopwatch = Stopwatch.StartNew();
@@ -173,7 +173,7 @@ public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
 
             stopwatch.Stop();
 
-            _logger.LogDebug("application-bulkcommandservicedtoasync-bulkaddasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+            Logger.LogDebug("application-bulkcommandservicedtoasync-bulkaddasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
                 result.Data?.RowsAffected ?? 0, stopwatch.ElapsedMilliseconds, result.Data?.IsSuccess ?? false);
 
             return result;
@@ -182,7 +182,7 @@ public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
         {
             stopwatch.Stop();
 
-            _logger.LogError(ex, "application-bulkcommandservicedtoasync-bulkaddasync-error Error={Error} ElapsedMs={ElapsedMs}",
+            Logger.LogError(ex, "application-bulkcommandservicedtoasync-bulkaddasync-error Error={Error} ElapsedMs={ElapsedMs}",
                 ex.Message, stopwatch.ElapsedMilliseconds);
 
             return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
@@ -207,7 +207,7 @@ public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
         BulkOperationOptions options,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-bulkcommandservicedtoasync-bulkmodifyasync-start Count={Count} BatchSize={BatchSize}",
+        Logger.LogDebug("application-bulkcommandservicedtoasync-bulkmodifyasync-start Count={Count} BatchSize={BatchSize}",
             dtos?.Count ?? 0, options.BatchSize);
 
         var stopwatch = Stopwatch.StartNew();
@@ -231,7 +231,7 @@ public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
 
             stopwatch.Stop();
 
-            _logger.LogDebug("application-bulkcommandservicedtoasync-bulkmodifyasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+            Logger.LogDebug("application-bulkcommandservicedtoasync-bulkmodifyasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
                 result.Data?.RowsAffected ?? 0, stopwatch.ElapsedMilliseconds, result.Data?.IsSuccess ?? false);
 
             return result;
@@ -240,7 +240,7 @@ public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
         {
             stopwatch.Stop();
 
-            _logger.LogError(ex, "application-bulkcommandservicedtoasync-bulkmodifyasync-error Error={Error} ElapsedMs={ElapsedMs}",
+            Logger.LogError(ex, "application-bulkcommandservicedtoasync-bulkmodifyasync-error Error={Error} ElapsedMs={ElapsedMs}",
                 ex.Message, stopwatch.ElapsedMilliseconds);
 
             return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
@@ -265,7 +265,7 @@ public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
         BulkOperationOptions options,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-bulkcommandservicedtoasync-bulkremoveasync-start Count={Count} BatchSize={BatchSize}",
+        Logger.LogDebug("application-bulkcommandservicedtoasync-bulkremoveasync-start Count={Count} BatchSize={BatchSize}",
             dtos?.Count ?? 0, options.BatchSize);
 
         var stopwatch = Stopwatch.StartNew();
@@ -280,7 +280,7 @@ public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
 
             stopwatch.Stop();
 
-            _logger.LogDebug("application-bulkcommandservicedtoasync-bulkremoveasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+            Logger.LogDebug("application-bulkcommandservicedtoasync-bulkremoveasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
                 result.Data?.RowsAffected ?? 0, stopwatch.ElapsedMilliseconds, result.Data?.IsSuccess ?? false);
 
             return result;
@@ -289,7 +289,7 @@ public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
         {
             stopwatch.Stop();
 
-            _logger.LogError(ex, "application-bulkcommandservicedtoasync-bulkremoveasync-error Error={Error} ElapsedMs={ElapsedMs}",
+            Logger.LogError(ex, "application-bulkcommandservicedtoasync-bulkremoveasync-error Error={Error} ElapsedMs={ElapsedMs}",
                 ex.Message, stopwatch.ElapsedMilliseconds);
 
             return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
@@ -353,7 +353,7 @@ public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
                 IList<IMessageResult> dtoErrors = dto.TryValidate(DtoValidator);
                 if (dtoErrors.AnySafe())
                 {
-                    _logger.LogDebug("application-bulkcommandservicedtoasync-validatedtos-failed DtoType={DtoType} ErrorCount={ErrorCount}",
+                    Logger.LogDebug("application-bulkcommandservicedtoasync-validatedtos-failed DtoType={DtoType} ErrorCount={ErrorCount}",
                         typeof(TDto).Name, dtoErrors.Count);
                     return Task.FromResult(dtoErrors.ToBusiness<IList<TEntity>>());
                 }
@@ -368,7 +368,7 @@ public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
                 IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
                 if (entityErrors.AnySafe())
                 {
-                    _logger.LogDebug("application-bulkcommandservicedtoasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
+                    Logger.LogDebug("application-bulkcommandservicedtoasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
                         typeof(TEntity).Name, entityErrors.Count);
                     return Task.FromResult(entityErrors.ToBusiness<IList<TEntity>>());
                 }

@@ -51,6 +51,12 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
     /// </summary>
     protected virtual IValidator<TEntity>? Validator => validator;
 
+    /// <summary>
+    /// Gets the logger instance for logging operations. Never <see langword="null"/>:
+    /// falls back to <see cref="NullLogger{T}.Instance"/> when no logger is supplied.
+    /// </summary>
+    protected virtual ILogger<RepositoryService<TEntity, TUoW>> Logger => _logger;
+
     #endregion
 
     #region [ Ctor ]
@@ -70,7 +76,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
     /// </summary>
     public virtual IBusinessResult<bool> ListAny()
     {
-        _logger.LogDebug("application-repositoryservice-listany");
+        _logger.LogDebug("[{ServiceName}] Executing ListAny for {EntityType}", GetType().Name, typeof(TEntity).Name);
         return UnitOfWork
             .GetRepository<TEntity>()
             .ListAny()
@@ -82,7 +88,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
     /// </summary>
     public virtual IBusinessResult<int> ListCount()
     {
-        _logger.LogDebug("application-repositoryservice-listcount");
+        _logger.LogDebug("[{ServiceName}] Executing ListCount for {EntityType}", GetType().Name, typeof(TEntity).Name);
         return UnitOfWork
             .GetRepository<TEntity>()
             .ListCount()
@@ -102,7 +108,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
     /// </summary>
     public virtual IBusinessResult<IList<TEntity>> List(IPagingCriteria? criteria)
     {
-        _logger.LogDebug("application-repositoryservice-list");
+        _logger.LogDebug("[{ServiceName}] Executing List for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
         return UnitOfWork
             .GetRepository<TEntity>()
             .List(criteria)
@@ -114,7 +120,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
     /// </summary>
     public virtual IBusinessResult<bool> GetByAny(Expression<Func<TEntity, bool>> clause)
     {
-        _logger.LogDebug("application-repositoryservice-getbyany");
+        _logger.LogDebug("[{ServiceName}] Executing GetByAny for {EntityType}", GetType().Name, typeof(TEntity).Name);
         return UnitOfWork
             .GetRepository<TEntity>()
             .GetByAny(clause)
@@ -126,7 +132,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
     /// </summary>
     public virtual IBusinessResult<int> GetByCount(Expression<Func<TEntity, bool>> clause)
     {
-        _logger.LogDebug("application-repositoryservice-getbycount");
+        _logger.LogDebug("[{ServiceName}] Executing GetByCount for {EntityType}", GetType().Name, typeof(TEntity).Name);
         return UnitOfWork
             .GetRepository<TEntity>()
             .GetByCount(clause)
@@ -146,7 +152,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
     /// </summary>
     public virtual IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria)
     {
-        _logger.LogDebug("application-repositoryservice-getby");
+        _logger.LogDebug("[{ServiceName}] Executing GetBy for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
         return UnitOfWork
             .GetRepository<TEntity>()
             .GetBy(clause, criteria)
@@ -166,7 +172,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
     /// </summary>
     public virtual IBusinessResult<TEntity?> GetById(object id, IPagingCriteria? criteria)
     {
-        _logger.LogDebug("application-repositoryservice-getbyid");
+        _logger.LogDebug("[{ServiceName}] Executing GetById for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
         return UnitOfWork
             .GetRepository<TEntity>()
             .GetById(id, criteria)
@@ -179,7 +185,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
 
     public virtual IBusinessResult<int> Add(TEntity entity)
     {
-        _logger.LogDebug("application-repositoryservice-add");
+        _logger.LogDebug("[{ServiceName}] Executing Add for {EntityType}", GetType().Name, typeof(TEntity).Name);
         IList<IMessageResult> errors = entity.TryValidate(Validator);
         if (!errors.AnySafe())
         {
@@ -194,7 +200,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
 
     public virtual IBusinessResult<int> Add(IList<TEntity> entities)
     {
-        _logger.LogDebug("application-repositoryservice-addlist");
+        _logger.LogDebug("[{ServiceName}] Executing Add for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
         if (!entities.AnySafe())
         {
             return 0.ToBusiness();
@@ -220,7 +226,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
 
     public virtual IBusinessResult<int> Modify(TEntity entity)
     {
-        _logger.LogDebug("application-repositoryservice-modify");
+        _logger.LogDebug("[{ServiceName}] Executing Modify for {EntityType}", GetType().Name, typeof(TEntity).Name);
         IList<IMessageResult> errors = entity.TryValidate(Validator);
         if (!errors.AnySafe())
         {
@@ -235,7 +241,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
 
     public virtual IBusinessResult<int> Modify(IList<TEntity> entities)
     {
-        _logger.LogDebug("application-repositoryservice-modifylist");
+        _logger.LogDebug("[{ServiceName}] Executing Modify for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
         if (!entities.AnySafe())
         {
             return 0.ToBusiness();
@@ -252,7 +258,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
 
     public virtual IBusinessResult<int> Remove(TEntity entity)
     {
-        _logger.LogDebug("application-repositoryservice-remove");
+        _logger.LogDebug("[{ServiceName}] Executing Remove for {EntityType}", GetType().Name, typeof(TEntity).Name);
         UnitOfWork.GetRepository<TEntity>().Remove(entity);
         return UnitOfWork.SaveChanges()
             .ToBusiness();
@@ -260,7 +266,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
 
     public virtual IBusinessResult<int> Remove(IList<TEntity> entities)
     {
-        _logger.LogDebug("application-repositoryservice-removelist");
+        _logger.LogDebug("[{ServiceName}] Executing Remove for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
         if (!entities.AnySafe())
         {
             return 0.ToBusiness();
@@ -277,7 +283,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
 
     public virtual IBusinessResult<int> RemoveById(object id)
     {
-        _logger.LogDebug("application-repositoryservice-removebyid");
+        _logger.LogDebug("[{ServiceName}] Executing RemoveById for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
         UnitOfWork.GetRepository<TEntity>().RemoveById(id);
         return UnitOfWork.SaveChanges()
             .ToBusiness();
@@ -285,7 +291,7 @@ public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntit
 
     public virtual IBusinessResult<int> RemoveById(IList<object> ids)
     {
-        _logger.LogDebug("application-repositoryservice-removebyidlist");
+        _logger.LogDebug("[{ServiceName}] Executing RemoveById for {Count} {EntityType} entities", GetType().Name, ids?.Count ?? 0, typeof(TEntity).Name);
         if (!ids.AnySafe())
         {
             return 0.ToBusiness();

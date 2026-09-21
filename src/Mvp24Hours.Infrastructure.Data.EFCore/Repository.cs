@@ -12,10 +12,10 @@ using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Entities;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
+using Mvp24Hours.Infrastructure.Data.EFCore.Internal;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore;
 
@@ -329,15 +329,17 @@ public class Repository<T>(DbContext dbContext, IOptions<EFCoreRepositoryOptions
 
             // properties that can not be changed
 
-            if (entity.GetType().InheritsOrImplements(typeof(IEntityLog<>)) || entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>)))
+            if (entity is IEntityDateLog dateLog && entityDb is IEntityDateLog dateLogDb)
             {
                 _logger?.LogDebug("Repository: Modify with entity log");
-                var entityLog = (dynamic)entity;
-                var entityDbLog = (dynamic)entityDb;
-                entityLog.Created = entityDbLog.Created;
-                entityLog.CreatedBy = entityDbLog.CreatedBy;
-                entityLog.Modified = entityDbLog.Modified;
-                entityLog.ModifiedBy = entityDbLog.ModifiedBy;
+                dateLog.Created = dateLogDb.Created;
+                dateLog.Modified = dateLogDb.Modified;
+            }
+
+            if (EntityLogAccessor.HasEntityLog(entity))
+            {
+                EntityLogAccessor.CopyPropertyValue(entityDb, entity, "CreatedBy");
+                EntityLogAccessor.CopyPropertyValue(entityDb, entity, "ModifiedBy");
             }
 
             dbContext.Entry(entityDb).CurrentValues.SetValues(entity);
@@ -371,19 +373,21 @@ public class Repository<T>(DbContext dbContext, IOptions<EFCoreRepositoryOptions
                 return;
             }
 
-            bool hasUserLog = (entity.GetType().InheritsOrImplements(typeof(IEntityLog<>))
-                || entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>)));
+            bool hasUserLog = EntityLogAccessor.HasEntityLog(entity);
 
-            bool hasUserLogDate = hasUserLog || entity.GetType().InheritsOrImplements(typeof(IEntityDateLog));
-
-            if (hasUserLog || hasUserLogDate)
+            if (entity is IEntityDateLog dateLog)
             {
                 _logger?.LogDebug("Repository: Remove with entity log");
-                var entityLog = (dynamic)entity;
-                entityLog.Removed = TimeZoneHelper.GetTimeZoneNow();
+                // TODO (task 4.2b): TimeZoneHelper is obsolete. Swapping it for IClock requires
+                // injecting the clock into the repository and would change the timezone of the
+                // stamped value (helper resolves South America; IClock.Now uses TimeZoneInfo.Local).
+#pragma warning disable CS0618 // intentional: legacy IEntityDateLog stamping until removal in v12
+                dateLog.Removed = TimeZoneHelper.GetTimeZoneNow();
+#pragma warning restore CS0618
                 if (hasUserLog)
                 {
-                    entityLog.RemovedBy = (dynamic)(EntityLogBy ?? throw new InvalidOperationException("EntityLogBy is not available."));
+                    object removedBy = EntityLogBy ?? throw new InvalidOperationException("EntityLogBy is not available.");
+                    EntityLogAccessor.TrySetPropertyValue(entity, "RemovedBy", removedBy);
                 }
                 Modify(entity);
             }
@@ -477,4 +481,49 @@ public class Repository<T>(DbContext dbContext, IOptions<EFCoreRepositoryOptions
     protected override object? EntityLogBy => (dbContext as Mvp24HoursContext)?.EntityLogBy;
 
     #endregion
+}
+
+/// <summary>
+///  <see cref="IRepository{T, TId}"/>
+/// </summary>
+/// <remarks>
+/// Additive wrapper over <see cref="Repository{T}"/>. Every typed member delegates to the
+/// <see cref="object"/>-based member of the base class, so each operation keeps a single
+/// real implementation and cannot diverge in behavior.
+/// </remarks>
+public class Repository<T, TId>(DbContext dbContext, IOptions<EFCoreRepositoryOptions> options, ILogger<Repository<T, TId>>? logger = null)
+    : Repository<T>(dbContext, options, logger), IRepository<T, TId>
+    where T : class, IEntityBase, IEntity<TId>
+{
+    /// <summary>
+    ///  <see cref="IRepository{T, TId}.GetById(TId)"/>
+    /// </summary>
+    public T? GetById(TId id)
+    {
+        return base.GetById((object)id!);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepository{T, TId}.GetById(TId, IPagingCriteria)"/>
+    /// </summary>
+    public T? GetById(TId id, IPagingCriteria? criteria)
+    {
+        return base.GetById((object)id!, criteria);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepository{T, TId}.RemoveById(TId)"/>
+    /// </summary>
+    public void RemoveById(TId id)
+    {
+        base.RemoveById((object)id!);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepository{T, TId}.RemoveById(IList{TId})"/>
+    /// </summary>
+    public void RemoveById(IList<TId> ids)
+    {
+        base.RemoveById(ids?.Cast<object>().ToList()!);
+    }
 }

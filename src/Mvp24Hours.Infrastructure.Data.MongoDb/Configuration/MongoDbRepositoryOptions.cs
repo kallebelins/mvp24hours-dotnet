@@ -10,5 +10,5 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 [Serializable]
 public sealed class MongoDbRepositoryOptions
 {
-    public int MaxQtyByQueryPage { get; set; } = ContantsHelper.Data.MaxQtyByQueryPage;
+    public int MaxQtyByQueryPage { get; set; } = ConstantsHelper.Data.MaxQtyByQueryPage;
 }

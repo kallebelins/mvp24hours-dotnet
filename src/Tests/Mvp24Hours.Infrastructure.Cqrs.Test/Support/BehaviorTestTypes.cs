@@ -52,6 +52,22 @@ public class CacheableTestQueryHandler : IMediatorQueryHandler<CacheableTestQuer
     }
 }
 
+public class NonCacheableTestQuery : IMediatorQuery<string>
+{
+    public string Id { get; init; } = "1";
+}
+
+public class NonCacheableTestQueryHandler : IMediatorQueryHandler<NonCacheableTestQuery, string>
+{
+    public static int ExecutionCount { get; set; }
+
+    public Task<string> Handle(NonCacheableTestQuery request, CancellationToken cancellationToken)
+    {
+        ExecutionCount++;
+        return Task.FromResult($"value-{request.Id}-{ExecutionCount}");
+    }
+}
+
 public class CacheInvalidatingCommand : IMediatorCommand<string>, ICacheInvalidator
 {
     public IEnumerable<string> CacheKeysToInvalidate => ["query:1"];
@@ -62,6 +78,27 @@ public class CacheInvalidatingCommandHandler : IMediatorCommandHandler<CacheInva
     public Task<string> Handle(CacheInvalidatingCommand request, CancellationToken cancellationToken)
     {
         return Task.FromResult("invalidated");
+    }
+}
+
+public class NonRetryableTestCommand : IMediatorCommand<string>
+{
+    public static int AttemptCount { get; set; }
+
+    public int FailUntilAttempt { get; init; } = 2;
+}
+
+public class NonRetryableTestCommandHandler : IMediatorCommandHandler<NonRetryableTestCommand, string>
+{
+    public Task<string> Handle(NonRetryableTestCommand request, CancellationToken cancellationToken)
+    {
+        NonRetryableTestCommand.AttemptCount++;
+        if (NonRetryableTestCommand.AttemptCount < request.FailUntilAttempt)
+        {
+            throw new TimeoutException("Transient failure");
+        }
+
+        return Task.FromResult("no-retry-success");
     }
 }
 
@@ -89,6 +126,22 @@ public class RetryTestCommandHandler : IMediatorCommandHandler<RetryTestCommand,
         }
 
         return Task.FromResult("retry-success");
+    }
+}
+
+public class NonIdempotentTestCommand : IMediatorCommand<int>
+{
+    public string OperationKey { get; init; } = "op-1";
+}
+
+public class NonIdempotentTestCommandHandler : IMediatorCommandHandler<NonIdempotentTestCommand, int>
+{
+    public static int ExecutionCount { get; set; }
+
+    public Task<int> Handle(NonIdempotentTestCommand request, CancellationToken cancellationToken)
+    {
+        ExecutionCount++;
+        return Task.FromResult(ExecutionCount * 10);
     }
 }
 

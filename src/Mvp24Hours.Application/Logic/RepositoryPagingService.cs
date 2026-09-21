@@ -44,7 +44,7 @@ public class RepositoryPagingService<TEntity, TUoW> : RepositoryService<TEntity,
     /// </summary>
     [ActivatorUtilitiesConstructor]
     public RepositoryPagingService(TUoW _unitOfWork, IValidator<TEntity>? validator, ILogger<RepositoryPagingService<TEntity, TUoW>>? logger = null)
-        : base(_unitOfWork, validator)
+        : base(_unitOfWork, validator, logger)
     {
         _pagingLogger = logger ?? NullLogger<RepositoryPagingService<TEntity, TUoW>>.Instance;
     }
@@ -54,14 +54,14 @@ public class RepositoryPagingService<TEntity, TUoW> : RepositoryService<TEntity,
 
     public virtual IPagingResult<IList<TEntity>> GetByWithPagination(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria = null)
     {
-        _pagingLogger.LogDebug("application-repositorypagingservice-getbywithpagination");
+        _pagingLogger.LogDebug("[{ServiceName}] Executing GetByWithPagination for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
         IRepository<TEntity> repo = UnitOfWork.GetRepository<TEntity>();
         return repo.ToBusinessPaging(clause, criteria);
     }
 
     public virtual IPagingResult<IList<TEntity>> ListWithPagination(IPagingCriteria? criteria = null)
     {
-        _pagingLogger.LogDebug("application-repositorypagingservice-listwithpagination");
+        _pagingLogger.LogDebug("[{ServiceName}] Executing ListWithPagination for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
         IRepository<TEntity> repo = UnitOfWork.GetRepository<TEntity>();
         return repo.ToBusinessPaging(criteria);
     }

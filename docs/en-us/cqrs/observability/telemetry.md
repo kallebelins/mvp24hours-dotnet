@@ -2,54 +2,43 @@
 
 ## Overview
 
-The Mediator integrates with the existing `ITelemetryService` in Mvp24Hours and with OpenTelemetry for metrics collection and distributed traces.
+The Mediator emits telemetry through `ILogger<T>` and `System.Diagnostics` (`ActivitySource`/`Meter`),
+integrated with OpenTelemetry for metrics collection and distributed traces.
 
-## Existing ITelemetryService
-
-```csharp
-public interface ITelemetryService
-{
-    void TrackEvent(string eventName, IDictionary<string, string>? properties = null);
-    void TrackMetric(string metricName, double value, IDictionary<string, string>? properties = null);
-    void TrackException(Exception exception, IDictionary<string, string>? properties = null);
-    void TrackDependency(string name, string data, DateTimeOffset startTime, TimeSpan duration, bool success);
-}
-```
+> The legacy `ITelemetryService` interface was removed in 10.8.0 — see
+> [Observability → Migration](../../observability/migration.md). The built-in `TelemetryBehavior`
+> never depended on it.
 
 ## TelemetryBehavior
 
+The shipped `TelemetryBehavior<TRequest, TResponse>` (registered by `RegisterTelemetryBehavior`) writes
+structured log entries and enriches the current `Activity`. A hand-written equivalent looks like this:
+
 ```csharp
-public sealed class TelemetryBehavior<TRequest, TResponse>
+public sealed class TelemetryBehavior<TRequest, TResponse>(
+    ILogger<TelemetryBehavior<TRequest, TResponse>> logger)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly ITelemetryService _telemetry;
-    private readonly ILogger<TelemetryBehavior<TRequest, TResponse>> _logger;
-
     public async Task<TResponse> Handle(
         TRequest request,
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
         var requestName = typeof(TRequest).Name;
-        var startTime = DateTimeOffset.UtcNow;
         var stopwatch = Stopwatch.StartNew();
 
         try
         {
-            var result = await next();
+            TResponse result = await next();
             stopwatch.Stop();
 
-            // Track success
-            _telemetry.TrackEvent($"Mediator.{requestName}.Success", new Dictionary<string, string>
-            {
-                ["RequestType"] = requestName,
-                ["ResponseType"] = typeof(TResponse).Name,
-                ["Duration"] = stopwatch.ElapsedMilliseconds.ToString()
-            });
+            logger.LogInformation(
+                "Mediator {RequestType} succeeded in {ElapsedMilliseconds}ms (response {ResponseType})",
+                requestName, stopwatch.ElapsedMilliseconds, typeof(TResponse).Name);
 
-            _telemetry.TrackMetric($"Mediator.{requestName}.Duration", 
-                stopwatch.ElapsedMilliseconds);
+            Activity.Current?.SetTag("mediator.request_type", requestName);
+            Activity.Current?.SetTag("mediator.duration_ms", stopwatch.ElapsedMilliseconds);
 
             return result;
         }
@@ -57,19 +46,9 @@ public sealed class TelemetryBehavior<TRequest, TResponse>
         {
             stopwatch.Stop();
 
-            // Track failure
-            _telemetry.TrackException(ex, new Dictionary<string, string>
-            {
-                ["RequestType"] = requestName,
-                ["Duration"] = stopwatch.ElapsedMilliseconds.ToString()
-            });
-
-            _telemetry.TrackEvent($"Mediator.{requestName}.Failure", new Dictionary<string, string>
-            {
-                ["RequestType"] = requestName,
-                ["ExceptionType"] = ex.GetType().Name,
-                ["ErrorMessage"] = ex.Message
-            });
+            logger.LogError(ex,
+                "Mediator {RequestType} failed after {ElapsedMilliseconds}ms",
+                requestName, stopwatch.ElapsedMilliseconds);
 
             throw;
         }

@@ -83,9 +83,68 @@ public sealed class CustomerService(
     IValidator<CreateCustomerDto>? createValidator = null,
     IValidator<UpdateCustomerDto>? updateValidator = null)
     : ApplicationServiceBaseWithSeparateDtosAsync<
-        Customer, CustomerDto, CreateCustomerDto, UpdateCustomerDto, IUnitOfWorkAsync>(
+        Customer, CustomerDto, CreateCustomerDto, UpdateCustomerDto>(
         unitOfWork, mapper, entityValidator, createValidator, updateValidator);
 ```
+
+> The `SeparateDtos` bases take **four** type parameters. The unit of work is not a type parameter:
+> the constructor accepts `IUnitOfWorkAsync` (or `IUnitOfWork` in the sync base) directly, and the
+> `protected virtual UnitOfWork` property is typed by that interface.
+
+### Logging
+
+Every service base takes the logger as an **optional last constructor parameter** and exposes it
+through a non-nullable `protected virtual ILogger Logger`. When no logger is supplied the base falls
+back to `NullLogger`, so `Logger` is never `null` and derived code can call it without `?.`.
+
+```csharp
+public sealed class CustomerService(
+    IUnitOfWorkAsync unitOfWork,
+    IMapper mapper,
+    ILogger<CustomerService>? logger = null)
+    : ApplicationServiceBaseWithDtoAsync<Customer, CustomerDto, IUnitOfWorkAsync>(
+        unitOfWork, mapper, null, null, logger)
+{
+    public async Task<IBusinessResult<CustomerDto>> ActivateAsync(int id)
+    {
+        Logger.LogInformation("Activating customer {CustomerId}", id);
+        // ...
+    }
+}
+```
+
+Notes:
+
+- The abstract bases declare `ILogger` (non-generic) because the concrete derived type is unknown at
+  that level. Pass an `ILogger<TYourService>` from DI — it satisfies `ILogger` and keeps your own
+  category name.
+- `RepositoryService`/`RepositoryServiceAsync` and their paging subclasses are concrete classes, so
+  they keep a categorized `ILogger<T>`.
+- Declare `ILogger<TYourService>` (not the non-generic `ILogger`) on your own constructor. The DI
+  container registers `ILogger<T>`, not `ILogger`, so a non-generic parameter would silently resolve
+  to `null` and fall back to `NullLogger`.
+
+### PATCH semantics
+
+`Patch`/`PatchAsync` call the `protected virtual ApplyPatchToEntity(TUpdateDto, TEntity)`
+extension point. It copies each non-null DTO property to the entity property with the same
+name. The DTO-to-entity property pairs are resolved by reflection once per
+`(TUpdateDto, TEntity)` combination and cached, so repeated PATCH requests do not re-scan
+the types.
+
+A pair is only produced when the entity exposes a public instance property with the same
+name, that property is writable, and its type is assignable from the DTO property type.
+
+Known limitations of this default implementation:
+
+| Limitation | Effect | Workaround |
+|---|---|---|
+| `null` is the "not informed" marker | A field cannot be cleared through PATCH. | Use `Modify`/`ModifyAsync` (full update), or override `ApplyPatchToEntity`. |
+| Non-nullable value types are always applied | `int 0`, `bool false` and `DateTime.MinValue` are indistinguishable from "informed as default". | Declare **both** sides as nullable (`int?` on the DTO **and** on the entity): `int` is not assignable from `int?`, so a nullable DTO property over a non-nullable entity property is skipped instead. |
+| Unmatched, read-only and type-incompatible properties are skipped silently | No exception is raised. | A debug log entry is written once, when the map is built for the type pair. Enable `Debug` logging on the service to inspect it. |
+
+Override `ApplyPatchToEntity` when the domain needs different semantics (explicit null
+handling, per-field opt-in, JSON Patch, and so on).
 
 Register mapping and services separately when the unified module is unnecessary:
 
@@ -176,6 +235,61 @@ services.AddMvp24HoursApplicationEventsWithOutbox(
 ```
 
 The built-in outbox is in memory and loses events on restart. Register a persistent `IApplicationEventOutbox` for production.
+
+### Combining cross-cutting concerns
+
+`CacheableQueryServiceBaseAsync`, `CacheableApplicationServiceBaseAsync`, `ObservableApplicationServiceBaseAsync`
+and `EventAwareCommandServiceBaseAsync` are **mutually exclusive by inheritance**: a service derives
+from exactly one of them, because C# does not support multiple base classes. Pick the base that
+matches the dominant concern of the service (caching queries, dispatching domain events, or emitting
+observability signals) and compose the remaining concerns manually inside the service body, using the
+same support types the base classes themselves rely on:
+
+| Concern | Support type (not a base class) |
+|---|---|
+| Query caching | `IQueryCacheProvider`, `ICacheInvalidator`, `IQueryCacheKeyGenerator` |
+| Application events | `IApplicationEventDispatcher` |
+| Observability | `ApplicationActivitySource`, `IOperationMetrics`, `IApplicationAuditStore`, `ICorrelationIdAccessor` |
+| Exception-to-result mapping | `SafeExecutor`, `IExceptionToResultMapper` |
+
+```csharp
+public sealed class CustomerService(
+    IUnitOfWorkAsync unitOfWork,
+    IQueryCacheProvider cacheProvider,
+    IApplicationEventDispatcher eventDispatcher,
+    ILogger<CustomerService>? logger = null)
+    : EventAwareCommandServiceBaseAsync<Customer, IUnitOfWorkAsync>(unitOfWork, eventDispatcher, logger: logger)
+{
+    // Cross-cutting concern not covered by the chosen base (caching, here) is composed
+    // directly with the same provider CacheableApplicationServiceBaseAsync would have used.
+    public async Task<IBusinessResult<Customer?>> GetByIdCachedAsync(int id, CancellationToken ct = default)
+    {
+        var cacheKey = $"customer:{id}";
+        if (await cacheProvider.TryGetAsync<Customer>(cacheKey, ct) is { Found: true } hit)
+        {
+            return BusinessResult.Create(hit.Value);
+        }
+
+        var result = await GetByIdAsync(id, ct);
+        if (result.HasData())
+        {
+            await cacheProvider.SetAsync(cacheKey, result.Data, ct: ct);
+        }
+        return result;
+    }
+}
+```
+
+This mirrors the decorator pattern already used by the CQRS module for the mediator
+(`IMediatorDecorator`/`MediatorDecoratorBase` in `Mvp24Hours.Infrastructure.Cqrs.Abstractions`):
+wrap or compose the cross-cutting behavior around a single inner implementation instead of
+stacking base classes. There is currently no equivalent `IApplicationServiceDecorator` for
+application services — the four base classes above cover the common single-concern cases, and no
+concrete need for combining more than one at once (cache + events, cache + observability, and so on)
+has been confirmed. If your service needs two or more of these concerns simultaneously and the
+composition above does not fit, open an issue describing the scenario before introducing a new
+decorator abstraction or a third-party library such as [Scrutor](https://github.com/khellang/Scrutor)
+for it.
 
 ## Exception-to-result mapping
 

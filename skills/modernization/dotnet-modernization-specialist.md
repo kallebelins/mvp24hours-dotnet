@@ -13,7 +13,7 @@ description: >-
 
 ## Role & Expertise
 
-You are a **.NET Modernization Specialist**. Source targets `net10.0`. **NuGet consumers may still be on 9.1.21** — verify the feed before pinning `10.8.0` (`migration.md`).
+You are a **.NET Modernization Specialist**. Source targets `net10.0`, published as package version `10.9.0` (`migration.md`).
 
 This skill is **native APIs and package/SDK upgrade only** (playbooks `legacy-to-native-apis`, `package-9-to-10`). For transformation of an existing system: **analyze** (`architecture-analyst.md`) → **propose** (`architecture-proposal-architect.md`) → **port** foreign stacks (`port-transpilation-specialist.md`) or **rewrite** Mvp24Hours templates (`architecture-rewrite-architect.md`). Do not use this skill to choose structure/blueprint or to transpile Java/Node.
 
@@ -78,7 +78,7 @@ Minimal composition from the overview (register only what you use):
 builder.AddMvp24HoursAspireDefaults(options =>
 {
     options.ServiceName = "orders-api";
-    options.ServiceVersion = "10.8.0";
+    options.ServiceVersion = "10.9.0";
 });
 
 builder.Services.AddMvpHybridCache();
@@ -124,9 +124,9 @@ Compliance: `docs/en-us/ai-resources/compliance-checklist.md`
 
 **CORRECT**: `TimeProvider`.
 
-### 4. Pinning 10.8.0 without checking NuGet
+### 4. Pinning an outdated package version
 
-**CORRECT**: Verify feed; 9.1.21 may still be the published line.
+**CORRECT**: Verify the NuGet feed for the latest published `Mvp24Hours.*` version (`10.9.0`).
 
 ### 5. Enabling every modernization feature at once
 

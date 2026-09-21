@@ -11,10 +11,10 @@ using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Entities;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
+using Mvp24Hours.Infrastructure.Data.EFCore.Internal;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore;
 
@@ -246,14 +246,16 @@ public class RepositoryAsync<T>(DbContext _dbContext, IOptions<EFCoreRepositoryO
 
         // properties that can not be changed
 
-        if (entity.GetType().InheritsOrImplements(typeof(IEntityLog<>)) || entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>)))
+        if (entity is IEntityDateLog dateLog && entityDb is IEntityDateLog dateLogDb)
         {
-            var entityLog = (dynamic)entity;
-            var entityDbLog = (dynamic)entityDb;
-            entityLog.Created = entityDbLog.Created;
-            entityLog.CreatedBy = entityDbLog.CreatedBy;
-            entityLog.Modified = entityDbLog.Modified;
-            entityLog.ModifiedBy = entityDbLog.ModifiedBy;
+            dateLog.Created = dateLogDb.Created;
+            dateLog.Modified = dateLogDb.Modified;
+        }
+
+        if (EntityLogAccessor.HasEntityLog(entity))
+        {
+            EntityLogAccessor.CopyPropertyValue(entityDb, entity, "CreatedBy");
+            EntityLogAccessor.CopyPropertyValue(entityDb, entity, "ModifiedBy");
         }
 
         dbContext.Entry(entityDb).CurrentValues.SetValues(entity);
@@ -276,18 +278,20 @@ public class RepositoryAsync<T>(DbContext _dbContext, IOptions<EFCoreRepositoryO
             return;
         }
 
-        bool hasUserLog = entity.GetType().InheritsOrImplements(typeof(IEntityLog<>))
-            || entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>));
+        bool hasUserLog = EntityLogAccessor.HasEntityLog(entity);
 
-        bool hasUserLogDate = hasUserLog || entity.GetType().InheritsOrImplements(typeof(IEntityDateLog));
-
-        if (hasUserLog || hasUserLogDate)
+        if (entity is IEntityDateLog dateLog)
         {
-            var entityLog = (dynamic)entity;
-            entityLog.Removed = TimeZoneHelper.GetTimeZoneNow();
+            // TODO (task 4.2b): TimeZoneHelper is obsolete. Swapping it for IClock requires
+            // injecting the clock into the repository and would change the timezone of the
+            // stamped value (helper resolves South America; IClock.Now uses TimeZoneInfo.Local).
+#pragma warning disable CS0618 // intentional: legacy IEntityDateLog stamping until removal in v12
+            dateLog.Removed = TimeZoneHelper.GetTimeZoneNow();
+#pragma warning restore CS0618
             if (hasUserLog)
             {
-                entityLog.RemovedBy = (dynamic)(EntityLogBy ?? throw new InvalidOperationException("EntityLogBy is not available."));
+                object removedBy = EntityLogBy ?? throw new InvalidOperationException("EntityLogBy is not available.");
+                EntityLogAccessor.TrySetPropertyValue(entity, "RemovedBy", removedBy);
             }
             await ModifyAsync(entity, cancellationToken);
         }
@@ -359,4 +363,49 @@ public class RepositoryAsync<T>(DbContext _dbContext, IOptions<EFCoreRepositoryO
     protected override object? EntityLogBy => (dbContext as Mvp24HoursContext)?.EntityLogBy;
 
     #endregion
+}
+
+/// <summary>
+///  <see cref="IRepositoryAsync{T, TId}"/>
+/// </summary>
+/// <remarks>
+/// Additive wrapper over <see cref="RepositoryAsync{T}"/>. Every typed member delegates to the
+/// <see cref="object"/>-based member of the base class, so each operation keeps a single
+/// real implementation and cannot diverge in behavior.
+/// </remarks>
+public class RepositoryAsync<T, TId>(DbContext _dbContext, IOptions<EFCoreRepositoryOptions> options)
+    : RepositoryAsync<T>(_dbContext, options), IRepositoryAsync<T, TId>
+    where T : class, IEntityBase, IEntity<TId>
+{
+    /// <summary>
+    ///  <see cref="IRepositoryAsync{T, TId}.GetByIdAsync(TId, CancellationToken)"/>
+    /// </summary>
+    public Task<T?> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
+    {
+        return base.GetByIdAsync((object)id!, cancellationToken);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepositoryAsync{T, TId}.GetByIdAsync(TId, IPagingCriteria, CancellationToken)"/>
+    /// </summary>
+    public Task<T?> GetByIdAsync(TId id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
+    {
+        return base.GetByIdAsync((object)id!, criteria, cancellationToken);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepositoryAsync{T, TId}.RemoveByIdAsync(TId, CancellationToken)"/>
+    /// </summary>
+    public Task RemoveByIdAsync(TId id, CancellationToken cancellationToken = default)
+    {
+        return base.RemoveByIdAsync((object)id!, cancellationToken);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepositoryAsync{T, TId}.RemoveByIdAsync(IList{TId}, CancellationToken)"/>
+    /// </summary>
+    public Task RemoveByIdAsync(IList<TId> ids, CancellationToken cancellationToken = default)
+    {
+        return base.RemoveByIdAsync(ids?.Cast<object>().ToList()!, cancellationToken);
+    }
 }

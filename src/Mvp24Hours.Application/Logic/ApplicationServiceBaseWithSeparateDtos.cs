@@ -4,11 +4,11 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System.Linq.Expressions;
-using System.Reflection;
 using AutoMapper;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Mvp24Hours.Application.Logic.Internal;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
@@ -26,7 +26,6 @@ namespace Mvp24Hours.Application.Logic;
 /// <typeparam name="TDto">The DTO type used for read operations (queries).</typeparam>
 /// <typeparam name="TCreateDto">The DTO type used for create operations.</typeparam>
 /// <typeparam name="TUpdateDto">The DTO type used for update operations.</typeparam>
-/// <typeparam name="TUoW">The unit of work type.</typeparam>
 /// <remarks>
 /// <para>
 /// This class provides a complete implementation with separate DTO types for different operations,
@@ -55,10 +54,9 @@ namespace Mvp24Hours.Application.Logic;
 ///     Customer, 
 ///     CustomerDto,           // For reads - includes all fields
 ///     CreateCustomerDto,     // For creates - excludes Id, CreatedAt
-///     UpdateCustomerDto,     // For updates - only editable fields
-///     MyDbContext&gt;
+///     UpdateCustomerDto&gt;     // For updates - only editable fields
 /// {
-///     public CustomerService(MyDbContext unitOfWork, IMapper mapper) 
+///     public CustomerService(IUnitOfWork unitOfWork, IMapper mapper) 
 ///         : base(unitOfWork, mapper) { }
 /// }
 /// </code>
@@ -74,35 +72,36 @@ namespace Mvp24Hours.Application.Logic;
 /// <param name="entityValidator">The validator for entity validation.</param>
 /// <param name="createDtoValidator">The validator for create DTO validation.</param>
 /// <param name="updateDtoValidator">The validator for update DTO validation.</param>
+/// <param name="logger">The logger for logging operations. When omitted, logging is disabled via <see cref="NullLogger.Instance"/>.</param>
 /// <exception cref="ArgumentNullException">Thrown when unitOfWork or mapper is null.</exception>
-public abstract class ApplicationServiceBaseWithSeparateDtos<TEntity, TDto, TCreateDto, TUpdateDto, TUoW>(
-    TUoW unitOfWork,
+public abstract class ApplicationServiceBaseWithSeparateDtos<TEntity, TDto, TCreateDto, TUpdateDto>(
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     IValidator<TEntity>? entityValidator,
     IValidator<TCreateDto>? createDtoValidator,
-    IValidator<TUpdateDto>? updateDtoValidator)
+    IValidator<TUpdateDto>? updateDtoValidator,
+    ILogger? logger = null)
     : IApplicationServiceWithSeparateDtos<TEntity, TDto, TCreateDto, TUpdateDto>,
       IReadOnlyApplicationServiceWithSeparateDtos<TEntity, TDto>
     where TEntity : class, IEntityBase
     where TDto : class
     where TCreateDto : class
     where TUpdateDto : class
-    where TUoW : class, IUnitOfWork
 {
     #region [ Properties / Fields ]
 
     private readonly IRepository<TEntity> _repository = unitOfWork.GetRepository<TEntity>();
-    private readonly TUoW _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+    private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     private readonly IMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     private readonly IValidator<TEntity>? _entityValidator = entityValidator;
     private readonly IValidator<TCreateDto>? _createDtoValidator = createDtoValidator;
     private readonly IValidator<TUpdateDto>? _updateDtoValidator = updateDtoValidator;
-    private readonly ILogger _logger = NullLogger.Instance;
+    private readonly ILogger _logger = logger ?? NullLogger.Instance;
 
     /// <summary>
     /// Gets the unit of work instance for managing transactions.
     /// </summary>
-    protected virtual TUoW UnitOfWork => _unitOfWork;
+    protected virtual IUnitOfWork UnitOfWork => _unitOfWork;
 
     /// <summary>
     /// Gets the repository instance for data access operations.
@@ -129,6 +128,12 @@ public abstract class ApplicationServiceBaseWithSeparateDtos<TEntity, TDto, TCre
     /// </summary>
     protected virtual IValidator<TUpdateDto>? UpdateDtoValidator => _updateDtoValidator;
 
+    /// <summary>
+    /// Gets the logger instance for logging operations. Never <see langword="null"/>:
+    /// falls back to <see cref="NullLogger.Instance"/> when no logger is supplied.
+    /// </summary>
+    protected virtual ILogger Logger => _logger;
+
     #endregion
 
     #region [ Constructors ]
@@ -139,7 +144,7 @@ public abstract class ApplicationServiceBaseWithSeparateDtos<TEntity, TDto, TCre
     /// <param name="unitOfWork">The unit of work for transaction management.</param>
     /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
     /// <exception cref="ArgumentNullException">Thrown when unitOfWork or mapper is null.</exception>
-    protected ApplicationServiceBaseWithSeparateDtos(TUoW unitOfWork, IMapper mapper)
+    protected ApplicationServiceBaseWithSeparateDtos(IUnitOfWork unitOfWork, IMapper mapper)
         : this(unitOfWork, mapper, null, null, null)
     {
     }
@@ -151,7 +156,7 @@ public abstract class ApplicationServiceBaseWithSeparateDtos<TEntity, TDto, TCre
     /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
     /// <param name="entityValidator">The validator for entity validation.</param>
     /// <exception cref="ArgumentNullException">Thrown when unitOfWork or mapper is null.</exception>
-    protected ApplicationServiceBaseWithSeparateDtos(TUoW unitOfWork, IMapper mapper, IValidator<TEntity>? entityValidator)
+    protected ApplicationServiceBaseWithSeparateDtos(IUnitOfWork unitOfWork, IMapper mapper, IValidator<TEntity>? entityValidator)
         : this(unitOfWork, mapper, entityValidator, null, null)
     {
     }
@@ -465,42 +470,46 @@ public abstract class ApplicationServiceBaseWithSeparateDtos<TEntity, TDto, TCre
     /// </summary>
     /// <param name="dto">The update DTO containing partial data.</param>
     /// <param name="entity">The existing entity to update.</param>
+    /// <remarks>
+    /// <para>
+    /// Property pairs are resolved by reflection once per <c>(TUpdateDto, TEntity)</c>
+    /// combination and cached for subsequent calls. A DTO property is only applied when the
+    /// entity exposes a public instance property with the same name, that property is
+    /// writable, and its type is assignable from the DTO property type.
+    /// </para>
+    /// <para>
+    /// <strong>Known limitations of this reflection-based PATCH:</strong>
+    /// <list type="number">
+    /// <item>
+    /// <description>
+    /// <strong>Null cannot be assigned.</strong> <c>null</c> is the "not informed" marker,
+    /// so there is no way to clear a value through PATCH. Use
+    /// <c>Modify</c> (full update) or override this method when clearing is required.
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <description>
+    /// <strong>Non-nullable value types are always applied.</strong> A default value such as
+    /// <c>int 0</c>, <c>bool false</c> or <c>DateTime.MinValue</c> is indistinguishable from
+    /// "informed as default", because the boxed value is never <c>null</c>. Declaring the DTO
+    /// property as nullable only helps when the entity property is nullable as well: the
+    /// entity property type must be assignable from the DTO property type, and
+    /// <c>int</c> is not assignable from <c>int?</c>.
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <description>
+    /// <strong>Unmatched, read-only and type-incompatible properties are ignored
+    /// silently.</strong> No exception is raised; a debug log entry is written once, when the
+    /// map is built for the type pair.
+    /// </description>
+    /// </item>
+    /// </list>
+    /// </para>
+    /// </remarks>
     protected virtual void ApplyPatchToEntity(TUpdateDto dto, TEntity entity)
     {
-        Type dtoType = typeof(TUpdateDto);
-        Type entityType = typeof(TEntity);
-
-        foreach (PropertyInfo dtoProperty in dtoType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-        {
-            if (!dtoProperty.CanRead)
-            {
-                continue;
-            }
-
-            object? dtoValue = dtoProperty.GetValue(dto);
-
-            // Skip null values for PATCH
-            if (dtoValue == null)
-            {
-                continue;
-            }
-
-            // Find matching property in entity
-            PropertyInfo? entityProperty = entityType.GetProperty(dtoProperty.Name, BindingFlags.Public | BindingFlags.Instance);
-            if (entityProperty == null || !entityProperty.CanWrite)
-            {
-                continue;
-            }
-
-            // Check if types are compatible
-            if (!entityProperty.PropertyType.IsAssignableFrom(dtoProperty.PropertyType))
-            {
-                continue;
-            }
-
-            // Apply the value
-            entityProperty.SetValue(entity, dtoValue);
-        }
+        PatchPropertyMap.Apply(typeof(TUpdateDto), typeof(TEntity), dto, entity, _logger);
     }
 
     #endregion

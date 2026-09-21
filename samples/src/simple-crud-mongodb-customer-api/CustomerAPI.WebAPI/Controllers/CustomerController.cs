@@ -5,11 +5,11 @@ using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Mvp24Hours.Core.Contract.Data;
+using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.DTOs.Models;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -28,7 +28,7 @@ namespace CustomerAPI.WebAPI.Controllers
     [Produces("application/json")]
     [Route("api/[controller]")]
     [ApiController]
-    public class CustomerController(IUnitOfWorkAsync uoW, IValidator<Customer> validator) : ControllerBase
+    public class CustomerController(IUnitOfWorkAsync uoW, IValidator<Customer> validator, IClock clock) : ControllerBase
     {
         #region [ Fields / Properties ]
 
@@ -112,7 +112,8 @@ namespace CustomerAPI.WebAPI.Controllers
 
             if (!errors.AnySafe())
             {
-                model.Created = TimeZoneHelper.GetTimeZoneNow();
+                // IClock is registered by builder.Services.AddTimeProvider() in Program.cs
+                model.Created = clock.UtcNow;
                 await Repository.AddAsync(model, cancellationToken);
                 if (await uoW.SaveChangesAsync(cancellationToken) > 0)
                 {

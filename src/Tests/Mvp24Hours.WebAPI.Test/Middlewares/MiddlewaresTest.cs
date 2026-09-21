@@ -25,7 +25,9 @@ public class MiddlewaresTest
     {
         DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         IOptions<ExceptionOptions> options = Options.Create(new ExceptionOptions());
+#pragma warning disable CS0618 // intentional: covers obsolete ExceptionMiddleware until removal in v12
         var sut = new ExceptionMiddleware(_ => throw new InvalidOperationException("boom"), options, NullLogger<ExceptionMiddleware>.Instance);
+#pragma warning restore CS0618
 
         await sut.InvokeAsync(context);
 
@@ -159,11 +161,13 @@ public class MiddlewaresTest
         mapper.Setup(x => x.Map(It.IsAny<Exception>(), It.IsAny<HttpContext>()))
             .Returns(new ProblemDetails { Status = 400, Title = "bad", Detail = "invalid" });
         mapper.Setup(x => x.GetStatusCode(It.IsAny<Exception>())).Returns(400);
+#pragma warning disable CS0618 // intentional: covers obsolete ProblemDetailsMiddleware until removal in v12
         var sut = new ProblemDetailsMiddleware(
             _ => throw new ArgumentException("invalid"),
             mapper.Object,
             Options.Create(new MvpProblemDetailsOptions()),
             NullLogger<ProblemDetailsMiddleware>.Instance);
+#pragma warning restore CS0618
         DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
 
         await sut.InvokeAsync(context);
@@ -270,10 +274,12 @@ public class MiddlewaresTest
     {
         DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         IOptions<ExceptionOptions> options = Options.Create(new ExceptionOptions());
+#pragma warning disable CS0618 // intentional: covers obsolete ExceptionMiddleware until removal in v12
         var sut = new ExceptionMiddleware(
             _ => throw new ValidationException("Validation failed", [new MessageResult("Name", "required", MessageType.Error)]),
             options,
             NullLogger<ExceptionMiddleware>.Instance);
+#pragma warning restore CS0618
 
         await sut.InvokeAsync(context);
 
@@ -285,10 +291,12 @@ public class MiddlewaresTest
     {
         DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         IOptions<ExceptionOptions> options = Options.Create(new ExceptionOptions());
+#pragma warning disable CS0618 // intentional: covers obsolete ExceptionMiddleware until removal in v12
         var sut = new ExceptionMiddleware(
             _ => throw new DomainException("Domain rule violated"),
             options,
             NullLogger<ExceptionMiddleware>.Instance);
+#pragma warning restore CS0618
 
         await sut.InvokeAsync(context);
 

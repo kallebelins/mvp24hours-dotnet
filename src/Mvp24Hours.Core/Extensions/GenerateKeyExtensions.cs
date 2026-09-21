@@ -49,25 +49,22 @@ public static class GenerateKeyExtensions
 
     private static class PropertiesOf<T>
     {
-        private static readonly List<Func<T, dynamic>> Properties = [];
-
-        static PropertiesOf()
-        {
-            foreach (PropertyInfo property in typeof(T).GetProperties())
-            {
-                MethodInfo? getMethod = property.GetGetMethod();
-                if (getMethod == null)
-                {
-                    continue;
-                }
-                var function = (Func<T, dynamic>)Delegate.CreateDelegate(typeof(Func<T, dynamic>), getMethod);
-                Properties.Add(function);
-            }
-        }
+        // Uses PropertyInfo.GetValue (rather than a compiled Func<T, dynamic> delegate) because
+        // Delegate.CreateDelegate cannot bind a getter that returns a nullable value type
+        // (e.g. DateTime?) to a Func<T, dynamic> (== Func<T, object>) target signature; that
+        // combination throws ArgumentException, which is cached forever by the static
+        // constructor (TypeInitializationException) and permanently breaks ToHash<T>/ToKey<T>
+        // for that T in this process.
+        private static readonly List<PropertyInfo> Properties = [.. typeof(T)
+            .GetProperties()
+            .Where(property => property.GetGetMethod() != null)];
 
         public static IEnumerable<dynamic> All(T entity)
         {
-            return Properties.Select(p => p(entity)).Where(v => v != null);
+            return Properties
+                .Select(p => p.GetValue(entity))
+                .Where(v => v != null)
+                .Select(v => (dynamic)v!);
         }
     }
 }

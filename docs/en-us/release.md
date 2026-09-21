@@ -4,12 +4,18 @@ This page summarizes what shipped and what is staged in the current source. For
 complete change history, see [`CHANGELOG.md`](../../CHANGELOG.md). For upgrade
 steps, use the [Migration guide](migration.md).
 
-## 10.8.0 (July 2026) — source release
+## 10.9.0 (September 2026) — stable release
 
-> **Publication blocker:** all projects build for `net10.0`, but production
-> `.csproj` files still report `9.1.21` and the public `Mvp24Hours.Core` feed has
-> no 10.8.0 package. Do not request `--version 10.8.0` until package metadata is
-> changed and publication is confirmed.
+This release publishes the `Mvp24Hours.*` NuGet packages built in `10.8.0`
+under the `10.9.0` version line. There are no source, API, or behavior
+changes relative to `10.8.0`: every production `.csproj` now declares
+`10.9.0` (`Version`, `AssemblyVersion`, `FileVersion`), and the outdated
+"publication blocker" notices that referenced a stale `9.1.21` package line
+have been removed from the README, this page, and the related migration and
+skills documentation. Treat `10.9.0` as the current stable, published
+version.
+
+## 10.8.0 (July 2026) — source release
 
 ### Platform and compatibility
 

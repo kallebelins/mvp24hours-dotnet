@@ -23,7 +23,7 @@ builder.Services.AddMvp24HoursRepositoryAsync(options =>
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| MaxQtyByQueryPage | int | `ContantsHelper.Data.MaxQtyByQueryPage` | Maximum page size. |
+| MaxQtyByQueryPage | int | `ConstantsHelper.Data.MaxQtyByQueryPage` (300) | Page size applied when the paging criteria does not set a limit. |
 | TransactionIsolationLevel | IsolationLevel? | `null` | Transaction isolation, or provider default. |
 | DefaultTrackingBehavior | QueryTrackingBehavior | `TrackAll` | Default EF query tracking. |
 | UseSplitQueries | bool | `false` | Uses split queries for includes. |
@@ -33,6 +33,43 @@ builder.Services.AddMvp24HoursRepositoryAsync(options =>
 | SlowQueryThresholdMs | int | `1000` | Slow-query threshold; `0` disables it. |
 | StreamingBufferSize | int | `100` | Default streaming buffer size. |
 | UseAutoMapperProjection | bool | `false` | Enables AutoMapper `ProjectTo` projections. |
+
+### Changing the default page size
+
+`ConstantsHelper.Data.MaxQtyByQueryPage` (300) is only the framework default. You do not need to fork or patch the framework to change it — configure `EFCoreRepositoryOptions.MaxQtyByQueryPage` at registration time.
+
+```csharp
+// Before: default page size (300) applied by RepositoryBase.GetQuery
+builder.Services.AddMvp24HoursRepositoryAsync();
+
+// After: 100 records per page for every repository resolved from this container
+builder.Services.AddMvp24HoursRepositoryAsync(options => options.MaxQtyByQueryPage = 100);
+```
+
+The same `Action<EFCoreRepositoryOptions>` parameter is available on `AddMvp24HoursRepository`, `AddMvp24HoursRepositoryWithEvents`, `AddMvp24HoursStreamingRepositoryAsync`, `AddMvp24HoursBulkOperationsRepositoryAsync`, `AddMvp24HoursReadOnlyRepository`, `AddMvp24HoursReadOnlyRepositoryAsync`, `AddMvp24HoursCqrsRepositories`, `AddMvp24HoursReadOptimizedRepository`, `AddMvp24HoursWriteOptimizedRepository`, and `AddMvp24HoursDevRepository`.
+
+To bind the value from `appsettings.json`, read it in the registration delegate:
+
+```csharp
+builder.Services.AddMvp24HoursRepositoryAsync(options =>
+    options.MaxQtyByQueryPage = builder.Configuration.GetValue("Mvp24Hours:Paging:MaxPageSize", 100));
+```
+
+How the effective page size is resolved in `RepositoryBase.GetQuery`:
+
+| Situation | Effective limit |
+|---|---|
+| `criteria` is `null` | `Options.MaxQtyByQueryPage` |
+| `criteria.Limit > 0` | `criteria.Limit` |
+| `criteria.Limit <= 0` | `Options.MaxQtyByQueryPage` |
+
+So the option is a default, not a hard cap: a caller passing `PagingCriteria(limit: 5000, offset: 0)` gets 5000 records. Enforce an upper bound at the API boundary when it matters.
+
+The `ToBusinessPaging`/`ToBusinessPagingAsync` extensions in `Mvp24Hours.Core` do not read `EFCoreRepositoryOptions`. They fall back to the constant and accept a per-call override:
+
+```csharp
+IPagingResult<IList<Customer>> result = repository.ToBusinessPaging(criteria, maxQtyByQueryDefault: 100);
+```
 
 ## Resilience
 
@@ -394,7 +431,7 @@ The module includes `AuditSaveChangesInterceptor`, `SoftDeleteInterceptor`, `Ten
 
 ```csharp
 builder.Services.AddScoped<AuditSaveChangesInterceptor>();
-builder.Services.AddScoped<SoftDeleteInterceptor>();
+builder.Services.AddMvp24HoursEFCoreSoftDeleteInterceptor();
 
 builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
     options.UseSqlServer(connectionString)
@@ -403,7 +440,13 @@ builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
             serviceProvider.GetRequiredService<SoftDeleteInterceptor>()));
 ```
 
-Apply `ApplySoftDeleteGlobalFilter()` and `ApplyTenantQueryFilters(...)` in `OnModelCreating`; interceptors modify writes, while filters isolate reads.
+`AddMvp24HoursEFCoreSoftDeleteInterceptor(defaultUser)` registers `SoftDeleteInterceptor` as scoped and wires the optional `ICurrentUserProvider` and `IClock`; without them it falls back to `defaultUser` (`"System"`) and `DateTime.UtcNow`. A plain `AddScoped<SoftDeleteInterceptor>()` also works, since every constructor parameter is optional. EF Core does not discover interceptors from the application container, so the `AddInterceptors(...)` call is still required.
+
+Apply `ApplySoftDeleteGlobalFilter()` and `ApplyTenantQueryFilters(...)` in `OnModelCreating`; interceptors modify writes, while filters isolate reads. Note that `ApplySoftDeleteGlobalFilter()` only matches the non-generic `ISoftDeletable`.
+
+### Soft delete: two mechanisms
+
+`SoftDeleteInterceptor` (`ISoftDeletable`) and the deprecated `Mvp24HoursContext.ApplyLogRules` (`IEntityDateLog`/`IEntityLog<T>`) are independent: they read different properties and never interact. `ApplyLogRules` is marked obsolete in 10.8.0 and will be removed in v12, with no behavior change in the meantime — `SaveChanges` still calls it and `CanApplyEntityLog` still gates it. See "Soft delete (EF Core)" in the [migration guide](../migration.md) for the comparison table and the per-entity migration path.
 
 ## Field encryption
 

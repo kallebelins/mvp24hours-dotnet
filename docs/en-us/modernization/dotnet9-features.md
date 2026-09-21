@@ -4,11 +4,6 @@ Mvp24Hours currently targets `net10.0` and builds on native platform features
 adopted across .NET 9 and .NET 10. This page is the map of those features. Use
 the linked module pages for API and option details.
 
-> **Package readiness:** the source tree targets .NET 10, but production
-> projects still declare package version `9.1.21`. Verify the NuGet feed before
-> referencing `10.8.0`. See the
-> [9.1.x → 10.8.0 migration](../migration.md?id=_91x-1000).
-
 ## Platform baseline
 
 The repository baseline is:

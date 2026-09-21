@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [10.9.0] - 2026-09 📦 Publication Release
+
+> **Stable publication of the .NET 10 line.** This release publishes the `Mvp24Hours.*` NuGet
+> packages built in `10.8.0` under the `10.9.0` version line. There are no source, API, or
+> behavior changes relative to `10.8.0` — this is a metadata and documentation release that
+> finalizes publication.
+
+### Changed
+
+- **Package version bump**: `Version`, `AssemblyVersion`, and `FileVersion` metadata updated
+  from `10.8.0` to `10.9.0` across all production projects (`Mvp24Hours.Core`, `.Application`,
+  `.Infrastructure` and its sub-packages, `.WebAPI`).
+- **`templates/**/*.csproj`**: sample `PackageReference` versions for `Mvp24Hours.*` packages
+  updated to `10.9.0`; `templates/README.md` NuGet-mode example updated accordingly.
+
+### Removed
+
+- **Outdated publication-blocker notices**: removed the stale warnings in `README.md`,
+  `docs/en-us/release.md`, `docs/en-us/home.md`, `docs/en-us/migration.md`,
+  `docs/en-us/modernization/migration-guide.md`, `docs/en-us/modernization/dotnet9-features.md`,
+  `skills/README.md`, and `skills/modernization/dotnet-modernization-specialist.md` that claimed
+  production `.csproj` metadata still reported `9.1.21` and that the `Mvp24Hours.Core` NuGet feed
+  had no `10.8.0`/`10.9.0` package. Package metadata is now aligned and this version is published.
+
 ## [10.8.0] - 2026-08 🚀 Major Release
 
 > **Migration to .NET 10** — This release aligns the entire solution with .NET 10 / C# 14, enables
@@ -31,6 +55,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Centralized package management (CPM)**: package versions now live in
   `src/Directory.Packages.props`; common build properties (`TargetFramework`, `LangVersion`,
   `Nullable`, `ImplicitUsings`) were centralized in `src/Directory.Build.props`.
+- **`Pipeline`/`PipelineAsync` — event handlers no longer fire-and-forget**: `RunEvents`/`RunEventsAsync`
+  previously dispatched each event handler via `Task.Factory.StartNew` without awaiting it and without a
+  `catch` block, so handlers could run after the pipeline had already continued (or completed) and any
+  exception they threw was silently swallowed. Event handlers now execute synchronously with the pipeline
+  flow, in registration order, before the pipeline proceeds. Exceptions raised by a handler are logged
+  (`Pipeline`/`PipelineAsync: Event handler {HandlerName} failure`) and, when `AllowPropagateException` is
+  `true`, rethrown — matching the behavior already used for pipeline operations and rollback. Consumers
+  relying on the previous "detached" timing (e.g. tests using `Task.Delay`/`Thread.Sleep` to wait for an
+  event handler) should no longer need that workaround.
+- **Application service bases — single logging convention**: every base under
+  `Mvp24Hours.Application.Logic` (and `Logic/Async`) now follows the same pattern: an optional
+  `ILogger? logger = null` as the last constructor parameter, a non-nullable `protected virtual ILogger Logger`
+  property, and a `NullLogger` fallback when no logger is supplied. This is **additive** — the new parameter
+  is optional and appended, so existing derived classes keep compiling without changes.
+  - `ApplicationServiceBaseWithDto`, `ApplicationServiceBaseWithSeparateDtos`,
+    `BulkCommandServiceBaseAsync`, `BulkCommandServiceWithDtoBaseAsync`,
+    `BulkCommandServiceWithSeparateDtosBaseAsync` (and the `Async` counterparts of the first two) had
+    logging **permanently disabled** by a hardcoded `private readonly ILogger _logger = NullLogger.Instance;`.
+    They now accept a logger and honor it.
+  - `ApplicationServiceBase`, `QueryServiceBase`, `CommandServiceBase` (and the `Async` counterparts)
+    changed `protected virtual ILogger? Logger` to `protected virtual ILogger Logger`; the value is never
+    null, so overrides/consumers no longer need `?.`. No constructor parameter was removed or reordered.
+  - `RepositoryPagingService`/`RepositoryPagingServiceAsync` now forward the injected logger to the base
+    `RepositoryService`/`RepositoryServiceAsync`, which previously always fell back to `NullLogger`.
+  - `RepositoryService`/`RepositoryServiceAsync` (and the paging subclasses) log messages migrated from
+    fixed strings (`"application-repositoryservice-listany"`) to the structured template already used by
+    the other bases (`"[{ServiceName}] Executing ListAny for {EntityType}"`). Consumers matching on the
+    old literal message text must update their filters. The `application-*` message style remains in the
+    DTO/Bulk bases and in the cache/event/validation support types — unchanged in this release.
+- **`ApplicationServiceBaseWithSeparateDtos` / `ApplicationServiceBaseWithSeparateDtosAsync` — one less
+  type parameter (breaking in generic arity)**: the `TUoW` type parameter was removed, so the bases now
+  take **four** type parameters (`TEntity, TDto, TCreateDto, TUpdateDto`) instead of five. The constructors
+  accept `IUnitOfWork` (sync) and `IUnitOfWorkAsync` (async) directly, in the same parameter order, and the
+  `protected virtual UnitOfWork` property is now typed as `IUnitOfWork`/`IUnitOfWorkAsync` instead of `TUoW`.
+  Derived classes only need to drop the last type argument:
+  `ApplicationServiceBaseWithSeparateDtosAsync<Customer, CustomerDto, CreateCustomerDto, UpdateCustomerDto, IUnitOfWorkAsync>`
+  becomes `ApplicationServiceBaseWithSeparateDtosAsync<Customer, CustomerDto, CreateCustomerDto, UpdateCustomerDto>`.
+  Code that overrode `UnitOfWork` to return a concrete unit-of-work type must widen the return type to the
+  interface. No method signature, log message, or runtime behavior changed. The other bases
+  (`ApplicationServiceBase`, `ApplicationServiceBaseWithDto`, `QueryServiceBase`, `CommandServiceBase`,
+  `RepositoryService`, `Bulk*`) keep their `TUoW` parameter.
 
 ### Security
 
@@ -76,10 +141,177 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **`AwsSecretsManagerProvider`**: `FallbackCredentialsFactory` → `DefaultAWSCredentialsIdentityResolver`
   (AWSSDK.Core v4).
 
+### Deprecated
+
+- **Custom error-handling middlewares in `Mvp24Hours.WebAPI`**: `ExceptionMiddleware` and
+  `ProblemDetailsMiddleware` — and the extension methods that configure and register them
+  (`AddMvp24HoursWebExceptions`, `UseMvp24HoursExceptionHandling`, `UseMvp24HoursProblemDetails`) —
+  are now `[Obsolete]`: *"Use `AddNativeProblemDetails()`/`UseNativeProblemDetailsHandling()`
+  instead. Will be removed in v12."* The native path builds on the ASP.NET Core
+  `IProblemDetailsService`, so it gets content negotiation, `UseExceptionHandler` and
+  `UseStatusCodePages` integration for free. `ExceptionMiddleware` never produced RFC 7807 at
+  all — it writes an `IBusinessResult` payload — so migrating away from it **changes the response
+  body**, which is precisely the reason for the deprecation.
+  **`AddMvp24HoursProblemDetails` (both overloads) and `AddMvp24HoursProblemDetailsAll` are NOT
+  deprecated**: besides the exception mappers, they register the MVC filters
+  `ModelStateValidationFilter` and `ProblemDetailsResultFilter`, which `AddNativeProblemDetails`
+  does not register. Keep calling them next to the native path when you rely on those filters, and
+  swap only the pipeline call (`app.UseMvp24HoursProblemDetails()` →
+  `app.UseNativeProblemDetailsHandling()`). Nothing was removed and no behavior changed.
+  See [WebAPI → Error handling](docs/en-us/webapi.md) and
+  [Problem Details](docs/en-us/modernization/problem-details.md).
+- **`ContantsHelper` → `ConstantsHelper`** (typo fix, `Mvp24Hours.Core.Helpers`). The correctly
+  spelled `ConstantsHelper` is now the canonical type and is used across production code, tests,
+  samples, and docs. `ContantsHelper` (with `ContantsHelper.Data`) remains as an `[Obsolete]` shim
+  whose `MaxQtyByQueryPage` forwards to `ConstantsHelper.Data.MaxQtyByQueryPage`, so existing
+  consumers keep compiling with a warning. The shim will be removed in v12 — replace
+  `ContantsHelper.Data.MaxQtyByQueryPage` with `ConstantsHelper.Data.MaxQtyByQueryPage`.
+  The constant value (300) and its visibility are unchanged, and it remains a default (not a cap),
+  overridable per provider via `EFCoreRepositoryOptions.MaxQtyByQueryPage` /
+  `MongoDbRepositoryOptions.MaxQtyByQueryPage`.
+- **`IPipelineMessage.DynamicContents`** (`Mvp24Hours.Core.Contract.Infrastructure.Pipe`) and its
+  implementation `PipelineMessage.DynamicContents` are now `[Obsolete]`: *"Use
+  `GetContent<T>()`/`AddContent<T>()` for type-safe access. Will be removed in v12."* The property
+  resolves members at runtime through `DynamicObject`, so a missing key throws
+  `ArgumentOutOfRangeException` and a null assignment throws `ArgumentNullException` — both only
+  when the line executes. The typed members (`AddContent<T>`, `GetContent<T>`, `HasContent<T>`,
+  `GetContentAll`) provide the same capability with compile-time checking. Neither the property nor
+  the `DynamicContents` class was removed, and behavior is unchanged. Types that implement
+  `IPipelineMessage` directly must keep implementing the member until v12; annotate it with the same
+  `[Obsolete]` attribute or suppress `CS0618` locally. See
+  [Pipeline → Message contents](docs/en-us/pipeline.md).
+- **`Mvp24HoursContext.ApplyLogRules`** (`Mvp24Hours.Infrastructure.Data.EFCore`) is now
+  `[Obsolete]`: *"Use `SoftDeleteInterceptor` + `AuditInterceptor` (see
+  `AddMvp24HoursEFCoreSoftDeleteInterceptor`). Will be removed in v12."* **No behavior changed**:
+  the three `SaveChanges`/`SaveChangesAsync` overrides still call it (with a local `CS0618`
+  suppression) and `CanApplyEntityLog` still gates it, so consumers that do nothing keep the
+  current stamping of `Created`/`Modified`/`CreatedBy`/`ModifiedBy`.
+  The EF Core module carries two independent soft-delete mechanisms that never interact:
+  `ApplyLogRules` + `Repository.Remove` operate on `IEntityDateLog`/`IEntityLog<T>`
+  (`Created`/`Modified`/`Removed`, `EntityLogBy`, `TimeZoneHelper`), while `SoftDeleteInterceptor`
+  operates on `ISoftDeletable`/`ISoftDeletable<T>` (`IsDeleted`/`DeletedAt`/`DeletedBy`,
+  `ICurrentUserProvider`, `IClock`). Deprecating one therefore does **not** migrate entities —
+  moving an aggregate across requires changing its interface, adding a migration for the new
+  columns, and backfilling `IsDeleted` from `Removed`. Two known limitations of the recommended
+  path: `ApplySoftDeleteGlobalFilter()` only matches the non-generic `ISoftDeletable`, and the
+  interceptor writes a `string` into `DeletedBy`. See
+  [Migration → Soft delete (EF Core)](docs/en-us/migration.md) and
+  [EF Core Advanced → Interceptors and filters](docs/en-us/database/efcore-advanced.md).
+- **`TimeZoneHelper` and `AddMvp24HoursTimeZone` (`Mvp24Hours.Infrastructure`)** are now
+  `[Obsolete]`: *"Use `IClock` (`Mvp24Hours.Core.Contract.Infrastructure`) or `TimeProvider`. Will be
+  removed in v12."* **No behavior changed** — every call site inside Mvp24Hours still uses the helper,
+  with a local `CS0618` suppression and a TODO. The helper keeps process-wide mutable state
+  (`TimeZoneIds` is a public static list) and caches the resolved `TimeZoneInfo` on first use, so any
+  later change to the list is silently ignored and every host in the process shares one configuration.
+  `AddMvp24HoursTimeZone` is deprecated for the same reason: it registers nothing in the container, it
+  only mutates that static list — and because of the cache, calling it after the first
+  `GetTimeZoneNow()` has no effect.
+  **`IClock` is not a drop-in replacement.** `GetTimeZoneNow()` resolves the first system timezone
+  matching `TimeZoneIds` (South America by default) *regardless of the machine's local timezone*,
+  while `SystemClock`, `AddTimeProvider()`, and `AddSystemClock()` use `TimeZoneInfo.Local`. To keep
+  the current values, register the zone explicitly:
+  `services.AddTimeProvider(TimeProvider.System, TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo"))`.
+  Two tests document the relationship: `GetTimeZoneNow_MatchesIClockNow_WhenClockIsRegisteredWithTheSameTimeZone`
+  and `GetTimeZoneNow_DiffersFromDefaultIClockNow_ByTheLocalTimeZoneOffsetDelta`.
+  The remaining internal call sites are the legacy `IEntityDateLog` stamping path
+  (`Repository.Remove`, `RepositoryAsync.RemoveAsync`, `Mvp24HoursContext.ApplyLogRules`) and the
+  no-`IClock` fallback in the MongoDB `AuditInterceptor`/`SoftDeleteInterceptor` — where the fallback
+  returns South America local time while `IClock.UtcNow` returns UTC, so registering an `IClock`
+  changes which value is stamped. See
+  [Migration → Static helpers replaced by DI](docs/en-us/migration.md).
+- **`ConfigurationHelper` (`Mvp24Hours.Infrastructure`)** is now `[Obsolete]`: *"Bind options via
+  `IConfiguration`/`IOptions<T>` at the host. Will be removed in v12."* Nothing was removed and no
+  behavior changed. The helper is a process-wide service locator for configuration: it holds static
+  mutable state (host environment plus the built `IConfigurationRoot`) and, when nothing has been set,
+  `AppSettings` builds its own configuration from `appsettings.json` in
+  `Directory.GetCurrentDirectory()` — the process working directory, not necessarily the content root
+  — which bypasses every source the host already composed (environment variables, user secrets,
+  command line, secret stores) and cannot be isolated per test. It had **no production consumer** in
+  this repository; the only call sites are static test setups, which keep it with a local `CS0618`
+  suppression and a TODO. `SetEnvironment`/`SetConfiguration` have no replacement because they have no
+  purpose once the host owns configuration — inject `IHostEnvironment`/`IConfiguration`. See
+  [Configuration reference → Reading configuration outside the host](docs/en-us/configuration-reference.md).
+
+### Removed
+
+- **Legacy static telemetry facade (breaking)**: the four types that made up the pre-OpenTelemetry
+  telemetry mechanism were deleted. All of them had been `[Obsolete]` since 9.1.200, none had any
+  remaining consumer in production code, and none was ever referenced by `samples/` or `templates/`:
+  - `Mvp24Hours.Helpers.TelemetryHelper` (`Mvp24Hours.Core`) — a static class holding six mutable
+    dictionaries of handlers plus a global ignore list. Being static, it leaked registrations across
+    tests and across hosts in the same process, and it had no way to be scoped or replaced.
+  - `Mvp24Hours.Extensions.TelemetryExtensions` (`Mvp24Hours.Core`) — `AddMvp24HoursTelemetry`,
+    `AddMvp24HoursTelemetryFiltered`, and `AddMvp24HoursTelemetryIgnore`. These took an
+    `IServiceCollection` but registered nothing in it: every overload only pushed handlers into the
+    static helper, so the DI container was decorative.
+  - `Mvp24Hours.Core.Contract.Infrastructure.Logging.ITelemetryService` — the handler contract, whose
+    only consumer was the removed helper.
+  - `Mvp24Hours.Core.Enums.Infrastructure.TelemetryLevels` — the `[Flags]` level enum, used only as a
+    parameter type of the removed APIs.
+
+  **Migration**: use `ILogger<T>` for structured logging and the OpenTelemetry surface already shipped
+  in `Mvp24Hours.Core.Observability` (`Mvp24HoursActivitySources`, `Mvp24HoursMeters`,
+  `AddMvp24HoursObservability`, `AddMvp24HoursTracing`, `AddMvp24HoursMetrics`,
+  `AddMvp24HoursLogging`) for traces and metrics. Mapping:
+  `TelemetryHelper.Execute(TelemetryLevels.Information, "Evt", a, b)` →
+  `_logger.LogInformation("Evt: {A}, {B}", a, b)`; `AddMvp24HoursTelemetry(level, action)` →
+  `services.AddMvp24HoursLogging(...)` / `services.AddLogging(b => b.AddConsole())` or a custom
+  `ILoggerProvider`;
+  `AddMvp24HoursTelemetryFiltered`/`AddMvp24HoursTelemetryIgnore` → log-level filtering by category
+  (`Logging:LogLevel` in `appsettings.json` or `ILoggingBuilder.AddFilter`);
+  `ITelemetryService` → `ILoggerProvider`; `TelemetryLevels` →
+  `Microsoft.Extensions.Logging.LogLevel` (`Verbose` → `Debug`/`Trace`, the rest map by name).
+  See [Telemetry](docs/en-us/telemetry.md) and
+  [Observability → Migration](docs/en-us/observability/migration.md).
+- **Swashbuckle-based Swagger/ReDoc APIs removed from `Mvp24Hours.WebAPI` (breaking)**: the
+  Swashbuckle-only registration/middleware surface — already `[Obsolete]` on the `Add*` side since
+  a previous release — was deleted, along with the `Use*` counterparts that had never been marked
+  obsolete:
+  - `IServiceCollection` extensions: `AddMvp24HoursWebSwagger`, `AddMvp24HoursSwaggerWithVersioning`.
+  - `IApplicationBuilder` extensions: `UseMvp24HoursSwagger`, `UseMvp24HoursSwaggerWithVersioning`,
+    `UseMvp24HoursReDoc`.
+  - Supporting types used only by the above: `Filters/Swagger/{AuthResponsesOperationFilter,
+    CustomSwaggerFilter, DeprecationOperationFilter, ExamplesOperationFilter,
+    VersionedSwaggerDocumentFilter}.cs`, `Configuration/ConfigureSwaggerGenOptions.cs`,
+    `Configuration/SwaggerOptions.cs` (and the nested `SwaggerVersionInfo`, `SwaggerContact`,
+    `SwaggerLicense`), `Models/SwaggerAuthorizationScheme.cs`.
+  - The `Swashbuckle.AspNetCore.Filters` package reference was removed from
+    `Mvp24Hours.WebAPI.csproj` and from `src/Directory.Packages.props` (it was only used by
+    `c.ExampleFilters()`/`AddSwaggerExamplesFromAssemblies`, both part of the removed APIs).
+  - `Swashbuckle.AspNetCore` (the umbrella package) **is kept** — the native OpenAPI path
+    (`AddMvp24HoursNativeOpenApi*`/`UseMvp24HoursNativeOpenApi`/`MapMvp24HoursNativeOpenApi`) still
+    serves its interactive UI via `Swashbuckle.AspNetCore.SwaggerUI` (`app.UseSwaggerUI(...)`,
+    `DocExpansion.List`); only the document-generation side of Swashbuckle (`.SwaggerGen`) and the
+    example filters (`.Filters`) are gone.
+  - No `[Obsolete]` shim was introduced: none of the removed APIs had a known consumer in
+    `samples/`, `templates/`, or outside test code that specifically existed to exercise them.
+  - **Migration**: replace `AddMvp24HoursWebSwagger`/`AddMvp24HoursSwaggerWithVersioning` with
+    `AddMvp24HoursNativeOpenApi`/`AddMvp24HoursNativeOpenApiWithVersions`, and replace
+    `UseMvp24HoursSwagger`/`UseMvp24HoursSwaggerWithVersioning`/`UseMvp24HoursReDoc` with
+    `UseMvp24HoursNativeOpenApi`/`MapMvp24HoursNativeOpenApi`. See
+    [Migration guide → Swashbuckle-based Swagger APIs removed](docs/en-us/migration.md).
+
 ### Fixed
 
+- **MongoDB `Repository`/`RepositoryAsync` `Remove` — broken soft delete**: the type check
+  `entity.GetType() == typeof(IEntityLog<>)` compared a closed runtime type against an open
+  generic definition, which is never true. As a result, `Remove` always hard-deleted the
+  document, even for entities implementing `IEntityLog<TForeignKey>`/`IEntityDateLog`.
+  **Behavior change**: `Remove`/`RemoveAsync` now perform a soft delete (sets `Removed`, and
+  `RemovedBy` when available) for any entity implementing `IEntityDateLog`, matching the
+  EF Core provider and the `SoftDeleteInterceptor`. Entities without `IEntityDateLog` continue
+  to be hard-deleted. `Modify`/`ModifyAsync` also had the equivalent invalid-cast fixed
+  (`(IEntityLog<object>)entity` failed for any `TForeignKey` other than `object`) and now
+  preserve `Created`/`CreatedBy`/`ModifiedBy` via reflection instead of `dynamic`.
+  `Repository.EntityLogBy`/`RepositoryAsync.EntityLogBy` no longer throw `NotSupportedException`;
+  they return `null` (no `RemovedBy` is set when unavailable, instead of blowing up the delete).
 - **`LockHandleBase.Dispose` / `DisposeAsync`**: lock release now occurs before marking
   `_disposed` (previously `ReleaseAsync` returned early and the resource remained held until expiration).
+- **Renamed `ServiceCollectionExtentions` → `ServiceCollectionExtensions`** (typo fix) in
+  `Mvp24Hours.Core` and `Mvp24Hours.WebAPI`. No shim was introduced (the API is only consumed via
+  extension-method syntax, so `services.AddX(...)` call sites are unaffected); only code that
+  referenced the type statically by its old name would need updating, and no such usage was found
+  in `samples/`, `templates/`, or `src/Tests/`.
 - **Build warnings zeroed in Release:** **~4235 → 0** (−100%). The first modernization pass
   reduced to ~969 and accepted the residual (~948) for a hygiene round; that debt
   was eliminated (nullable CS86xx in production and tests, LOGGEN002, CS0618/`MvpExecutionStrategy`,
@@ -94,6 +326,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `.editorconfig` style rules elevated from `suggestion` → `warning` (`EnforceCodeStyleInBuild`);
   full `dotnet format` applied across the solution (file-scoped namespaces, primary constructors,
   collection expressions, usings, etc.).
+- **Compliance check false positive — `Nullable reference types enabled`**: the MCP compliance
+  checker (`ComplianceService.CheckFile`) flagged every `.csproj` under `src/` because it only
+  looked for `<Nullable>enable</Nullable>` in the individual project file, without resolving
+  MSBuild's automatic import of the nearest `Directory.Build.props` (which already sets it
+  solution-wide). The checker now walks up from the `.csproj` to the repo root looking for an
+  ancestor `Directory.Build.props` that enables `Nullable` before reporting a violation.
+- **Residual `new HttpClient()` in `Mvp24Hours.Infrastructure.Test`**: parameterless instantiation
+  in `TestingServiceExtensionsTest` replaced with `new HttpClient(new SocketsHttpHandler())`,
+  matching the pattern already used for the Keycloak test suite.
 
 ### Tests
 
@@ -144,6 +385,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **CronJob resilient distributed locking**: `ResilientCronJobService<T>` now supports optional
   cluster-safe execution lock acquisition through `IDistributedCronJobLock`, with skip metrics/logging
   on contention and guaranteed async disposal of lock handles.
+- **Repository contracts with strongly-typed identifiers**: new optional `IRepository<T, TId>` and
+  `IRepositoryAsync<T, TId>` in `Mvp24Hours.Core.Contract.Data`, for entities that declare their
+  identifier through `IEntity<TId>`. They inherit the full surface of `IRepository<T>` /
+  `IRepositoryAsync<T>` and add only `GetById(TId)`, `GetById(TId, IPagingCriteria?)`,
+  `RemoveById(TId)`, `RemoveById(IList<TId>)` and the `Async` counterparts.
+  - Purely **additive**: `IRepository<T>` / `IRepositoryAsync<T>` are unchanged, the `object`-based
+    members remain the real implementation (the typed members delegate to them) and are not obsolete,
+    and `IEntityBase.EntityKey` remains `object?`. No existing consumer needs to change.
+  - Implemented by EF Core and MongoDB as `Repository<T, TId>` / `RepositoryAsync<T, TId>`, derived
+    from the existing one-parameter classes so current subclasses (including
+    `BulkOperationsRepositoryAsync`) are untouched.
+  - `AddMvp24HoursRepository` / `AddMvp24HoursRepositoryAsync` register the typed contract alongside the
+    untyped one in both providers. Resolve it from the container: `IUnitOfWork.GetRepository<T>()` has a
+    single type parameter and still returns `IRepository<T>`. When a custom `repository` /
+    `repositoryAsync` type is supplied, the typed contract is intentionally left unregistered, because a
+    one-parameter implementation has no two-parameter counterpart and defaulting would silently bypass
+    the customization.
+- **EF Core soft-delete interceptor registration**: new `AddMvp24HoursEFCoreSoftDeleteInterceptor(
+  defaultUser = "System")` in `Mvp24Hours.Extensions` (`EFCoreInterceptorExtensions`), mirroring
+  `AddMongoDbSoftDeleteInterceptor`. It registers `SoftDeleteInterceptor` as scoped and resolves the
+  optional `ICurrentUserProvider` and `IClock` with `GetService`, falling back to `defaultUser` and
+  `DateTime.UtcNow`. EF Core does not discover interceptors from the application container, so the
+  two follow-up steps are still required and are documented on the method: resolve it inside
+  `AddDbContext` via `AddInterceptors(...)`, and call `ApplySoftDeleteGlobalFilter()` in
+  `OnModelCreating` — the interceptor changes writes only.
 
 ### Changed (incremental updates)
 

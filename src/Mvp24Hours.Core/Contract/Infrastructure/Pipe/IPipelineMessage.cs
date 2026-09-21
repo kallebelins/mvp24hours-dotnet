@@ -24,6 +24,7 @@ public interface IPipelineMessage
     /// <summary>
     /// Allow access to a content by a dynamic object
     /// </summary>
+    [Obsolete("Use GetContent<T>()/AddContent<T>() for type-safe access. Will be removed in v12.")]
     dynamic DynamicContents { get; }
     /// <summary>
     /// List of feedback messages

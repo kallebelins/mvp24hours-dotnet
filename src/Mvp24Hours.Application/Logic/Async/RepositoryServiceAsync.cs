@@ -51,6 +51,12 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
     /// </summary>
     protected virtual IValidator<TEntity>? Validator => validator;
 
+    /// <summary>
+    /// Gets the logger instance for logging operations. Never <see langword="null"/>:
+    /// falls back to <see cref="NullLogger{T}.Instance"/> when no logger is supplied.
+    /// </summary>
+    protected virtual ILogger<RepositoryServiceAsync<TEntity, TUoW>> Logger => _logger;
+
     #endregion
 
     #region [ Ctor ]
@@ -67,7 +73,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual Task<IBusinessResult<bool>> ListAnyAsync(CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-listanyasync");
+        _logger.LogDebug("[{ServiceName}] Executing ListAnyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
         return UnitOfWork
             .GetRepository<TEntity>()
             .ListAnyAsync(cancellationToken: cancellationToken)
@@ -76,7 +82,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual Task<IBusinessResult<int>> ListCountAsync(CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-listcountasync");
+        _logger.LogDebug("[{ServiceName}] Executing ListCountAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
         return UnitOfWork
             .GetRepository<TEntity>()
             .ListCountAsync(cancellationToken: cancellationToken)
@@ -90,7 +96,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual Task<IBusinessResult<IList<TEntity>>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-listasync");
+        _logger.LogDebug("[{ServiceName}] Executing ListAsync for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
         return UnitOfWork
             .GetRepository<TEntity>()
             .ListAsync(criteria, cancellationToken: cancellationToken)
@@ -99,7 +105,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual Task<IBusinessResult<bool>> GetByAnyAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-getbyanyasync");
+        _logger.LogDebug("[{ServiceName}] Executing GetByAnyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
         return UnitOfWork
             .GetRepository<TEntity>()
             .GetByAnyAsync(clause, cancellationToken: cancellationToken)
@@ -108,7 +114,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual Task<IBusinessResult<int>> GetByCountAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-getbycountasync");
+        _logger.LogDebug("[{ServiceName}] Executing GetByCountAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
         return UnitOfWork
             .GetRepository<TEntity>()
             .GetByCountAsync(clause, cancellationToken: cancellationToken)
@@ -122,7 +128,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-getbyasync");
+        _logger.LogDebug("[{ServiceName}] Executing GetByAsync for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
         return UnitOfWork
             .GetRepository<TEntity>()
             .GetByAsync(clause, criteria, cancellationToken: cancellationToken)
@@ -136,7 +142,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-getbyidasync");
+        _logger.LogDebug("[{ServiceName}] Executing GetByIdAsync for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
         return UnitOfWork
             .GetRepository<TEntity>()
             .GetByIdAsync(id, criteria, cancellationToken: cancellationToken)
@@ -149,7 +155,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual async Task<IBusinessResult<int>> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-addasync");
+        _logger.LogDebug("[{ServiceName}] Executing AddAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
         IList<IMessageResult> errors = entity.TryValidate(Validator);
         if (!errors.AnySafe())
         {
@@ -164,7 +170,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual async Task<IBusinessResult<int>> AddAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-addlistasync");
+        _logger.LogDebug("[{ServiceName}] Executing AddAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
         if (!entities.AnySafe())
         {
             return 0.ToBusiness();
@@ -186,7 +192,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual async Task<IBusinessResult<int>> ModifyAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-modifyasync");
+        _logger.LogDebug("[{ServiceName}] Executing ModifyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
         IList<IMessageResult> errors = entity.TryValidate(Validator);
         if (!errors.AnySafe())
         {
@@ -201,7 +207,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual async Task<IBusinessResult<int>> ModifyAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-modifylistasync");
+        _logger.LogDebug("[{ServiceName}] Executing ModifyAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
         if (!entities.AnySafe())
         {
             return 0.ToBusiness();
@@ -223,7 +229,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual async Task<IBusinessResult<int>> RemoveAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-removeasync");
+        _logger.LogDebug("[{ServiceName}] Executing RemoveAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
         await UnitOfWork.GetRepository<TEntity>().RemoveAsync(entity, cancellationToken: cancellationToken);
         return await UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken)
                 .ToBusinessAsync();
@@ -231,7 +237,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual async Task<IBusinessResult<int>> RemoveAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-removelistasync");
+        _logger.LogDebug("[{ServiceName}] Executing RemoveAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
         if (!entities.AnySafe())
         {
             return 0.ToBusiness();
@@ -245,7 +251,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-removebyidasync");
+        _logger.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
         await UnitOfWork.GetRepository<TEntity>().RemoveByIdAsync(id, cancellationToken: cancellationToken);
         return await UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken)
                 .ToBusinessAsync();
@@ -253,7 +259,7 @@ public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<T
 
     public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(IList<object> ids, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("application-repositoryserviceasync-removebyidlistasync");
+        _logger.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {Count} {EntityType} entities", GetType().Name, ids?.Count ?? 0, typeof(TEntity).Name);
         if (!ids.AnySafe())
         {
             return 0.ToBusiness();

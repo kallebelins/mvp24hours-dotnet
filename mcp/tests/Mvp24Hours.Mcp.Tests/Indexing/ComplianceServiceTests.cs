@@ -57,4 +57,79 @@ public class ComplianceServiceTests : McpTestFixture
         Assert.DoesNotContain(result.Violations, v =>
             v.Rule.Contains("MediatR", StringComparison.OrdinalIgnoreCase));
     }
+
+    [Fact]
+    public void CheckPaths_does_not_flag_missing_nullable_when_directory_build_props_enables_it()
+    {
+        var paths = CreatePaths();
+        var manifest = new ManifestService(paths);
+        var compliance = new ComplianceService(paths, manifest);
+
+        var tempDir = Path.Combine(paths.RepoRoot, "mcp", "tests", ".compliance-temp-" + Guid.NewGuid().ToString("N"));
+        var projectDir = Path.Combine(tempDir, "Product.Core");
+        Directory.CreateDirectory(projectDir);
+
+        // Directory.Build.props lives one level above the .csproj, like src/Directory.Build.props does.
+        File.WriteAllText(Path.Combine(tempDir, "Directory.Build.props"), """
+            <Project>
+              <PropertyGroup>
+                <Nullable>enable</Nullable>
+              </PropertyGroup>
+            </Project>
+            """);
+
+        File.WriteAllText(Path.Combine(projectDir, "Product.Core.csproj"), """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+              </PropertyGroup>
+            </Project>
+            """);
+
+        try
+        {
+            var relDir = Path.GetRelativePath(paths.RepoRoot, tempDir).Replace('\\', '/');
+            var result = compliance.CheckPaths([relDir]);
+
+            Assert.DoesNotContain(result.Violations, v =>
+                v.Rule.Contains("Nullable", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CheckPaths_flags_missing_nullable_when_no_directory_build_props_enables_it()
+    {
+        var paths = CreatePaths();
+        var manifest = new ManifestService(paths);
+        var compliance = new ComplianceService(paths, manifest);
+
+        var tempDir = Path.Combine(paths.RepoRoot, "mcp", "tests", ".compliance-temp-" + Guid.NewGuid().ToString("N"));
+        var projectDir = Path.Combine(tempDir, "Product.Core");
+        Directory.CreateDirectory(projectDir);
+
+        File.WriteAllText(Path.Combine(projectDir, "Product.Core.csproj"), """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+              </PropertyGroup>
+            </Project>
+            """);
+
+        try
+        {
+            var relDir = Path.GetRelativePath(paths.RepoRoot, tempDir).Replace('\\', '/');
+            var result = compliance.CheckPaths([relDir]);
+
+            Assert.Contains(result.Violations, v =>
+                v.Rule.Contains("Nullable", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }

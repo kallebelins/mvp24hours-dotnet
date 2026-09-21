@@ -45,6 +45,13 @@ namespace Mvp24Hours.Application.Logic.Cache;
 /// }
 /// </code>
 /// </para>
+/// <para>
+/// This base is mutually exclusive with <see cref="Mvp24Hours.Application.Logic.Observability.ObservableApplicationServiceBaseAsync{TEntity, TUoW}"/>
+/// and <see cref="Mvp24Hours.Application.Logic.Events.EventAwareCommandServiceBaseAsync{TEntity, TUoW}"/> — a service
+/// derives from exactly one of them. To combine caching with events or observability, compose the
+/// missing concern manually with its support type instead of stacking base classes. See "Combining
+/// cross-cutting concerns" in docs/en-us/application-services.md.
+/// </para>
 /// </remarks>
 public abstract class CacheableQueryServiceBaseAsync<TEntity, TUoW> : QueryServiceBaseAsync<TEntity, TUoW>
     where TEntity : class, IEntityBase

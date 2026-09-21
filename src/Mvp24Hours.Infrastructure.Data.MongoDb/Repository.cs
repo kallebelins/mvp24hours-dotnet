@@ -15,6 +15,7 @@ using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Base;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
+using Mvp24Hours.Infrastructure.Data.MongoDb.Internal;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb;
 
@@ -167,9 +168,10 @@ public class Repository<T>(Mvp24HoursContext dbContext, IOptions<MongoDbReposito
         {
             if (entities?.AnySafe() == true)
             {
-                foreach (T entity in entities)
+                var nonNullEntities = entities.Where(e => e != null).ToList();
+                if (nonNullEntities.Count > 0)
                 {
-                    Add(entity);
+                    dbEntities.InsertMany(nonNullEntities);
                 }
             }
         }
@@ -191,15 +193,17 @@ public class Repository<T>(Mvp24HoursContext dbContext, IOptions<MongoDbReposito
 
             // properties that can not be changed
 
-            if (entity.GetType() == typeof(IEntityLog<>))
+            if (entity is IEntityDateLog dateLog && entityDb is IEntityDateLog dateLogDb)
             {
                 _logger?.LogDebug("MongoDB repository Modify: preserving log fields");
-                var entityLog = (IEntityLog<object>)entity;
-                var entityDbLog = (IEntityLog<object>)entityDb;
-                entityLog.Created = entityDbLog.Created;
-                entityLog.CreatedBy = entityDbLog.CreatedBy;
-                entityLog.Modified = entityDbLog.Modified;
-                entityLog.ModifiedBy = entityDbLog.ModifiedBy;
+                dateLog.Created = dateLogDb.Created;
+                dateLog.Modified = dateLogDb.Modified;
+            }
+
+            if (EntityLogAccessor.HasEntityLog(entity))
+            {
+                EntityLogAccessor.CopyPropertyValue(entityDb, entity, "CreatedBy");
+                EntityLogAccessor.CopyPropertyValue(entityDb, entity, "ModifiedBy");
             }
 
             dbEntities.ReplaceOne(GetKeyFilter(entity), entity);
@@ -233,12 +237,19 @@ public class Repository<T>(Mvp24HoursContext dbContext, IOptions<MongoDbReposito
                 return;
             }
 
-            if (entity.GetType() == typeof(IEntityLog<>))
+            if (entity is IEntityDateLog dateLog)
             {
                 _logger?.LogDebug("MongoDB repository Remove: performing soft delete");
-                var entityLog = (IEntityLog<object>)entity;
-                entityLog.Removed = TimeZoneHelper.GetTimeZoneNow();
-                entityLog.RemovedBy = EntityLogBy;
+                // TODO (task 4.2b): TimeZoneHelper is obsolete. Swapping it for IClock requires
+                // injecting the clock into the repository and would change the timezone of the
+                // stamped value (helper resolves South America; IClock.Now uses TimeZoneInfo.Local).
+#pragma warning disable CS0618 // intentional: legacy IEntityDateLog stamping until removal in v12
+                dateLog.Removed = TimeZoneHelper.GetTimeZoneNow();
+#pragma warning restore CS0618
+                if (EntityLogBy != null && EntityLogAccessor.HasEntityLog(entity))
+                {
+                    EntityLogAccessor.TrySetPropertyValue(entity, "RemovedBy", EntityLogBy);
+                }
                 Modify(entity);
             }
             else
@@ -317,7 +328,60 @@ public class Repository<T>(Mvp24HoursContext dbContext, IOptions<MongoDbReposito
 
     #region [ Properties ]
 
-    protected override object? EntityLogBy => throw new NotSupportedException();
+    /// <summary>
+    /// Returns <c>null</c> because this repository does not track a current user by itself.
+    /// When <c>RemovedBy</c> (from <c>IEntityLog{TForeignKey}</c>) needs to be populated
+    /// on soft delete, use <c>ICurrentUserProvider</c> with
+    /// <see cref="Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors.AuditInterceptor"/> /
+    /// <see cref="Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors.SoftDeleteInterceptor"/>
+    /// via <see cref="RepositoryAsyncWithInterceptors{T}"/> instead.
+    /// </summary>
+    protected override object? EntityLogBy => null;
 
     #endregion
+}
+
+/// <summary>
+///  <see cref="IRepository{T, TId}"/>
+/// </summary>
+/// <remarks>
+/// Additive wrapper over <see cref="Repository{T}"/>. Every typed member delegates to the
+/// <see cref="object"/>-based member of the base class, so each operation keeps a single
+/// real implementation and cannot diverge in behavior.
+/// </remarks>
+public class Repository<T, TId>(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options, ILogger<Repository<T, TId>>? logger = null)
+    : Repository<T>(dbContext, options, logger), IRepository<T, TId>
+    where T : class, IEntityBase, IEntity<TId>
+{
+    /// <summary>
+    ///  <see cref="IRepository{T, TId}.GetById(TId)"/>
+    /// </summary>
+    public T? GetById(TId id)
+    {
+        return base.GetById((object)id!);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepository{T, TId}.GetById(TId, IPagingCriteria)"/>
+    /// </summary>
+    public T? GetById(TId id, IPagingCriteria? criteria)
+    {
+        return base.GetById((object)id!, criteria);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepository{T, TId}.RemoveById(TId)"/>
+    /// </summary>
+    public void RemoveById(TId id)
+    {
+        base.RemoveById((object)id!);
+    }
+
+    /// <summary>
+    ///  <see cref="IRepository{T, TId}.RemoveById(IList{TId})"/>
+    /// </summary>
+    public void RemoveById(IList<TId> ids)
+    {
+        base.RemoveById(ids?.Cast<object>().ToList()!);
+    }
 }

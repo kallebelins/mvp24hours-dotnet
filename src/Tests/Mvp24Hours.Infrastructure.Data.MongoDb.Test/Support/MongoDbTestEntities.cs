@@ -181,6 +181,96 @@ public class TestEntity : IEntityBase
     }
 }
 
+/// <summary>
+/// Entity that declares a strongly-typed identifier through <see cref="IEntity{TId}"/>, which is
+/// the constraint required by <c>IRepository&lt;T, TId&gt;</c> / <c>IRepositoryAsync&lt;T, TId&gt;</c>.
+/// </summary>
+public class TestTypedEntity : IEntityBase, IEntity<ObjectId>
+{
+    public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
+
+    public string Name { get; set; } = string.Empty;
+
+    public object EntityKey => Id;
+
+    public IReadOnlyCollection<MessageResult> GetNotifications()
+    {
+        return [];
+    }
+
+    public bool HasNotifications()
+    {
+        return false;
+    }
+}
+
+/// <summary>
+/// Entity implementing <see cref="IEntityLog{TForeignKey}"/> with a <see cref="string"/>
+/// foreign key. Used to exercise the soft-delete/audit path in
+/// <see cref="Mvp24Hours.Infrastructure.Data.MongoDb.Repository{T}"/> /
+/// <see cref="Mvp24Hours.Infrastructure.Data.MongoDb.RepositoryAsync{T}"/> without relying on
+/// a cast to a single closed generic (which would not cover other <c>TForeignKey</c> types).
+/// </summary>
+public class TestEntityLogOfString : IEntityBase, IEntityLog<string>
+{
+    public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
+
+    public string Name { get; set; } = string.Empty;
+
+    public DateTime Created { get; set; }
+
+    public string CreatedBy { get; set; } = string.Empty;
+
+    public DateTime? Modified { get; set; }
+
+    public string? ModifiedBy { get; set; }
+
+    public DateTime? Removed { get; set; }
+
+    public string? RemovedBy { get; set; }
+
+    public object EntityKey => Id;
+
+    public IReadOnlyCollection<MessageResult> GetNotifications()
+    {
+        return [];
+    }
+
+    public bool HasNotifications()
+    {
+        return false;
+    }
+}
+
+/// <summary>
+/// Entity that implements only <see cref="IEntityDateLog"/> (no <c>*By</c> fields), used to
+/// verify that the soft-delete path works without requiring <see cref="IEntityLog{TForeignKey}"/>.
+/// </summary>
+public class TestDateLogOnlyEntity : IEntityBase, IEntityDateLog
+{
+    public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
+
+    public string Name { get; set; } = string.Empty;
+
+    public DateTime Created { get; set; }
+
+    public DateTime? Modified { get; set; }
+
+    public DateTime? Removed { get; set; }
+
+    public object EntityKey => Id;
+
+    public IReadOnlyCollection<MessageResult> GetNotifications()
+    {
+        return [];
+    }
+
+    public bool HasNotifications()
+    {
+        return false;
+    }
+}
+
 public class CustomerDto
 {
     public string Email { get; set; } = string.Empty;

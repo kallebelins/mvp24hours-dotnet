@@ -9,7 +9,7 @@ Register only the features your API uses, then add their middleware in a deliber
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddMvp24HoursProblemDetails();
+builder.Services.AddNativeProblemDetailsAll(builder.Environment);
 builder.Services.AddMvp24HoursRequestContext();
 builder.Services.AddMvp24HoursRequestObservability();
 builder.Services.AddMvp24HoursSecurityHeaders();
@@ -20,7 +20,7 @@ builder.Services.AddMvp24HoursOutputCache();
 var app = builder.Build();
 app.UseMvp24HoursRequestContext();
 app.UseMvp24HoursRequestObservability();
-app.UseMvp24HoursProblemDetails();
+app.UseNativeProblemDetailsHandling();
 app.UseMvp24HoursSecurityHeaders();
 app.UseMvp24HoursRateLimiting();
 app.UseMvp24HoursOutputCache();
@@ -28,11 +28,34 @@ app.UseMvp24HoursOutputCache();
 
 `AddMvp24HoursOutputCaching` and `UseMvp24HoursOutputCaching` are compatibility APIs. New applications should use `AddMvp24HoursOutputCache` and `UseMvp24HoursOutputCache`.
 
+### Error handling: deprecated middlewares
+
+`AddNativeProblemDetailsAll` + `UseNativeProblemDetailsHandling` is the only recommended error handling path. The two custom middlewares below are deprecated and will be removed in v12:
+
+| Deprecated | Replacement |
+| --- | --- |
+| `ExceptionMiddleware`, `AddMvp24HoursWebExceptions`, `UseMvp24HoursExceptionHandling` | `AddNativeProblemDetailsAll` + `UseNativeProblemDetailsHandling` |
+| `ProblemDetailsMiddleware`, `UseMvp24HoursProblemDetails` | `UseNativeProblemDetailsHandling` |
+
+`AddMvp24HoursProblemDetails` and `AddMvp24HoursProblemDetailsAll` are **not** deprecated: they are the shared registration for `ModelStateValidationFilter` and `ProblemDetailsResultFilter`, which `AddNativeProblemDetails` does not register. Combine them with the native path when you need those MVC filters.
+
+```csharp
+// before
+builder.Services.AddMvp24HoursWebExceptions(o => o.TraceMiddleware = false);
+var app = builder.Build();
+app.UseMvp24HoursExceptionHandling();
+
+// after
+builder.Services.AddNativeProblemDetailsAll(builder.Environment);
+var app = builder.Build();
+app.UseNativeProblemDetailsHandling();
+```
+
 ## Production matrix
 
 | Middleware / feature | Options class | Tested defaults | Production guidance |
 |---|---|---|---|
-| Legacy exception middleware | `ExceptionOptions` | tracing off; built-in status mapper | Prefer RFC 7807 Problem Details for new APIs. |
+| Legacy exception middleware (**deprecated**, removed in v12) | `ExceptionOptions` | tracing off; built-in status mapper | Use `AddNativeProblemDetailsAll` + `UseNativeProblemDetailsHandling`. |
 | Correlation ID | `CorrelationIdOptions` | `X-Correlation-ID`; response header on | Accept a gateway-provided ID only from trusted infrastructure. |
 | Security headers | `SecurityHeadersOptions` | HSTS, CSP and frame protection on | Review CSP and preload before deployment. |
 | ETag | `ETagOptions` | enabled; content hash; strong ETags | Keep strong hashes unless representation semantics require weak ETags. |
@@ -57,8 +80,7 @@ app.UseMvp24HoursOutputCache();
 | Request telemetry | `RequestTelemetryOptions` | traces/metrics on; exception details off | Exclude health/metrics routes and avoid sensitive header enrichment. |
 | Request body tracing | `RequestBodyTracingOptions` | disabled; POST/PUT/PATCH; 16 KiB max | Enable only where needed and always keep redaction lists updated. |
 | IP filtering | `IpFilteringOptions` | disabled; localhost allowed | Configure trusted proxies before forwarded headers. |
-| Swashbuckle | `SwaggerOptions` | title `API`; OpenAPI 3.1; UI at `swagger` | Restrict UI exposure in production. |
-| Native OpenAPI | `NativeOpenApiOptions` | document `v1`; UI on; ReDoc off | Prefer this .NET 10 path for new APIs when its feature set is sufficient. |
+| Native OpenAPI | `NativeOpenApiOptions` | document `v1`; UI on; ReDoc off | The only supported OpenAPI path; the Swashbuckle-based `SwaggerOptions`/`AddMvp24HoursWebSwagger`/`AddMvp24HoursSwaggerWithVersioning` APIs were removed. |
 | Anti-forgery | `AntiForgeryOptions` | enabled for unsafe methods | Use for cookie-authenticated browser clients. |
 | Request context | `RequestContextOptions` | response/outgoing propagation on; W3C flag off | Enable W3C mode when integrating with distributed tracing. |
 | Request logging | `RequestLoggingOptions` | basic; bodies/headers off; 3 s slow threshold | Keep bodies off by default and extend sensitive-field lists. |
@@ -173,26 +195,22 @@ builder.Services.AddMvp24HoursApiVersioning(options =>
     options.DeprecatedApiVersions.Add(new ApiVersion(1, 0));
 });
 
-builder.Services.AddMvp24HoursSwaggerWithVersioning(options =>
+builder.Services.AddMvp24HoursNativeOpenApiWithVersions(options =>
 {
     options.Title = "Orders API";
-    options.ShowDeprecationWarnings = true;
-    options.Versions.Add(new SwaggerVersionInfo
+    options.Version = "v1";
+    options.AdditionalVersions.Add(new OpenApiVersionConfig
     {
-        Version = "v1",
-        Title = "Orders API v1",
-        IsDeprecated = true,
-        DeprecationMessage = "Use v2. Removal planned for 2027-01-01."
-    });
-    options.Versions.Add(new SwaggerVersionInfo
-    {
-        Version = "v2",
-        Title = "Orders API v2"
+        DocumentName = "v2",
+        Version = "v2"
     });
 });
 ```
 
-Mark controllers with `[ApiVersion("1.0")]` and route templates such as `api/v{version:apiVersion}/[controller]`. For Native OpenAPI, configure deprecation on `NativeOpenApiOptions` version entries and see [Native OpenAPI](modernization/native-openapi.md).
+Mark controllers with `[ApiVersion("1.0")]` and route templates such as `api/v{version:apiVersion}/[controller]`. Configure deprecation on `NativeOpenApiOptions` version entries — see [Native OpenAPI](modernization/native-openapi.md) for the complete guide, including `IsDeprecated`/deprecation messaging per version.
+
+> **Note:** `AddMvp24HoursSwaggerWithVersioning`/`UseMvp24HoursSwaggerWithVersioning` (Swashbuckle-based)
+> were removed. See [Migration guide → Swashbuckle-based Swagger APIs removed](migration.md).
 
 ## Authentication methods
 

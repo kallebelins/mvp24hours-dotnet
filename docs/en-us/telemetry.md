@@ -1,77 +1,69 @@
 # Telemetry
 
-> ⚠️ **DEPRECATED**: This API is deprecated and will be removed in a future version.
-> 
-> **Migrate to `ILogger<T>` (Microsoft.Extensions.Logging) and OpenTelemetry.**
-> 
+> 🚫 **REMOVED in 10.8.0**: the legacy static telemetry facade no longer exists.
+>
+> **Use `ILogger<T>` (Microsoft.Extensions.Logging) and OpenTelemetry.**
+>
 > See the [Migration Guide](/en-us/observability/migration.md) for complete instructions.
 
 ---
 
-Solution created to track all application execution levels. You can inject actions for processing using any log manager, including metrics and trace.
+## Removal Notice
 
-## ⚠️ Deprecation Notice
+The following types were `[Obsolete]` since 9.1.200 and were **deleted** in 10.8.0. They no longer
+ship in any package, so code referencing them does not compile.
 
-Starting from this version, the following components are marked as `[Obsolete]`:
+| Removed | Replacement |
+|---------|-------------|
+| `TelemetryHelper` (`Mvp24Hours.Helpers`) | `ILogger<T>` for logs; `Mvp24HoursActivitySources`/`Mvp24HoursMeters` for traces and metrics |
+| `TelemetryLevels` (`Mvp24Hours.Core.Enums.Infrastructure`) | `Microsoft.Extensions.Logging.LogLevel` |
+| `ITelemetryService` (`Mvp24Hours.Core.Contract.Infrastructure.Logging`) | `ILogger<T>`, or `ILoggerProvider` for a custom sink |
+| `AddMvp24HoursTelemetry()` | `AddMvp24HoursLogging()` / `AddLogging()` |
+| `AddMvp24HoursTelemetryFiltered()` | log-level filtering by category (`AddFilter`, `Logging:LogLevel`) |
+| `AddMvp24HoursTelemetryIgnore()` | log-level filtering by category (`AddFilter`, `Logging:LogLevel`) |
 
-- `TelemetryHelper` - Use `ILogger<T>` instead
-- `TelemetryLevels` - Use `Microsoft.Extensions.Logging.LogLevel` instead
-- `ITelemetryService` - Use `ILogger<T>` or implement `ILoggerProvider` instead
-- `AddMvp24HoursTelemetry()` - Use `AddLogging()` instead
+The `Add*` extensions took an `IServiceCollection` but registered nothing in it — every overload only
+pushed handlers into the static helper. Nothing in DI was lost by their removal.
 
 ### Level Comparison
 
-| TelemetryLevels (Old) | LogLevel (New) |
-|-----------------------|----------------|
+| TelemetryLevels (Removed) | LogLevel (New) |
+|---------------------------|----------------|
 | `Verbose` | `LogLevel.Debug` or `LogLevel.Trace` |
 | `Information` | `LogLevel.Information` |
 | `Warning` | `LogLevel.Warning` |
 | `Error` | `LogLevel.Error` |
 | `Critical` | `LogLevel.Critical` |
 
-## Configuration (Legacy - Deprecated)
+### Migrating the registration
 
 ```csharp
-/// Startup.cs
-Logger logger = LogManager.GetCurrentClassLogger(); // any log manager
-
-// trace
-services.AddMvp24HoursTelemetry(TelemetryLevel.Information | TelemetryLevel.Verbose,
-    (name, state) =>
-    {
-        logger.Trace($"{name}|{string.Join("|", state)}");
-    }
-);
-
-// error
-services.AddMvp24HoursTelemetry(TelemetryLevel.Error,
-    (name, state) =>
-    {
-        if (name.EndsWith("-failure"))
-        {
-            logger.Error(state.ElementAtOrDefault(0) as Exception);
-        }
-        else
-        {
-            logger.Error($"{name}|{string.Join("|", state)}");
-        }
-    }
-);
-
-// ignore events
+// Before (removed in 10.8.0):
+services.AddMvp24HoursTelemetry(TelemetryLevels.Information | TelemetryLevels.Verbose,
+    (name, state) => logger.Trace($"{name}|{string.Join("|", state)}"));
 services.AddMvp24HoursTelemetryIgnore("rabbitmq-consumer-basic");
+
+// After:
+services.AddLogging(logging =>
+{
+    logging.SetMinimumLevel(LogLevel.Debug);
+    logging.AddFilter("Mvp24Hours.Infrastructure.RabbitMQ", LogLevel.Warning);
+});
 ```
 
-## Run (Legacy - Deprecated)
+### Migrating the call site
 
 ```csharp
-/// MyFile.cs
-TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-publish-start", $"token:{tokenDefault}");
+// Before (removed in 10.8.0):
+TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-publish-start", $"token:{token}");
+
+// After:
+_logger.LogDebug("RabbitMQ client publish started. Token: {Token}", token);
 ```
 
 ---
 
-## ✅ New Recommended Approach
+## ✅ Recommended Approach
 
 ### Configuration with ILogger
 

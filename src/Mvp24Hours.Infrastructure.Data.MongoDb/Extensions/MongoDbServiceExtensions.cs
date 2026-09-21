@@ -61,6 +61,13 @@ public static class MongoDbServiceExtensions
     /// <summary>
     /// Add repository
     /// </summary>
+    /// <remarks>
+    /// Registers <see cref="IRepository{T}"/> and, when <paramref name="repository"/> is not
+    /// supplied, also the optional strongly-typed identifier contract
+    /// <see cref="IRepository{T, TId}"/> for entities implementing <c>IEntity&lt;TId&gt;</c>.
+    /// Resolve the typed contract directly from the container: <c>IUnitOfWork.GetRepository&lt;T&gt;()</c>
+    /// has a single type parameter and always returns <see cref="IRepository{T}"/>.
+    /// </remarks>
     public static IServiceCollection AddMvp24HoursRepository(this IServiceCollection services,
         Action<MongoDbRepositoryOptions>? repositoryOptions = null,
         Type? repository = null,
@@ -92,6 +99,10 @@ public static class MongoDbServiceExtensions
         else
         {
             services.Add(new ServiceDescriptor(typeof(IRepository<>), typeof(Repository<>), lifetime));
+            // Optional strongly-typed identifier contract. Registered only for the default
+            // implementation: a custom one-parameter repository has no two-parameter counterpart,
+            // and mapping IRepository<T, TId> to Repository<T, TId> anyway would silently bypass it.
+            services.Add(new ServiceDescriptor(typeof(IRepository<,>), typeof(Repository<,>), lifetime));
         }
 
         return services;
@@ -100,6 +111,13 @@ public static class MongoDbServiceExtensions
     /// <summary>
     /// Add repository
     /// </summary>
+    /// <remarks>
+    /// Registers <see cref="IRepositoryAsync{T}"/> and, when <paramref name="repositoryAsync"/> is
+    /// not supplied, also the optional strongly-typed identifier contract
+    /// <see cref="IRepositoryAsync{T, TId}"/> for entities implementing <c>IEntity&lt;TId&gt;</c>.
+    /// Resolve the typed contract directly from the container: <c>IUnitOfWorkAsync.GetRepository&lt;T&gt;()</c>
+    /// has a single type parameter and always returns <see cref="IRepositoryAsync{T}"/>.
+    /// </remarks>
     public static IServiceCollection AddMvp24HoursRepositoryAsync(this IServiceCollection services,
         Action<MongoDbRepositoryOptions>? repositoryOptions = null,
         Type? repositoryAsync = null,
@@ -131,6 +149,10 @@ public static class MongoDbServiceExtensions
         else
         {
             services.Add(new ServiceDescriptor(typeof(IRepositoryAsync<>), typeof(RepositoryAsync<>), lifetime));
+            // Optional strongly-typed identifier contract. Registered only for the default
+            // implementation: a custom one-parameter repository has no two-parameter counterpart,
+            // and mapping IRepositoryAsync<T, TId> to RepositoryAsync<T, TId> anyway would silently bypass it.
+            services.Add(new ServiceDescriptor(typeof(IRepositoryAsync<,>), typeof(RepositoryAsync<,>), lifetime));
         }
 
         return services;

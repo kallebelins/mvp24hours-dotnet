@@ -502,7 +502,7 @@ public class PipelineAsync : PipelineBase, IPipelineAsync
             }
         }
     }
-    protected virtual async Task RunEventsAsync(List<MvpEventHandler<IPipelineMessage, EventArgs>> _handlers, IPipelineMessage input)
+    protected virtual Task RunEventsAsync(List<MvpEventHandler<IPipelineMessage, EventArgs>> _handlers, IPipelineMessage input)
     {
         if (_handlers.AnySafe())
         {
@@ -516,11 +516,20 @@ public class PipelineAsync : PipelineBase, IPipelineAsync
                 _logger?.LogDebug("PipelineAsync: Executing event handler {HandlerName}", handler.GetType().Name);
                 try
                 {
-                    await Task.Factory.StartNew(() => handler(input, EventArgs.Empty));
+                    handler(input, EventArgs.Empty);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "PipelineAsync: Event handler {HandlerName} failure", handler.GetType().Name);
+                    if (AllowPropagateException)
+                    {
+                        throw;
+                    }
                 }
                 finally { _logger?.LogDebug("PipelineAsync: Event handler {HandlerName} completed", handler.GetType().Name); }
             }
         }
+        return Task.CompletedTask;
     }
     private async Task RunRollbackOperationsAsync(IPipelineMessage input)
     {

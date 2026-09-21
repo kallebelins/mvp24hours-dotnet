@@ -201,9 +201,19 @@ public class SoftDeleteInterceptor(
         }
     }
 
+    /// <remarks>
+    /// When no <c>IClock</c> is registered the fallback keeps the legacy <c>TimeZoneHelper</c>
+    /// behavior, which returns South America local time while <c>IClock.UtcNow</c> returns UTC —
+    /// so the stamped value depends on whether the clock was registered. Register an
+    /// <c>IClock</c> (e.g. <c>services.AddTimeProvider()</c>) to get a consistent, injectable time
+    /// source. The fallback is kept as-is to avoid changing behavior for existing consumers.
+    /// </remarks>
     private DateTime GetCurrentTime()
     {
+        // TODO (task 4.2b): drop the TimeZoneHelper fallback when the helper is removed in v12.
+#pragma warning disable CS0618 // intentional: legacy fallback preserved until removal in v12
         return _clock?.UtcNow ?? TimeZoneHelper.GetTimeZoneNow();
+#pragma warning restore CS0618
     }
 
     private string GetCurrentUser()

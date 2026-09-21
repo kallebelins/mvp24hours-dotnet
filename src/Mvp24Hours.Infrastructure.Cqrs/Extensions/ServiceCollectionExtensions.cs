@@ -12,8 +12,6 @@ using Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 using Mvp24Hours.Infrastructure.Cqrs.Implementations;
 using Mvp24Hours.Infrastructure.Cqrs.MultiTenancy;
 using Mvp24Hours.Infrastructure.Cqrs.Observability;
-// Extensibility types for decorator registration
-using IExceptionHandlerBase = System.Type;
 using MediatorImpl = Mvp24Hours.Infrastructure.Cqrs.Implementations.Mediator;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Extensions;
@@ -241,31 +239,31 @@ public static class ServiceCollectionExtensions
             .Where(t => t is { IsClass: true, IsAbstract: false })
             .ToList();
 
-        foreach (IExceptionHandlerBase? type in handlerTypes)
+        foreach (Type type in handlerTypes)
         {
             // Register IMediatorRequestHandler<,>
-            IEnumerable<IExceptionHandlerBase> requestHandlerInterfaces = type.GetInterfaces()
+            IEnumerable<Type> requestHandlerInterfaces = type.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMediatorRequestHandler<,>));
 
-            foreach (IExceptionHandlerBase? @interface in requestHandlerInterfaces)
+            foreach (Type @interface in requestHandlerInterfaces)
             {
                 services.AddTransient(@interface, type);
             }
 
             // Register IMediatorNotificationHandler<>
-            IEnumerable<IExceptionHandlerBase> notificationHandlerInterfaces = type.GetInterfaces()
+            IEnumerable<Type> notificationHandlerInterfaces = type.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMediatorNotificationHandler<>));
 
-            foreach (IExceptionHandlerBase? @interface in notificationHandlerInterfaces)
+            foreach (Type @interface in notificationHandlerInterfaces)
             {
                 services.AddTransient(@interface, type);
             }
 
             // Register IStreamRequestHandler<,>
-            IEnumerable<IExceptionHandlerBase> streamHandlerInterfaces = type.GetInterfaces()
+            IEnumerable<Type> streamHandlerInterfaces = type.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStreamRequestHandler<,>));
 
-            foreach (IExceptionHandlerBase? @interface in streamHandlerInterfaces)
+            foreach (Type @interface in streamHandlerInterfaces)
             {
                 services.AddTransient(@interface, type);
             }

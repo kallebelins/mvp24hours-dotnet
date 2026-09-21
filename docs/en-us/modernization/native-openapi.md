@@ -319,12 +319,17 @@ options.Tags.Add(new OpenApiTagInfo
 });
 ```
 
-## Migration from Swashbuckle
+## Migration from the removed Swashbuckle-based APIs
 
-### Before (Swashbuckle)
+> `AddMvp24HoursWebSwagger`/`AddMvp24HoursSwaggerWithVersioning` and
+> `UseMvp24HoursSwagger`/`UseMvp24HoursSwaggerWithVersioning`/`UseMvp24HoursReDoc` were **removed**.
+> See [Migration guide → Swashbuckle-based Swagger APIs removed](../migration.md) for the full list
+> of removed types.
+
+### Before (removed)
 
 ```csharp
-// ⚠️ DEPRECATED
+// ❌ Removed
 services.AddMvp24HoursWebSwagger(
     title: "My API",
     version: "v1",

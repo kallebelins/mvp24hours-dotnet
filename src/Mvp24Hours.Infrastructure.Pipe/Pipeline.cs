@@ -510,7 +510,15 @@ public class Pipeline : PipelineBase, IPipeline
                 _logger?.LogDebug("Pipeline: Executing event handler {HandlerName}", handler.GetType().Name);
                 try
                 {
-                    Task.Factory.StartNew(() => handler(input, EventArgs.Empty));
+                    handler(input, EventArgs.Empty);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Pipeline: Event handler {HandlerName} failure", handler.GetType().Name);
+                    if (AllowPropagateException)
+                    {
+                        throw;
+                    }
                 }
                 finally { _logger?.LogDebug("Pipeline: Event handler {HandlerName} completed", handler.GetType().Name); }
             }

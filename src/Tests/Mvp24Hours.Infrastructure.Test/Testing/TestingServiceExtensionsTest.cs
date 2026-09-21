@@ -140,7 +140,7 @@ public class TestingServiceExtensionsTest
         services.AddSingleton<ISmsService, FakeSmsService>();
         services.AddSingleton<IFileStorage, FakeFileStorage>();
         services.AddSingleton<IClock, MockClock>();
-        services.AddSingleton(new HttpClient());
+        services.AddSingleton(new HttpClient(new SocketsHttpHandler()));
 
         services.ReplaceWithTestInfrastructure(options =>
         {

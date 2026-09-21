@@ -24,9 +24,6 @@ keyed services, native OpenAPI, `System.Threading.RateLimiting`,
 
 The current source tree targets `net10.0`, uses Central Package Management,
 enables nullable reference types, and defaults to `LangVersion=latest`.
-This does not mean that a `10.8.0` NuGet package is already available: the
-production projects still declare package version `9.1.21`. Check the package
-feed before changing consumer package references.
 
 Use the canonical [9.1.x → 10.8.0 migration](../migration.md?id=_91x-1000)
 for the SDK, target framework, package readiness, nullable diagnostics,
@@ -60,7 +57,11 @@ native platform patterns.
 ### From: `TelemetryHelper`
 ### To: `ILogger` + OpenTelemetry
 
-#### Before (Deprecated)
+> **Removed in 10.8.0.** `TelemetryHelper`, `AddMvp24HoursTelemetry*`, `ITelemetryService`, and
+> `TelemetryLevels` no longer ship in any package, so this migration is mandatory — code using them
+> does not compile. See [Telemetry](../telemetry.md) for the full mapping table.
+
+#### Before (removed in 10.8.0)
 
 ```csharp
 public class MyService
@@ -602,8 +603,11 @@ native implementations for the same service in one container.
 
 Use this checklist to track your migration progress:
 
-- [ ] **Telemetry**
+- [ ] **Telemetry** (mandatory — the legacy types were removed in 10.8.0)
   - [ ] Replace `TelemetryHelper` with `ILogger`
+  - [ ] Replace `AddMvp24HoursTelemetry*` with `AddMvp24HoursLogging()`/`AddLogging()` + category filters
+  - [ ] Replace `ITelemetryService` implementations with `ILoggerProvider`
+  - [ ] Replace `TelemetryLevels` with `LogLevel`
   - [ ] Configure OpenTelemetry exporters
   - [ ] Update all logging calls
 

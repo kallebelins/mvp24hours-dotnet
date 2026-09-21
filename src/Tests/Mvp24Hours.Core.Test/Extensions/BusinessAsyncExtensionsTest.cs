@@ -179,6 +179,7 @@ public class BusinessAsyncExtensionsTest
         public IList<IMessageResult> Messages { get; } = [];
         public string Token { get; } = token;
         public bool IsLocked { get; private set; }
+        [Obsolete("Use GetContent<T>()/AddContent<T>() for type-safe access. Will be removed in v12.")]
         public dynamic DynamicContents => throw new NotSupportedException();
 
         public void AddContent<T>(T obj)

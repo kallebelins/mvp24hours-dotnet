@@ -1,4 +1,4 @@
-# <img src="docs/_media/icon.png" width="32" height="32" alt="icon" /> Mvp24Hours - .NET 10 (v10.8.0 source) 🚀
+# <img src="docs/_media/icon.png" width="32" height="32" alt="icon" /> Mvp24Hours - .NET 10 (v10.9.0) 🚀
 
 Enterprise-ready library for rapid .NET application development with CQRS, Event Sourcing, Domain Events, and modern observability.
 
@@ -29,18 +29,11 @@ dotnet add package Mvp24Hours.WebAPI
 - 📖 **Documentation**: [English Documentation](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/home)
 - 🧪 **Samples**: [`samples/`](samples/README.md) — 32 runnable .NET 10 solutions (Minimal, Simple, Complex, Blueprints, Capabilities); see the [catalog](samples/README.md#complete-catalog) and [decision matrix](samples/README.md#which-sample-should-i-open-first)
 
-> **Release status:** the repository targets `net10.0`, but its package project metadata
-> remains at `9.1.21` and the public `Mvp24Hours.Core` feed does not include 10.8.0.
-> Treat 10.8.0 as the source release until metadata is finalized and publication is confirmed.
+## 🆕 What's New in v10.9.0
 
-## 🆕 What's New in v10.8.0
-
-- 🔄 **.NET 10** - All production and test projects target `net10.0`; C# defaults to `latest`
-- ✅ **Strict quality gate** - Nullable enabled and Release builds run with warnings as errors
-- 🔐 **Security updates** - Patched `System.Security.Cryptography.Xml` dependency chain
-- 🧰 **Modernized internals** - `Microsoft.Data.SqlClient`, current AWS credential resolution, and non-obsolete cryptography APIs
-- 🐛 **Distributed lock fix** - Lock handles now release the resource before marking themselves disposed
-- 🧪 **Expanded test coverage** - 19 test projects on .NET 10, split unit/integration CI jobs, **55%** line-coverage floor (product target **95%**), consolidated baseline **59.4%**
+- 📦 **Stable publication** - `Mvp24Hours.*` packages are published on NuGet as `10.9.0`; all `.csproj` metadata (`Version`, `AssemblyVersion`, `FileVersion`) is aligned across every project
+- 🧹 **Documentation cleanup** - Removed outdated "publication blocker" notices that referenced a stale `9.1.21` package line; README, release notes, and migration guides now describe a single, current, published version
+- 🔄 **.NET 10 baseline carried forward** - All production and test projects target `net10.0`; C# defaults to `latest`, Nullable is enabled, and Release builds run with warnings as errors
 
 See full changelog: [CHANGELOG.md](CHANGELOG.md) | [Release Notes](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/release)
 

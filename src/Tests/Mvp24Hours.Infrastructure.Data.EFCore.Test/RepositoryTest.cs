@@ -38,6 +38,20 @@ public class RepositoryTest : IDisposable
     }
 
     [Fact]
+    public void Modify_WhenKeyNotFoundInDatabase_ShouldThrow()
+    {
+        using IServiceScope scope = _provider.CreateScope();
+        IRepository<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IRepository<TestEntity>>();
+
+        var entity = new TestEntity { Id = 99999, Name = "Missing" };
+
+        Action act = () => repository.Modify(entity);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("Key value not found.");
+    }
+
+    [Fact]
     public void Add_List_ShouldPersistAllEntities()
     {
         using IServiceScope scope = _provider.CreateScope();

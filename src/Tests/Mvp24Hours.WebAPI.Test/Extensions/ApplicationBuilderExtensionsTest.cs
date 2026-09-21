@@ -75,7 +75,9 @@ public class ApplicationBuilderExtensionsTest
     {
         IApplicationBuilder app = CreateAppBuilder();
 
+#pragma warning disable CS0618 // intentional: covers obsolete UseMvp24HoursExceptionHandling until removal in v12
         IApplicationBuilder result = app.UseMvp24HoursExceptionHandling();
+#pragma warning restore CS0618
 
         result.Should().BeSameAs(app);
     }
@@ -196,20 +198,6 @@ public class ApplicationBuilderExtensionsTest
     }
 
     [Fact]
-    public void UseMvp24HoursSwagger_ShouldReturnBuilder()
-    {
-        WebApplication app = CreateWebApplication(services =>
-        {
-            services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
-        });
-
-        IApplicationBuilder result = app.UseMvp24HoursSwagger("Test API");
-
-        result.Should().BeSameAs(app);
-    }
-
-    [Fact]
     public void UseMvp24HoursRateLimiting_Enabled_ShouldReturnSameBuilder()
     {
         IApplicationBuilder app = CreateAppBuilder();
@@ -284,7 +272,9 @@ public class ApplicationBuilderExtensionsTest
     {
         IApplicationBuilder app = CreateAppBuilder();
 
+#pragma warning disable CS0618 // intentional: covers obsolete UseMvp24HoursProblemDetails until removal in v12
         IApplicationBuilder result = app.UseMvp24HoursProblemDetails();
+#pragma warning restore CS0618
 
         result.Should().BeSameAs(app);
     }

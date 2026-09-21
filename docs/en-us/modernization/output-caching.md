@@ -430,7 +430,7 @@ builder.Services.AddMvpHybridCache();
 var app = builder.Build();
 
 // Exception handling first
-app.UseMvp24HoursProblemDetails();
+app.UseNativeProblemDetailsHandling();
 
 // Then CORS
 app.UseCors();

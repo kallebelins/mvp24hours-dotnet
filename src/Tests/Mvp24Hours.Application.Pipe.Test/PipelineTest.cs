@@ -593,6 +593,7 @@ public class PipelineTest
         // arrange
         IPipelineMessage input = new PipelineMessage();
 
+#pragma warning disable CS0618 // intentional: covers obsolete DynamicContents until removal in v12
         // operations
         input.DynamicContents.Person = new Person { Name = "John Smith", CC = new CC { Number = "4532849103927456", CVV = "435", ExpirationDate = "11/32" } };
         input.AddContent("person_name", input.DynamicContents.Person.Name);
@@ -624,6 +625,7 @@ public class PipelineTest
         Assert.Equal(personExpected.CC.Number, personActual.CC.Number);
         Assert.Equal(personExpected.CC.CVV, personActual.CC.CVV);
         Assert.Equal(personExpected.CC.ExpirationDate, personActual.CC.ExpirationDate);
+#pragma warning restore CS0618
     }
 
     [Fact, Priority(18)]
@@ -634,6 +636,7 @@ public class PipelineTest
         ArgumentNullException? setExceptionNull = null;
         ArgumentOutOfRangeException? getExceptionOutOfRange = null;
 
+#pragma warning disable CS0618 // intentional: covers obsolete DynamicContents until removal in v12
         // operations
         try
         {
@@ -652,10 +655,64 @@ public class PipelineTest
         {
             getExceptionOutOfRange = ex;
         }
+#pragma warning restore CS0618
 
         // assert
         Assert.NotNull(setExceptionNull);
         Assert.NotNull(getExceptionOutOfRange);
+    }
+
+    [Fact, Priority(19)]
+    public void RunEvents_HandlerExecutes_BeforePipelineContinues()
+    {
+        // arrange
+        Pipeline pipeline = new();
+        var executionOrder = new List<string>();
+
+        pipeline.AddInterceptors((input, e) => executionOrder.Add("event"), PipelineInterceptorType.PostOperation);
+        pipeline.Add(_ => executionOrder.Add("operation"));
+
+        // act
+        pipeline.Execute();
+
+        // assert
+        Assert.Equal(["operation", "event"], executionOrder);
+    }
+
+    [Fact, Priority(20)]
+    public void RunEvents_HandlerThrows_LogsErrorAndContinues()
+    {
+        // arrange
+        Pipeline pipeline = new(); // AllowPropagateException = false (default)
+        var afterHandlerRan = false;
+
+        pipeline.AddInterceptors((input, e) => throw new InvalidOperationException("Handler failure"), PipelineInterceptorType.PostOperation);
+        pipeline.Add(_ => { });
+
+        // act
+        var exception = Record.Exception(() => pipeline.Execute());
+        afterHandlerRan = true;
+
+        // assert
+        Assert.Null(exception);
+        Assert.True(afterHandlerRan);
+    }
+
+    [Fact, Priority(21)]
+    public void RunEvents_HandlerThrows_PropagatesWhenAllowPropagateExceptionTrue()
+    {
+        // arrange
+        Pipeline pipeline = new() { AllowPropagateException = true };
+
+        pipeline.AddInterceptors((input, e) => throw new InvalidOperationException("Handler failure"), PipelineInterceptorType.PostOperation);
+        pipeline.Add(_ => { });
+
+        // act
+        var exception = Record.Exception(() => pipeline.Execute());
+
+        // assert
+        Assert.NotNull(exception);
+        Assert.Equal("Handler failure", exception.Message);
     }
 
     private class Person

@@ -15,6 +15,17 @@ using Mvp24Hours.WebAPI.Configuration;
 
 namespace Mvp24Hours.WebAPI.Middlewares;
 
+/// <summary>
+/// Legacy exception handling middleware that writes an <c>IBusinessResult</c> payload.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Deprecated: this middleware does not produce RFC 7807 <c>application/problem+json</c>
+/// responses. Use the native ASP.NET Core pipeline instead
+/// (<c>AddNativeProblemDetailsAll</c> + <c>UseNativeProblemDetailsHandling</c>).
+/// </para>
+/// </remarks>
+[Obsolete("Use AddNativeProblemDetails()/UseNativeProblemDetailsHandling() instead. Will be removed in v12.")]
 public class ExceptionMiddleware(RequestDelegate next, IOptions<ExceptionOptions> options, ILogger<ExceptionMiddleware> logger)
 {
     private readonly ExceptionOptions options = options?.Value ?? throw new ArgumentNullException(nameof(options), "[ExceptionMiddleware] Options is required. Check: services.AddMvp24HoursWebExceptions().");

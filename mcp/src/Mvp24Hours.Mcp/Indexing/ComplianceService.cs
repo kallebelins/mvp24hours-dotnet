@@ -139,8 +139,8 @@ public sealed partial class ComplianceService
         }
 
         if (fullPath.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase) &&
-            !content.Contains("<Nullable>enable</Nullable>", StringComparison.Ordinal) &&
-            !content.Contains("<Nullable>enable</Nullable>", StringComparison.OrdinalIgnoreCase))
+            !HasNullableEnabled(content) &&
+            !DirectoryBuildPropsEnablesNullable(fullPath))
         {
             AddViolation(result, "Nullable reference types enabled", relativePath, "Missing <Nullable>enable</Nullable>.");
         }
@@ -155,6 +155,47 @@ public sealed partial class ComplianceService
                 AddViolation(result, "Application must not reference Infrastructure or WebAPI", relativePath);
             }
         }
+    }
+
+    private static bool HasNullableEnabled(string content) =>
+        content.Contains("<Nullable>enable</Nullable>", StringComparison.Ordinal) ||
+        content.Contains("<Nullable>enable</Nullable>", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Walks up from the .csproj directory looking for a Directory.Build.props that already
+    /// sets &lt;Nullable&gt;enable&lt;/Nullable&gt;. MSBuild imports the nearest Directory.Build.props
+    /// automatically, so a .csproj with no explicit &lt;Nullable&gt; element is not a violation when an
+    /// ancestor Directory.Build.props already enables it. The walk stops at the repo root to avoid
+    /// escaping the repository.
+    /// </summary>
+    private bool DirectoryBuildPropsEnablesNullable(string csprojFullPath)
+    {
+        var repoRoot = Path.GetFullPath(_paths.RepoRoot);
+        var directory = Path.GetDirectoryName(Path.GetFullPath(csprojFullPath));
+
+        while (!string.IsNullOrEmpty(directory))
+        {
+            var propsPath = Path.Combine(directory, "Directory.Build.props");
+            if (File.Exists(propsPath) && HasNullableEnabled(File.ReadAllText(propsPath)))
+            {
+                return true;
+            }
+
+            if (string.Equals(Path.GetFullPath(directory), repoRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                break;
+            }
+
+            var parent = Directory.GetParent(directory);
+            if (parent is null)
+            {
+                break;
+            }
+
+            directory = parent.FullName;
+        }
+
+        return false;
     }
 
     public void Warmup() => _ = _checklistRules.Value;

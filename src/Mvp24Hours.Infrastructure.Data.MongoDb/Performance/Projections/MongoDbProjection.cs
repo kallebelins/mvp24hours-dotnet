@@ -241,15 +241,20 @@ public class MongoDbProjectionOptions<TSource, TDestination>
     /// Automatically maps fields from source to destination based on matching property names.
     /// </summary>
     /// <returns>The options instance for chaining.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if <typeparamref name="TDestination"/> does not have a public parameterless constructor,
+    /// which is required to build the underlying projection expression.
+    /// </exception>
     public MongoDbProjectionOptions<TSource, TDestination> AutoMap()
     {
-        var destProperties = typeof(TDestination).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        List<PropertyInfo> destProperties = typeof(TDestination).GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.CanWrite)
-            .Select(p => p.Name)
             .ToList();
 
+        var destPropertiesByName = destProperties.ToDictionary(p => p.Name);
+
         var sourceProperties = typeof(TSource).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => destProperties.Contains(p.Name))
+            .Where(p => destPropertiesByName.ContainsKey(p.Name))
             .ToList();
 
         foreach (PropertyInfo? prop in sourceProperties)
@@ -257,6 +262,29 @@ public class MongoDbProjectionOptions<TSource, TDestination>
             BsonElementAttribute? bsonElement = prop.GetCustomAttribute<BsonElementAttribute>();
             string fieldName = bsonElement?.ElementName ?? prop.Name;
             _includeFields.Add(fieldName);
+        }
+
+        // Build a projection expression that maps each matched source property to the
+        // destination property of the same name, so Build() below has something to project
+        // with. Without this, AutoMap() only recorded field names and Build() always threw.
+        if (sourceProperties.Count > 0)
+        {
+            ConstructorInfo? ctor = typeof(TDestination).GetConstructor(Type.EmptyTypes);
+            if (ctor == null)
+            {
+                throw new InvalidOperationException(
+                    $"AutoMap requires {typeof(TDestination).Name} to have a public parameterless constructor.");
+            }
+
+            ParameterExpression parameter = Expression.Parameter(typeof(TSource), "source");
+            var bindings = sourceProperties
+                .Select(sourceProp => (MemberBinding)Expression.Bind(
+                    destPropertiesByName[sourceProp.Name],
+                    Expression.Property(parameter, sourceProp)))
+                .ToList();
+
+            MemberInitExpression body = Expression.MemberInit(Expression.New(ctor), bindings);
+            _projectionExpression = Expression.Lambda<Func<TSource, TDestination>>(body, parameter);
         }
 
         return this;

@@ -38,7 +38,10 @@ public class ConfigurationHelperTest
             .AddInMemoryCollection(values)
             .Build();
 
+        // intentional: covers the obsolete ConfigurationHelper until removal in v12
+#pragma warning disable CS0618
         ConfigurationHelper.SetConfiguration(config);
+#pragma warning restore CS0618
     }
 
     [Fact]
@@ -49,8 +52,11 @@ public class ConfigurationHelperTest
         environment.SetupGet(e => e.EnvironmentName).Returns("Development");
 
         // Act
+        // intentional: covers the obsolete ConfigurationHelper until removal in v12
+#pragma warning disable CS0618
         ConfigurationHelper.SetEnvironment(environment.Object);
         IHostEnvironment? result = ConfigurationHelper.GetEnvironment();
+#pragma warning restore CS0618
 
         // Assert
         result.Should().BeSameAs(environment.Object);
@@ -64,7 +70,10 @@ public class ConfigurationHelperTest
         SetInMemoryConfiguration();
 
         // Act
+        // intentional: covers the obsolete ConfigurationHelper until removal in v12
+#pragma warning disable CS0618
         string? value = ConfigurationHelper.GetSettings("MyKey");
+#pragma warning restore CS0618
 
         // Assert
         value.Should().Be("MyValue");
@@ -77,7 +86,10 @@ public class ConfigurationHelperTest
         SetInMemoryConfiguration();
 
         // Act
+        // intentional: covers the obsolete ConfigurationHelper until removal in v12
+#pragma warning disable CS0618
         SectionSettings? settings = ConfigurationHelper.GetSettings<SectionSettings>("Section");
+#pragma warning restore CS0618
 
         // Assert
         settings.Should().NotBeNull();
@@ -91,7 +103,10 @@ public class ConfigurationHelperTest
         SetInMemoryConfiguration();
 
         // Act
+        // intentional: covers the obsolete ConfigurationHelper until removal in v12
+#pragma warning disable CS0618
         IConfigurationSection? section = ConfigurationHelper.GetSection("Section");
+#pragma warning restore CS0618
 
         // Assert
         section.Should().NotBeNull();
@@ -105,7 +120,10 @@ public class ConfigurationHelperTest
         SetInMemoryConfiguration();
 
         // Act
+        // intentional: covers the obsolete ConfigurationHelper until removal in v12
+#pragma warning disable CS0618
         string? value = ConfigurationHelper.GetSettings("MissingKey");
+#pragma warning restore CS0618
 
         // Assert
         value.Should().BeNull();
@@ -118,7 +136,10 @@ public class ConfigurationHelperTest
         SetInMemoryConfiguration();
 
         // Act
+        // intentional: covers the obsolete ConfigurationHelper until removal in v12
+#pragma warning disable CS0618
         SectionSettings? settings = ConfigurationHelper.GetSettings<SectionSettings>("MissingSection");
+#pragma warning restore CS0618
 
         // Assert
         settings.Should().BeNull();

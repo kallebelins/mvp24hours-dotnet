@@ -675,7 +675,7 @@ See any of the completed skills for the full structure. Key requirements:
 
 ### Version Information
 - **Current Source**: .NET 10 (`net10.0`)
-- **Package Version**: 9.1.21 (stable), 10.8.0 (source, verify before using)
+- **Package Version**: 10.9.0 (stable, published)
 - **Migration Guide**: `docs/en-us/migration.md`
 
 ---

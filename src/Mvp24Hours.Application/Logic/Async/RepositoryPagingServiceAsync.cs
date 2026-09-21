@@ -41,7 +41,7 @@ public class RepositoryPagingServiceAsync<TEntity, TUoW> : RepositoryServiceAsyn
     /// </summary>
     [ActivatorUtilitiesConstructor]
     public RepositoryPagingServiceAsync(TUoW _unitOfWork, IValidator<TEntity>? validator, ILogger<RepositoryPagingServiceAsync<TEntity, TUoW>>? logger = null)
-        : base(_unitOfWork, validator)
+        : base(_unitOfWork, validator, logger)
     {
         _pagingLogger = logger ?? NullLogger<RepositoryPagingServiceAsync<TEntity, TUoW>>.Instance;
     }
@@ -51,14 +51,14 @@ public class RepositoryPagingServiceAsync<TEntity, TUoW> : RepositoryServiceAsyn
 
     public virtual async Task<IPagingResult<IList<TEntity>>> GetByWithPaginationAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria = null, CancellationToken cancellationToken = default)
     {
-        _pagingLogger.LogDebug("application-repositorypagingserviceasync-getbywithpaginationasync");
+        _pagingLogger.LogDebug("[{ServiceName}] Executing GetByWithPaginationAsync for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
         IRepositoryAsync<TEntity> repo = UnitOfWork.GetRepository<TEntity>();
         return await repo.ToBusinessPagingAsync(clause, criteria);
     }
 
     public virtual async Task<IPagingResult<IList<TEntity>>> ListWithPaginationAsync(IPagingCriteria? criteria = null, CancellationToken cancellationToken = default)
     {
-        _pagingLogger.LogDebug("application-repositorypagingserviceasync-listwithpaginationasync");
+        _pagingLogger.LogDebug("[{ServiceName}] Executing ListWithPaginationAsync for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
         IRepositoryAsync<TEntity> repo = UnitOfWork.GetRepository<TEntity>();
         return await repo.ToBusinessPagingAsync(criteria);
     }

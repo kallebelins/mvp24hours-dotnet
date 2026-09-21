@@ -24,6 +24,7 @@ public class TestDbContext : Mvp24HoursContext
     public DbSet<TestTenantEntity> TenantEntities => Set<TestTenantEntity>();
     public DbSet<TestVersionedEntity> VersionedEntities => Set<TestVersionedEntity>();
     public DbSet<TestDomainEventEntity> DomainEventEntities => Set<TestDomainEventEntity>();
+    public DbSet<TestTypedEntity> TypedEntities => Set<TestTypedEntity>();
 }
 
 public class TestEntity : EntityBase<int>
@@ -31,6 +32,17 @@ public class TestEntity : EntityBase<int>
     public string Name { get; set; } = string.Empty;
     public bool Active { get; set; } = true;
     public int Score { get; set; }
+}
+
+/// <summary>
+/// Entity that declares a strongly-typed identifier through <see cref="IEntity{TId}"/>,
+/// which is the constraint required by <c>IRepository&lt;T, TId&gt;</c>.
+/// <see cref="EntityBase{TKey}"/> only implements <see cref="IEntityBase"/>, so the marker
+/// has to be declared explicitly; <c>Id</c> already satisfies it.
+/// </summary>
+public class TestTypedEntity : EntityBase<int>, IEntity<int>
+{
+    public string Name { get; set; } = string.Empty;
 }
 
 public class TestLogEntity : EntityBase<int>, IEntityDateLog
@@ -70,6 +82,20 @@ public class TestVersionedEntity : EntityBase<int>, IVersionedEntityWithCounter
     public long Version { get; set; }
 }
 
+public class TestRowVersionEntity : EntityBase<int>, IVersionedEntity
+{
+    public string Name { get; set; } = string.Empty;
+    public byte[] RowVersion { get; set; } = [];
+}
+
+public class TestNoKeyEntity : IEntityBase
+{
+    public int Identifier { get; set; }
+    public string Name { get; set; } = string.Empty;
+
+    public object? EntityKey => Identifier;
+}
+
 public class TestDomainEventEntity : EntityBase<int>, IHasDomainEvents
 {
     private readonly List<IDomainEvent> _domainEvents = [];
@@ -101,6 +127,11 @@ public class TestEntityLog : EntityBaseLog<int, string>
     public string Name { get; set; } = string.Empty;
 }
 
+public class TestEntityLogGuid : EntityBaseLog<int, Guid>
+{
+    public string Name { get; set; } = string.Empty;
+}
+
 public class TestDbContextNoLog(DbContextOptions options) : Mvp24HoursContext(options)
 {
     public override bool CanApplyEntityLog => false;
@@ -116,6 +147,7 @@ public class TestDbContextWithUser(DbContextOptions options, object? entityLogBy
     public override object? EntityLogBy { get; } = entityLogBy;
 
     public DbSet<TestEntityLog> EntityLogs => Set<TestEntityLog>();
+    public DbSet<TestEntityLogGuid> EntityLogsGuid => Set<TestEntityLogGuid>();
     public DbSet<TestLogEntity> LogEntities => Set<TestLogEntity>();
 }
 

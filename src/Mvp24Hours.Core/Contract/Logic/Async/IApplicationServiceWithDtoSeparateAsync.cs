@@ -33,10 +33,9 @@ namespace Mvp24Hours.Core.Contract.Logic;
 ///     Customer, 
 ///     CustomerDto,           // For reads - includes all fields
 ///     CreateCustomerDto,     // For creates - excludes Id, CreatedAt
-///     UpdateCustomerDto,     // For updates - only editable fields
-///     MyDbContext&gt;
+///     UpdateCustomerDto&gt;     // For updates - only editable fields
 /// {
-///     public CustomerService(MyDbContext unitOfWork, IMapper mapper) 
+///     public CustomerService(IUnitOfWorkAsync unitOfWork, IMapper mapper) 
 ///         : base(unitOfWork, mapper) { }
 /// }
 /// </code>

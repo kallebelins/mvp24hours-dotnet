@@ -99,7 +99,11 @@ public class MultipartFormDataHelper
             throw new ArgumentNullException(nameof(bytes));
         }
 
-        using var stream = new MemoryStream(bytes);
+        // The stream must stay open: AddFile wraps it in a StreamContent that is read later
+        // (e.g. when the multipart content is actually sent), not synchronously here. Disposing
+        // it immediately via `using` would leave the StreamContent pointing at a closed stream
+        // and throw ObjectDisposedException on the first real read.
+        var stream = new MemoryStream(bytes);
         return AddFile(name, stream, fileName, contentType);
     }
 

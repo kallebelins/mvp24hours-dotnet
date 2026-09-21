@@ -34,7 +34,9 @@ public class PipelineMessage : IPipelineMessage
     {
         _contents = [];
         Token = token ?? Guid.NewGuid().ToString();
+#pragma warning disable CS0618 // intentional: initializes the obsolete DynamicContents until removal in v12
         DynamicContents = new DynamicContents(this);
+#pragma warning restore CS0618
 
         if (args?.Length > 0)
         {
@@ -56,6 +58,7 @@ public class PipelineMessage : IPipelineMessage
     public IList<IMessageResult> Messages => field ??= [];
     public string Token { get; private set; }
     public bool IsLocked { get; private set; }
+    [Obsolete("Use GetContent<T>()/AddContent<T>() for type-safe access. Will be removed in v12.")]
     public dynamic DynamicContents { get; private set; }
     #endregion
 

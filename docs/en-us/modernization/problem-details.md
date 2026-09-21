@@ -89,11 +89,13 @@ var app = builder.Build();
 app.UseNativeProblemDetailsHandling();
 ```
 
-### Using Custom Middleware (Legacy)
+### Using Custom Middleware (deprecated)
 
-For applications that need more control or are using older patterns:
+> ⚠️ `ProblemDetailsMiddleware` and `UseMvp24HoursProblemDetails` are marked `[Obsolete]` and
+> will be removed in v12. Use `UseNativeProblemDetailsHandling` instead.
 
 ```csharp
+// deprecated
 builder.Services.AddMvp24HoursProblemDetails(options =>
 {
     options.IncludeExceptionDetails = builder.Environment.IsDevelopment();
@@ -101,6 +103,35 @@ builder.Services.AddMvp24HoursProblemDetails(options =>
 
 var app = builder.Build();
 app.UseMvp24HoursProblemDetails();
+```
+
+The registration method `AddMvp24HoursProblemDetails` itself is **not** deprecated. Besides the
+exception mappers, it registers the MVC filters `ModelStateValidationFilter` and
+`ProblemDetailsResultFilter`, which `AddNativeProblemDetails` does not register. Keep it when
+you need those filters, and swap only the pipeline call:
+
+```csharp
+builder.Services.AddNativeProblemDetailsAll(builder.Environment);
+builder.Services.AddMvp24HoursModelStateValidation(); // MVC ModelState -> ProblemDetails
+
+var app = builder.Build();
+app.UseNativeProblemDetailsHandling();
+```
+
+The legacy `ExceptionMiddleware` (`AddMvp24HoursWebExceptions` +
+`UseMvp24HoursExceptionHandling`) is deprecated as well. It never produced RFC 7807 responses —
+it writes an `IBusinessResult` payload — so migrating changes the response body:
+
+```csharp
+// before
+builder.Services.AddMvp24HoursWebExceptions(o => o.TraceMiddleware = false);
+var app = builder.Build();
+app.UseMvp24HoursExceptionHandling();
+
+// after
+builder.Services.AddNativeProblemDetailsAll(builder.Environment);
+var app = builder.Build();
+app.UseNativeProblemDetailsHandling();
 ```
 
 ## Exception Mappings
@@ -415,14 +446,14 @@ app.MapPost("/api/orders", async (CreateOrderCommand command, ISender sender) =>
 
 ## Comparison: Native vs Custom Middleware
 
-| Feature | Native (`AddNativeProblemDetails`) | Custom (`AddMvp24HoursProblemDetails`) |
+| Feature | Native (`UseNativeProblemDetailsHandling`) | Custom (`UseMvp24HoursProblemDetails`, deprecated) |
 |---------|-----------------------------------|----------------------------------------|
+| Status | recommended | `[Obsolete]`, removed in v12 |
 | .NET Version | 8+ | All |
-| Integration | Built-in ASP.NET Core | Custom middleware |
+| Integration | Built-in ASP.NET Core (`IProblemDetailsService`) | Custom middleware |
 | Content Negotiation | Automatic | Manual |
 | Status Code Pages | Integrated | Separate |
-| Performance | Optimized | Good |
-| Flexibility | Standard | Maximum |
+| MVC filters (`ModelStateValidationFilter`, `ProblemDetailsResultFilter`) | register via `AddMvp24HoursProblemDetails` / `AddMvp24HoursModelStateValidation` | registered by `AddMvp24HoursProblemDetails` |
 
 ## See Also
 
