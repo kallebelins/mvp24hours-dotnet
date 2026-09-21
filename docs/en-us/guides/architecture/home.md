@@ -22,7 +22,7 @@ Use these guides to choose a solution shape before selecting implementation deta
 
 ## Scaffolding templates
 
-Use [Scaffolding templates](scaffolding-templates.md) when you need a **compilable** starting solution (placeholder `Item`, `App.*` projects). Use [`samples/`](../../../samples/README.md) when you need a full teaching scenario.
+Use [Scaffolding templates](scaffolding-templates.md) when you need a **compilable** starting solution (placeholder `Item`, `App.*` projects). Use [`samples/`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/README.md) when you need a full teaching scenario.
 
 - Blueprints: Complex N-Layers, Clean Architecture, Hexagonal, CQRS, DDD, Event-Driven
 - Hosts: API (via Complex N-Layers), BFF, Azure Functions (minimal/simple/complex), Workers (minimal/simple/complex)

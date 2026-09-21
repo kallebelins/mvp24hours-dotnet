@@ -41,7 +41,7 @@ Use this checklist when scaffolding or reviewing solutions with Mvp24Hours. Sour
 
 - [ ] Public API claims match types under `src/Mvp24Hours.*/`.
 - [ ] Behavior claims are backed by tests under `src/Tests/**` when available.
-- [ ] Architecture shape matches a template in [`templates-manifest.json`](templates-manifest.json) or is explicitly documented as a justified deviation.
+- [ ] Architecture shape matches a template in [`templates-manifest.json`](https://kallebelins.github.io/mvp24hours-dotnet/en-us/ai-resources/templates-manifest.json) or is explicitly documented as a justified deviation.
 
 ## Anti-patterns to reject
 

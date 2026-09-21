@@ -155,6 +155,7 @@
   * [.NET 10 Modernization Overview](en-us/modernization/dotnet9-features.md)
 * AI & MCP Resources
   * [Overview](en-us/ai-resources/home.md)
-  * [Cursor Rule](mvp24hours.mdc)
-  * [Compact LLM Context](llms_compact_en.txt)
-  * [Complete LLM Context](llms_complete_en.txt)
+  * [Skills Catalog](en-us/ai-resources/skills-catalog.md)
+  * [Agent Rules](en-us/ai-resources/agent-rules.md)
+  * [Compact LLM Context](https://kallebelins.github.io/mvp24hours-dotnet/llms_compact_en.txt)
+  * [Complete LLM Context](https://kallebelins.github.io/mvp24hours-dotnet/llms_complete_en.txt)

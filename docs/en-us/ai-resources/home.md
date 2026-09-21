@@ -8,15 +8,19 @@ Mvp24Hours separates documentation by audience:
 
 ## Local MCP DevKit
 
-The [`mcp/`](../../mcp/) project ships a [Model Context Protocol](https://modelcontextprotocol.io/) server that indexes `docs/`, `samples/`, and `src/` without duplicating template content.
+The [`mcp/`](https://github.com/kallebelins/mvp24hours-dotnet/tree/main/mcp) project ships a [Model Context Protocol](https://modelcontextprotocol.io/) server that indexes `docs/`, `samples/`, and `src/` without duplicating template content.
 
-**Agent entry point:** [`skills/orchestration/skill-router.md`](../../skills/orchestration/skill-router.md) (`@skill-router`) or any domain skill (`@efcore-specialist`, `@demand-architect`, …). The [global installer](../../scripts/README-devkit.md) registers all 36 skills as `SKILL.md` folders and keeps a `catalog/` copy inside `skill-router` for handoff.
+**Agent entry point:** [`skills/orchestration/skill-router.md`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/skills/orchestration/skill-router.md) (`@skill-router`) or any domain skill (`@efcore-specialist`, `@demand-architect`, …). The [global installer](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/scripts/README-devkit.md) registers all 36 skills as `SKILL.md` folders and keeps a `catalog/` copy inside `skill-router` for handoff.
+
+**Full skill catalog:** see the [Skills Catalog](skills-catalog.md) for all 36 skills grouped by category, the structure/blueprint/capability axes, and common workflows. The catalog's canonical source is [`skills/README.md`](https://github.com/kallebelins/mvp24hours-dotnet/tree/main/skills) on GitHub.
+
+**Persistent project context per tool:** see [Agent Rules](agent-rules.md) for a downloadable rules file per AI tool (Cursor, Kiro, VS Code Copilot, Claude Code, Windsurf, Cline, Continue, JetBrains AI Assistant). Each file is meant for **your own project that consumes Mvp24Hours**, not this repository — it tells the agent to call `@skill-router` for Mvp24Hours work instead of assuming this repo's folder layout.
 
 **Build once before using stdio:** every configuration below launches the server with `dotnet run --no-build --configuration Release`, so run `dotnet build mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj --configuration Release` first (the global installer does it for you). Building on each start makes Cursor and VS Code fight over the same `bin/` and `obj/` files, and the second editor fails with "the process cannot access the file because it is being used by another process". Rebuild after pulling changes, otherwise the editors keep running the previous binaries.
 
 ### Cursor setup (this repo)
 
-Project configuration: [`.cursor/mcp.json`](../../.cursor/mcp.json)
+Project configuration: [`.cursor/mcp.json`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/.cursor/mcp.json)
 
 ```json
 {
@@ -39,11 +43,11 @@ Project configuration: [`.cursor/mcp.json`](../../.cursor/mcp.json)
 
 Restart Cursor after changing MCP configuration.
 
-**External Cursor project:** set user env `MVP24HOURS_MCP_REPO_ROOT` to the clone, then use [`mcp/templates/cursor/mcp.external.json`](../../mcp/templates/cursor/mcp.external.json) (`mcpServers`). HTTP: [`mcp/templates/cursor/mcp.http.json`](../../mcp/templates/cursor/mcp.http.json).
+**External Cursor project:** set user env `MVP24HOURS_MCP_REPO_ROOT` to the clone, then use [`mcp/templates/cursor/mcp.external.json`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/mcp/templates/cursor/mcp.external.json) (`mcpServers`). HTTP: [`mcp/templates/cursor/mcp.http.json`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/mcp/templates/cursor/mcp.http.json).
 
 ### VS Code setup (this repo)
 
-Project configuration: [`.vscode/mcp.json`](../../.vscode/mcp.json)
+Project configuration: [`.vscode/mcp.json`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/.vscode/mcp.json)
 
 ```json
 {
@@ -73,7 +77,7 @@ Use when the workspace is **another** solution but you want Mvp24Hours MCP.
 
 #### Option 1 — stdio with input prompt (recommended)
 
-Replace `.vscode/mcp.json` with [`mcp/templates/vscode/mcp.external.json`](../../mcp/templates/vscode/mcp.external.json):
+Replace `.vscode/mcp.json` with [`mcp/templates/vscode/mcp.external.json`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/mcp/templates/vscode/mcp.external.json):
 
 ```json
 {
@@ -116,7 +120,7 @@ VS Code prompts for the clone path on first server start and stores the value.
    dotnet run --no-build --configuration Release --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj -- --http --urls http://localhost:5199
    ```
 
-2. Replace `.vscode/mcp.json` with [`mcp/templates/vscode/mcp.http.json`](../../mcp/templates/vscode/mcp.http.json):
+2. Replace `.vscode/mcp.json` with [`mcp/templates/vscode/mcp.http.json`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/mcp/templates/vscode/mcp.http.json):
 
    ```json
    {
@@ -154,14 +158,14 @@ dotnet run --no-build --configuration Release --project mcp/src/Mvp24Hours.Mcp/M
 
 | Resource | Path |
 | --- | --- |
-| Architecture manifest | [`templates-manifest.json`](templates-manifest.json) |
-| Scenarios manifest | [`scenarios-manifest.json`](scenarios-manifest.json) |
-| Capabilities manifest | [`capabilities-manifest.json`](capabilities-manifest.json) |
-| Migration playbooks | [`migration-playbooks.json`](migration-playbooks.json) |
+| Architecture manifest | [`templates-manifest.json`](https://kallebelins.github.io/mvp24hours-dotnet/en-us/ai-resources/templates-manifest.json) |
+| Scenarios manifest | [`scenarios-manifest.json`](https://kallebelins.github.io/mvp24hours-dotnet/en-us/ai-resources/scenarios-manifest.json) |
+| Capabilities manifest | [`capabilities-manifest.json`](https://kallebelins.github.io/mvp24hours-dotnet/en-us/ai-resources/capabilities-manifest.json) |
+| Migration playbooks | [`migration-playbooks.json`](https://kallebelins.github.io/mvp24hours-dotnet/en-us/ai-resources/migration-playbooks.json) |
 | Discovery playbook | [`discovery-playbook.md`](discovery-playbook.md) |
-| Layer templates | [`layers/`](layers/) |
+| Layer templates | [`layers/`](https://github.com/kallebelins/mvp24hours-dotnet/tree/main/docs/en-us/ai-resources/layers) |
 | Compliance checklist | [`compliance-checklist.md`](compliance-checklist.md) |
-| MCP server docs | [`mcp/README.md`](../../mcp/README.md) |
+| MCP server docs | [`mcp/README.md`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/mcp/README.md) |
 
 ### MCP capabilities
 
@@ -171,9 +175,9 @@ dotnet run --no-build --configuration Release --project mcp/src/Mvp24Hours.Mcp/M
 
 ## Current machine context (fallback)
 
-- [Compact LLM context](../../llms_compact_en.txt)
-- [Complete LLM context](../../llms_complete_en.txt)
-- [Cursor rule](../../mvp24hours.mdc)
+- [Compact LLM context](https://kallebelins.github.io/mvp24hours-dotnet/llms_compact_en.txt)
+- [Complete LLM context](https://kallebelins.github.io/mvp24hours-dotnet/llms_complete_en.txt)
+- [Cursor rule](https://raw.githubusercontent.com/kallebelins/mvp24hours-dotnet/main/agent-rules/cursor.mdc) — see [Agent Rules](agent-rules.md) for the other 7 tools
 
 These files are compatibility resources. Canonical human documentation wins if generated context conflicts with source or tests.
 

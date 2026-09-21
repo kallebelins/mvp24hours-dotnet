@@ -1,7 +1,7 @@
 # Release notes
 
 This page summarizes what shipped and what is staged in the current source. For
-complete change history, see [`CHANGELOG.md`](../../CHANGELOG.md). For upgrade
+complete change history, see [`CHANGELOG.md`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/CHANGELOG.md). For upgrade
 steps, use the [Migration guide](migration.md).
 
 ## 10.9.0 (September 2026) — stable release
@@ -112,4 +112,4 @@ registration and request types, use the [CQRS guide](cqrs/getting-started.md).
   middleware, resilience, validation, repository, messaging, and observability
   foundations.
 
-See [`CHANGELOG.md`](../../CHANGELOG.md) for the detailed historical record.
+See [`CHANGELOG.md`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/CHANGELOG.md) for the detailed historical record.

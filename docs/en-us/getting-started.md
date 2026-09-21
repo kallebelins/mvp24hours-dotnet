@@ -10,7 +10,7 @@ Quick navigation:
 - [Configuration Reference](configuration-reference.md)
 - [Architecture Guides](guides/architecture/home.md)
 - [Release Notes](release.md) · [Version Migration](migration.md)
-- [AI & MCP Resources](ai-resources/home.md)
+- [AI & MCP Resources](ai-resources/home.md) — MCP DevKit setup, the [36-skill catalog](ai-resources/skills-catalog.md), and downloadable [agent rules](ai-resources/agent-rules.md) for Cursor, Kiro, Claude Code, and more
 
 ## 🚀 Quick Installation
 

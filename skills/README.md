@@ -31,29 +31,7 @@ These are **portable AI agent skill files** designed to be copied into any proje
    cp -r skills/ /path/to/your/project/.cursor/skills/
    ```
 
-2. **Configure Mvp24Hours MCP** (if not already configured):
-   ```json
-   // .cursor/mcp.json
-   {
-     "servers": {
-       "mvp24hours": {
-         "type": "stdio",
-         "command": "dotnet",
-         "args": [
-           "run",
-           "--no-build",
-           "--configuration",
-           "Release",
-           "--project",
-           "path/to/mvp24hours-dotnet/mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"
-         ],
-         "env": { "MVP24HOURS_REPO_ROOT": "path/to/mvp24hours-dotnet" }
-       }
-     }
-   }
-   ```
-
-   Build the server once with `dotnet build path/to/mvp24hours-dotnet/mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj --configuration Release`. `--no-build` keeps the startup free of MSBuild, so Cursor and VS Code can run the server at the same time without locking each other's output files.
+2. **Configure Mvp24Hours MCP** (if not already configured): follow the Cursor setup in [`docs/en-us/ai-resources/home.md`](../docs/en-us/ai-resources/home.md#local-mcp-devkit) for the `.cursor/mcp.json` configuration, the required `dotnet build ... --configuration Release` step, and why `--no-build` matters when Cursor and VS Code share the same server.
 
 3. **Use skills in chat**:
    ```
@@ -69,7 +47,7 @@ These are **portable AI agent skill files** designed to be copied into any proje
    cp -r skills/ /path/to/your/project/.github/skills/
    ```
 
-2. **Configure MCP** in `.vscode/mcp.json` (same format as above)
+2. **Configure MCP** in `.vscode/mcp.json` — see the VS Code setup in [`docs/en-us/ai-resources/home.md`](../docs/en-us/ai-resources/home.md#local-mcp-devkit), including the external-project templates and HTTP mode.
 
 3. **Use in Agent mode** with `@skillname` mention
 
@@ -480,46 +458,7 @@ All skills require the **Mvp24Hours MCP DevKit** to be configured. The MCP serve
 
 ### Setting Up MCP
 
-**Cursor**:
-```json
-// .cursor/mcp.json
-{
-  "servers": {
-    "mvp24hours": {
-      "type": "stdio",
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--no-build",
-        "--configuration",
-        "Release",
-        "--project",
-        "<path-to-mcp>/Mvp24Hours.Mcp.csproj"
-      ],
-      "env": { "MVP24HOURS_REPO_ROOT": "<path-to-mvp24hours-dotnet-repo>" }
-    }
-  }
-}
-```
-
-**VS Code**:
-```json
-// .vscode/mcp.json  (same format as above)
-```
-
-**Build once** (`--no-build` requires it, and it lets both editors run the server side by side):
-```bash
-dotnet build <path-to-mcp>/Mvp24Hours.Mcp.csproj --configuration Release
-```
-
-**Environment Variable**:
-```bash
-# Windows
-set MVP24HOURS_REPO_ROOT=C:\Dev\Github\mvp24hours\mvp24hours-dotnet
-
-# Linux/Mac
-export MVP24HOURS_REPO_ROOT=/path/to/mvp24hours-dotnet
-```
+The canonical Cursor and VS Code configuration (JSON for this repo, external-project templates, HTTP mode, and the `--no-build` rationale) lives in [`docs/en-us/ai-resources/home.md`](../docs/en-us/ai-resources/home.md#local-mcp-devkit). Follow that page instead of copying JSON snippets here, so the setup instructions stay in one place.
 
 ---
 
