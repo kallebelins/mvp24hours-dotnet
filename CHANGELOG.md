@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [10.9.0] - 2026-09 📦 Publication Release
+
+> **Stable publication of the .NET 10 line.** This release publishes the `Mvp24Hours.*` NuGet
+> packages built in `10.8.0` under the `10.9.0` version line. There are no source, API, or
+> behavior changes relative to `10.8.0` — this is a metadata and documentation release that
+> finalizes publication.
+
+### Changed
+
+- **Package version bump**: `Version`, `AssemblyVersion`, and `FileVersion` metadata updated
+  from `10.8.0` to `10.9.0` across all production projects (`Mvp24Hours.Core`, `.Application`,
+  `.Infrastructure` and its sub-packages, `.WebAPI`).
+- **`templates/**/*.csproj`**: sample `PackageReference` versions for `Mvp24Hours.*` packages
+  updated to `10.9.0`; `templates/README.md` NuGet-mode example updated accordingly.
+
+### Removed
+
+- **Outdated publication-blocker notices**: removed the stale warnings in `README.md`,
+  `docs/en-us/release.md`, `docs/en-us/home.md`, `docs/en-us/migration.md`,
+  `docs/en-us/modernization/migration-guide.md`, `docs/en-us/modernization/dotnet9-features.md`,
+  `skills/README.md`, and `skills/modernization/dotnet-modernization-specialist.md` that claimed
+  production `.csproj` metadata still reported `9.1.21` and that the `Mvp24Hours.Core` NuGet feed
+  had no `10.8.0`/`10.9.0` package. Package metadata is now aligned and this version is published.
+
 ## [10.8.0] - 2026-08 🚀 Major Release
 
 > **Migration to .NET 10** — This release aligns the entire solution with .NET 10 / C# 14, enables
@@ -302,6 +326,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `.editorconfig` style rules elevated from `suggestion` → `warning` (`EnforceCodeStyleInBuild`);
   full `dotnet format` applied across the solution (file-scoped namespaces, primary constructors,
   collection expressions, usings, etc.).
+- **Compliance check false positive — `Nullable reference types enabled`**: the MCP compliance
+  checker (`ComplianceService.CheckFile`) flagged every `.csproj` under `src/` because it only
+  looked for `<Nullable>enable</Nullable>` in the individual project file, without resolving
+  MSBuild's automatic import of the nearest `Directory.Build.props` (which already sets it
+  solution-wide). The checker now walks up from the `.csproj` to the repo root looking for an
+  ancestor `Directory.Build.props` that enables `Nullable` before reporting a violation.
+- **Residual `new HttpClient()` in `Mvp24Hours.Infrastructure.Test`**: parameterless instantiation
+  in `TestingServiceExtensionsTest` replaced with `new HttpClient(new SocketsHttpHandler())`,
+  matching the pattern already used for the Keycloak test suite.
 
 ### Tests
 

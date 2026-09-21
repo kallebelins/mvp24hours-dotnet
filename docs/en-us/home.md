@@ -1,4 +1,4 @@
-# <img  style="vertical-align:middle" width="42" height="42" src="https://kallebelins.github.io/mvp24hours-dotnet/_media/icon.png" alt="Mvp24Hours" /> Mvp24Hours - .NET 10 (v10.8.0 source) 🚀
+# <img  style="vertical-align:middle" width="42" height="42" src="https://kallebelins.github.io/mvp24hours-dotnet/_media/icon.png" alt="Mvp24Hours" /> Mvp24Hours - .NET 10 (v10.9.0) 🚀
 
 This project was developed to contribute to the rapid construction of services with [.NET](https://learn.microsoft.com/en-us/training/dotnet/). I used the reference of market solutions for building microservices.
 
@@ -12,10 +12,6 @@ Start here:
 - [Infrastructure Modules](infrastructure/home.md)
 - [Testing Cookbook](testing/home.md)
 - [AI & MCP Resources](ai-resources/home.md)
-
-> **Release status:** this repository targets `net10.0`, but production package
-> metadata remains at `9.1.21` and the public `Mvp24Hours.Core` feed does not
-> include 10.8.0. See [Release & Migration](release.md) before upgrading.
 
 ## 🎯 Characteristics
 

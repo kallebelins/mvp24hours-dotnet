@@ -6,12 +6,6 @@ APIs live in the [.NET 9+ modernization guide](modernization/migration-guide.md)
 
 ## 9.1.x → 10.8.0
 
-> **Package availability:** the repository and changelog describe 10.8.0, but
-> production package metadata remains at `9.1.21` and the public
-> `Mvp24Hours.Core` feed has no 10.8.0 package. Complete the preparation and
-> validation steps below, but do not request 10.8.0 until publication is
-> confirmed.
-
 ### 1. Prepare the toolchain
 
 1. Install the .NET 10 SDK.

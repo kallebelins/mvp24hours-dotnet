@@ -24,9 +24,6 @@ keyed services, native OpenAPI, `System.Threading.RateLimiting`,
 
 The current source tree targets `net10.0`, uses Central Package Management,
 enables nullable reference types, and defaults to `LangVersion=latest`.
-This does not mean that a `10.8.0` NuGet package is already available: the
-production projects still declare package version `9.1.21`. Check the package
-feed before changing consumer package references.
 
 Use the canonical [9.1.x → 10.8.0 migration](../migration.md?id=_91x-1000)
 for the SDK, target framework, package readiness, nullable diagnostics,
