@@ -72,7 +72,6 @@ Prefer `*OptionsTest.cs`, `*Extensions*Test*.cs`, and integration tests over inv
 - Target `net10.0` and C# 14 in new or updated C# examples.
 - Use APIs present in the repository. Never invent names, overloads, configuration sections, defaults, or behavior.
 - Do not document roadmap features absent from `src/`.
-- Do not treat Semantic Kernel, Semantic Kernel Graph, or Agent Framework as Mvp24Hours product features.
 - Do not retain stale `9.*` package pins. Prefer `dotnet add package Package.Name` unless a verified version is necessary; if a version is shown, use the verified current release.
 - Explain version-specific or breaking behavior explicitly and link to Release & Migration.
 

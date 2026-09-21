@@ -38,7 +38,7 @@ Every agent rules file covers the same four things:
 - **Project framing** — this is a project that consumes Mvp24Hours via NuGet, not the Mvp24Hours repository; do not assume its internal folder layout exists here.
 - **Start here** — call `@skill-router` first for anything Mvp24Hours-related; let it classify the request and hand off, rather than picking a specialist skill yourself.
 - **What you can explore via skills** — the topics the 35 domain skills cover (architecture, data, messaging, CQRS, observability, pipeline, caching, infrastructure, web API, testing, identity/security, cron jobs, modernization), so the agent knows what to ask for.
-- **Accuracy rules** — guardrails specific to Mvp24Hours (use the Mvp24Hours Mediator, not MediatR; verify the package versions actually referenced in the project before assuming specific APIs; Semantic Kernel and Microsoft Agent Framework are not Mvp24Hours modules).
+- **Accuracy rules** — guardrails specific to Mvp24Hours (use the Mvp24Hours Mediator, not MediatR; verify the package versions actually referenced in the project before assuming specific APIs).
 
 ## Related documentation
 

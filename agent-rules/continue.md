@@ -38,4 +38,3 @@ This project consumes the [Mvp24Hours](https://github.com/kallebelins/mvp24hours
 - For CQRS use Mvp24Hours APIs: `AddMvpMediator`, `IMediatorCommand<T>`, `IMediatorQuery<T>`, their handler interfaces, and `IMediator.SendAsync` — never MediatR's `IRequest<T>`.
 - Prefer current `Program.cs` composition, native OpenAPI, `ILogger<T>`, OpenTelemetry, health checks, `TimeProvider`, and native .NET resilience over older patterns.
 - Treat the Mvp24Hours GitHub repository (`https://github.com/kallebelins/mvp24hours-dotnet`) and its published docs site as the source of truth for exact APIs — not assumptions carried over from other libraries.
-- Semantic Kernel, Semantic Kernel Graph, and Microsoft Agent Framework are external projects, not Mvp24Hours product modules.

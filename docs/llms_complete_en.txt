@@ -36,7 +36,6 @@ Use this context when implementing or reviewing .NET solutions with Mvp24Hours.
 - Prefer current `Program.cs`, native OpenAPI, `ILogger<T>`, OpenTelemetry, health checks, `TimeProvider`, and native resilience guidance.
 - Canonical module documentation owns API/configuration facts. Architecture Guides explain why, boundaries, and solution shape.
 - Former `ai-context/` pages are compatibility stubs. Do not route new work to them.
-- Semantic Kernel, Semantic Kernel Graph, and Microsoft Agent Framework are external projects, not Mvp24Hours product modules.
 
 
 ## Architecture blueprints

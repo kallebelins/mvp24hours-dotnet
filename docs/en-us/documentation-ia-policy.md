@@ -19,7 +19,6 @@ This page locks the scope and organizing principles for the English Mvp24Hours d
 
 - Translating or synchronizing `docs/pt-br/**`.
 - Documenting roadmap features that do not exist in source.
-- Maintaining Semantic Kernel, Semantic Kernel Graph, or Agent Framework guidance as Mvp24Hours product documentation.
 - Reorganizing the external samples repository.
 - Replacing canonical module documentation with generated AI context.
 

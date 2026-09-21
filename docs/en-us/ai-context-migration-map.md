@@ -13,8 +13,8 @@ Related policy:
 
 | Metric | Task 0.4 claim | Actual |
 |--------|----------------|--------|
-| Page count | 41 | **42** |
-| Location | `docs/en-us/ai-context/**` | Flat directory, 42 `.md` files |
+| Page count | 41 | **22** |
+| Location | `docs/en-us/ai-context/**` | Flat directory, 22 `.md` files |
 | Sidebar coverage | — | Former pages are compatibility stubs; primary navigation uses **Architecture Guides** and collapsed **AI & MCP Resources** |
 
 Downstream consumers deferred to Phase 5.7: `docs/mvp24hours.mdc`, `docs/llms_compact_en.txt`, `docs/llms_complete_en.txt`.
@@ -28,8 +28,6 @@ Downstream consumers deferred to Phase 5.7: `docs/mvp24hours.mdc`, `docs/llms_co
 | Testing guide | `docs/en-us/testing/home.md` |
 | Deployment guide | `docs/en-us/guides/deployment/containerization.md` |
 | Health catalog | `docs/en-us/infrastructure/health-checks.md` |
-| External MCP/AI project | `mvp24hours-mcp-ai/docs/**` (URL TBD) |
-| Semantic Kernel Graph docs | `https://skgraph.dev/` / `semantic-kernel-graph-docs` |
 
 ## Disposition summary
 
@@ -38,8 +36,7 @@ Downstream consumers deferred to Phase 5.7: `docs/mvp24hours.mdc`, `docs/llms_co
 | Keep/Rewrite | 13 | Preserve as human Architecture Guides or deployment guidance |
 | Merge into canonical docs | 4 | Extract unique content into module owners, then stub |
 | Convert to compatibility stub/index | 5 | Short index at the old URL; no second API truth |
-| Move to external MCP/AI project | 20 | Externalize SK, SKG, Agent Framework, and AI indexes |
-| **Total** | **42** | |
+| **Total** | **22** | |
 
 ## Exhaustive disposition table
 
@@ -67,26 +64,6 @@ Downstream consumers deferred to Phase 5.7: `docs/mvp24hours.mdc`, `docs/llms_co
 | 20 | `ai-context/error-handling-patterns.md` | Merge into canonical docs | `webapi-advanced.md`, `core/exceptions.md`, related module pages (+ stub) | Domain exception hierarchy; `IBusinessResult<T>` patterns; middleware mapping |
 | 21 | `ai-context/api-versioning-patterns.md` | Merge into canonical docs | Expand `webapi-advanced.md` (+ stub) | Versioning strategy matrix; Swagger multi-version; sunset headers |
 | 22 | `ai-context/containerization-patterns.md` | Keep/Rewrite | `guides/deployment/containerization.md` (+ stub) | Dockerfile/Compose/nginx/CI; update base images to .NET 10 |
-| 23 | `ai-context/ai-implementation-index.md` | Move external | `mvp24hours-mcp-ai/docs/ai-implementation-index.md` (+ stub) | Approach comparison tables; Mvp24Hours+AI sketch; external repo links |
-| 24 | `ai-context/ai-decision-matrix.md` | Move external | `mvp24hours-mcp-ai/docs/ai-decision-matrix.md` (+ stub) | SK vs SKG vs Agent Framework decision tree |
-| 25 | `ai-context/template-sk-chat-completion.md` | Move external | `mvp24hours-mcp-ai/docs/templates/sk/` (+ stub) | Kernel/provider setup; streaming; conversation history |
-| 26 | `ai-context/template-sk-plugins.md` | Move external | `mvp24hours-mcp-ai/docs/templates/sk/` (+ stub) | Plugin authoring; function calling |
-| 27 | `ai-context/template-sk-rag-basic.md` | Move external | `mvp24hours-mcp-ai/docs/templates/sk/` (+ stub) | Vector store; ingestion; retrieval prompts |
-| 28 | `ai-context/template-sk-planners.md` | Move external | `mvp24hours-mcp-ai/docs/templates/sk/` (+ stub) | Handlebars planner; auto-planning flows |
-| 29 | `ai-context/template-skg-graph-executor.md` | Move external | `semantic-kernel-graph/docs/templates/` (+ stub) | Graph structure; sequential/parallel/conditional execution |
-| 30 | `ai-context/template-skg-react-agent.md` | Move external | `semantic-kernel-graph/docs/templates/` (+ stub) | Reason→Act→Observe loop |
-| 31 | `ai-context/template-skg-chain-of-thought.md` | Move external | `semantic-kernel-graph/docs/templates/` (+ stub) | Step-by-step reasoning graphs |
-| 32 | `ai-context/template-skg-chatbot-memory.md` | Move external | `semantic-kernel-graph/docs/templates/` (+ stub) | Persistent conversation memory |
-| 33 | `ai-context/template-skg-multi-agent.md` | Move external | `semantic-kernel-graph/docs/templates/` (+ stub) | SKG multi-agent coordination |
-| 34 | `ai-context/template-skg-document-pipeline.md` | Move external | `semantic-kernel-graph/docs/templates/` (+ stub) | Multi-stage document analysis |
-| 35 | `ai-context/template-skg-human-in-loop.md` | Move external | `semantic-kernel-graph/docs/templates/` (+ stub) | Approval gates; human oversight |
-| 36 | `ai-context/template-skg-checkpointing.md` | Move external | `semantic-kernel-graph/docs/templates/` (+ stub) | Checkpoint/recovery flows |
-| 37 | `ai-context/template-skg-streaming.md` | Move external | `semantic-kernel-graph/docs/templates/` (+ stub) | Real-time event streaming |
-| 38 | `ai-context/template-skg-observability.md` | Move external | `semantic-kernel-graph/docs/templates/` (+ stub) | Graph execution metrics |
-| 39 | `ai-context/template-agent-framework-basic.md` | Move external | `mvp24hours-mcp-ai/docs/templates/agent-framework/` (+ stub) | Provider-agnostic AI abstractions |
-| 40 | `ai-context/template-agent-framework-workflows.md` | Move external | `mvp24hours-mcp-ai/docs/templates/agent-framework/` (+ stub) | Agent Framework workflow patterns |
-| 41 | `ai-context/template-agent-framework-multi-agent.md` | Move external | `mvp24hours-mcp-ai/docs/templates/agent-framework/` (+ stub) | Enterprise multi-agent orchestration |
-| 42 | `ai-context/template-agent-framework-middleware.md` | Move external | `mvp24hours-mcp-ai/docs/templates/agent-framework/` (+ stub) | Agent middleware pipeline |
 
 ## Duplicate clusters
 
@@ -94,11 +71,8 @@ Downstream consumers deferred to Phase 5.7: `docs/mvp24hours.mdc`, `docs/llms_co
 |---------|-------|------------|
 | Structure triple | `architecture-templates.md` and three `structure-*.md` pages | Keep the three structure pages; stub the templates index after merging variations |
 | Navigation hub | `home.md`, `decision-matrix.md`, `project-structure.md`, `architecture-templates.md` | One Architecture Guides landing plus dedicated decision/structure pages |
-| Two Decision Matrix labels | `decision-matrix.md` vs `ai-decision-matrix.md` | Keep Mvp24Hours matrix; externalize AI-framework matrix |
 | Pattern mega-pages | database/messaging/observability/modernization patterns | Short indexes; merge unique slices into module docs |
 | MediatR blueprints | CQRS, Clean Architecture, Microservices | Rewrite to Mvp24Hours Mediator in task 5.3 |
-| Multi-agent frameworks | SKG vs Agent Framework multi-agent | Both externalize; preserve separately |
-| AI index trio | `home.md` AI section, `ai-implementation-index.md`, `ai-decision-matrix.md` | Externalize indexes; strip from Architecture Guides landing |
 
 ## Recommended merge targets
 
@@ -124,17 +98,7 @@ This page moved to [{new location}]({relative-or-external-link}).
 
 > Human architecture guidance lives in Architecture Guides.
 > Module APIs live in canonical module documentation.
-> AI framework templates live in the external MCP / Semantic Kernel Graph project.
 ```
-
-## Externalization block
-
-| Framework group | Pages | Primary external destination |
-|-----------------|------:|------------------------------|
-| AI indexes | 2 | `mvp24hours-mcp-ai/docs/` |
-| Semantic Kernel | 4 | `mvp24hours-mcp-ai/docs/templates/sk/` |
-| Semantic Kernel Graph | 10 | [skgraph.dev](https://skgraph.dev/) / `semantic-kernel-graph-docs` |
-| Agent Framework | 4 | `mvp24hours-mcp-ai/docs/templates/agent-framework/` |
 
 Transition bridge: `docs/en-us/ai-resources/home.md` as a collapsed sidebar entry linking the MCP bridge, external repos, and machine-context downloads until MCP cutover.
 
@@ -144,12 +108,10 @@ Transition bridge: `docs/en-us/ai-resources/home.md` as a collapsed sidebar entr
 - Rewrite MediatR APIs in retained blueprints to Mvp24Hours Mediator APIs.
 - Mark NLog-first observability guidance as deprecated relative to OpenTelemetry.
 - Prefer Native OpenAPI / current WebAPI extensions over Swagger-only or `Startup.cs` examples where inappropriate.
-- Do not validate external AI-framework packages against Mvp24Hours `src/` tests; externalize them instead.
 
 ## Acceptance criteria
 
-- All 42 `ai-context/**` pages have exactly one disposition.
+- All 22 `ai-context/**` pages have exactly one disposition.
 - Architecture decisions, project structures, blueprints, testing, and containerization content have explicit destinations.
-- Semantic Kernel, Semantic Kernel Graph, Agent Framework, and AI-framework decision/index pages are marked for externalization.
 - Unique merge content has a canonical target so no page is silently lost.
 - Physical moves remain deferred to Phase 5; current URLs stay valid until stubs are written.

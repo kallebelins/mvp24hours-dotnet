@@ -187,9 +187,3 @@ These files are compatibility resources. Canonical human documentation wins if g
 2. Use canonical module documentation and Architecture Guides.
 3. Use the compatibility downloads above only as an offline fallback.
 4. Verify exact APIs against `src/` and behavior against `src/Tests/`.
-
-## External AI frameworks
-
-Semantic Kernel and Microsoft Agent Framework are not Mvp24Hours product modules. Their former templates are no longer first-class library documentation.
-
-Semantic Kernel Graph documentation lives at [skgraph.dev](https://skgraph.dev/) and the docs repository [semantic-kernel-graph-docs](https://github.com/kallebelins/semantic-kernel-graph-docs).
