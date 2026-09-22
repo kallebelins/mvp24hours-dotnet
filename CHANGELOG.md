@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [10.10.0] - 2026-09 ✨ Minor Release
+
+### Added
+
+- **`IPipelineMessage.GetKeys()`**: new method that returns the list of keys currently stored in
+  the message's content dictionary (`IList<string>`), implemented in `PipelineMessage` as
+  `[.. _contents.Keys]`. Returns an empty list when no content has been added, mirroring the
+  existing `GetContentAll()` behavior. This is an **additive interface change** — custom
+  implementations of `IPipelineMessage` (e.g. test fakes/mocks) must implement the new member.
+
 ## [10.9.0] - 2026-09 📦 Publication Release
 
 > **Stable publication of the .NET 10 line.** This release publishes the `Mvp24Hours.*` NuGet

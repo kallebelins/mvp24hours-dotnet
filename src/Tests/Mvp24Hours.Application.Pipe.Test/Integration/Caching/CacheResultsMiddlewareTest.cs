@@ -240,6 +240,11 @@ public class CacheResultsMiddlewareTest
             return [];
         }
 
+        public IList<string> GetKeys()
+        {
+            return [];
+        }
+
         public void SetLock()
         {
             IsLocked = true;

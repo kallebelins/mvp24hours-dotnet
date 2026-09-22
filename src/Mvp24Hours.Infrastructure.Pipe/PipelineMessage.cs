@@ -112,6 +112,10 @@ public class PipelineMessage : IPipelineMessage
     {
         return [.. _contents.Values];
     }
+    public IList<string> GetKeys()
+    {
+        return [.. _contents.Keys];
+    }
     public void SetLock()
     {
         IsLocked = true;

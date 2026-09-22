@@ -66,6 +66,10 @@ public interface IPipelineMessage
     /// </summary>
     IList<object> GetContentAll();
     /// <summary>
+    /// Get all content keys
+    /// </summary>
+    IList<string> GetKeys();
+    /// <summary>
     /// Blocks message for non-mandatory operations
     /// </summary>
     void SetLock();

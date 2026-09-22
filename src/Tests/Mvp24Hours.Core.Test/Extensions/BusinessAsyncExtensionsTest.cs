@@ -217,6 +217,11 @@ public class BusinessAsyncExtensionsTest
             return [.. _contents.Values];
         }
 
+        public IList<string> GetKeys()
+        {
+            return [.. _contents.Keys];
+        }
+
         public void SetFailure()
         {
             IsFaulty = true;

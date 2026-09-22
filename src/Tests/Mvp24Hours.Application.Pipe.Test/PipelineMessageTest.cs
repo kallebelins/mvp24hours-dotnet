@@ -225,4 +225,63 @@ public class PipelineMessageTest
         message.IsFaulty.Should().BeTrue();
         message.Messages.Should().HaveCount(1);
     }
+
+    [Fact, Priority(21)]
+    public void PipelineMessage_GetKeys_WhenEmpty_ShouldReturnEmptyList()
+    {
+        var message = new PipelineMessage();
+
+        IList<string> keys = message.GetKeys();
+
+        keys.Should().BeEmpty();
+    }
+
+    [Fact, Priority(22)]
+    public void PipelineMessage_GetKeys_ByType_ShouldReturnTypeKeys()
+    {
+        var message = new PipelineMessage();
+
+        message.AddContent("test-value");
+
+        message.GetKeys().Should().Contain(typeof(string).FullName);
+    }
+
+    [Fact, Priority(23)]
+    public void PipelineMessage_GetKeys_ByCustomKey_ShouldReturnCustomKeys()
+    {
+        var message = new PipelineMessage();
+
+        message.AddContent("my-key", 99);
+
+        message.GetKeys().Should().Contain("my-key");
+    }
+
+    [Fact, Priority(24)]
+    public void PipelineMessage_GetKeys_WithMultipleContents_ShouldReturnAllKeys()
+    {
+        var message = new PipelineMessage();
+
+        message.AddContent("key1", "val1");
+        message.AddContent("key2", 42);
+
+        IList<string> keys = message.GetKeys();
+
+        keys.Should().HaveCount(2);
+        keys.Should().Contain("key1");
+        keys.Should().Contain("key2");
+    }
+
+    [Fact, Priority(25)]
+    public void PipelineMessage_GetKeys_AfterUpdatingExistingKey_ShouldNotDuplicateKey()
+    {
+        var message = new PipelineMessage();
+
+        message.AddContent("key", "first");
+        message.AddContent("key", "updated");
+
+        IList<string> keys = message.GetKeys();
+
+        keys.Should().HaveCount(1);
+        keys.Should().Contain("key");
+    }
 }

@@ -148,6 +148,11 @@ public class CoreExtensionsRemainingCoverageTest
             return [.. _content.Values.Where(v => v != null).Cast<object>()];
         }
 
+        public IList<string> GetKeys()
+        {
+            return [.. _content.Keys];
+        }
+
         public void SetLock()
         {
             IsLocked = true;
