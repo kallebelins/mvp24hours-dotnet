@@ -1,3 +1,4 @@
+using System.Reflection;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
@@ -78,6 +79,12 @@ public class McpServerTests : McpTestFixture
 
     private static async Task<McpClient> ConnectClientAsync(string repoRoot, string projectPath)
     {
+        // Launch the server in the same build configuration the tests were built with.
+        // The ProjectReference guarantees the server is already built for that configuration,
+        // so --no-build is safe. Hard-coding Release broke `dotnet test` (which defaults to Debug),
+        // because no Release output / runtimeconfig.json existed to run against.
+        var configuration = GetBuildConfiguration();
+
         var transport = new StdioClientTransport(new StdioClientTransportOptions
         {
             Name = "mvp24hours-test",
@@ -86,7 +93,7 @@ public class McpServerTests : McpTestFixture
             [
                 "run",
                 "--project", projectPath,
-                "--configuration", "Release",
+                "--configuration", configuration,
                 "--no-build"
             ],
             EnvironmentVariables = new Dictionary<string, string>
@@ -96,5 +103,13 @@ public class McpServerTests : McpTestFixture
         });
 
         return await McpClient.CreateAsync(transport);
+    }
+
+    private static string GetBuildConfiguration()
+    {
+        var configuration = typeof(McpServerTests).Assembly
+            .GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration;
+
+        return string.IsNullOrWhiteSpace(configuration) ? "Debug" : configuration;
     }
 }
